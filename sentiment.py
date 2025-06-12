@@ -19,6 +19,7 @@ nltk.download('vader_lexicon')
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('wordnet')
+nltk.download('punkt_tab')
 
 st.set_page_config(page_title="Sentiment & Topic Analysis", layout="wide")
 st.title("📊 Student Feedback Analyzer with AI Recommendations")
