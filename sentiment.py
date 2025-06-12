@@ -1,3 +1,4 @@
+# Import Libraries
 import streamlit as st
 import pandas as pd
 import re
@@ -15,23 +16,55 @@ from gensim.models import LdaModel
 from wordcloud import WordCloud
 import google.generativeai as genai
 
+# Download necessary NLTK corpora
 nltk.download('vader_lexicon')
 nltk.download('stopwords')
 nltk.download('punkt')
-nltk.download('punkt_tab')
-
 nltk.download('wordnet')
 
-st.set_page_config(page_title="TeachAIRs: Sentiment & Topic Analysis", layout="wide")
-st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
+# Streamlit Setup
+st.set_page_config(page_title="Sentiment & Topic Analysis", layout="centered")
+st.title("📊 Student Feedback Analyzer with AI Recommendations")
 
+# Load custom Filipino VADER Lexicon
+filipino_lexicon_file = st.file_uploader("📤 Upload Filipino VADER Lexicon CSV (word, score)", type=["csv"])
+filipino_positive_keywords = []
+filipino_negative_keywords = []
+
+if filipino_lexicon_file:
+    try:
+        filipino_lex_df = pd.read_csv(filipino_lexicon_file)
+        custom_dict = dict(zip(filipino_lex_df.iloc[:, 0], filipino_lex_df.iloc[:, 1]))
+        for word, score in custom_dict.items():
+            SentimentIntensityAnalyzer().lexicon[word] = float(score)
+        st.success("Custom Filipino VADER lexicon loaded!")
+    except Exception as e:
+        st.warning(f"⚠️ Failed to load custom lexicon: {e}")
+
+# Preload Tools
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 translator = Translator()
 vader_eng = SentimentIntensityAnalyzer()
 
-filipino_positive_keywords = ['magaling', 'mahusay', 'matalino', 'mabait']
-filipino_negative_keywords = ['hindi', 'pangit', 'masama', 'mahirap']
+# Define updated Filipino keyword sentiment function with lexicon override
+
+def get_filipino_keyword_sentiment(text):
+    score = 0
+    words = text.split()
+    if 'custom_dict' in globals() and custom_dict:
+        for word in words:
+            if word in custom_dict:
+                score += float(custom_dict[word])
+    else:
+        for w in filipino_positive_keywords:
+            if w in words:
+                score += 1
+        for w in filipino_negative_keywords:
+            if w in words:
+                score -= 1
+    label = 'Positive' if score > 0 else 'Negative' if score < 0 else 'Neutral'
+    return score, label
 
 def preprocess(text):
     text = str(text).lower()
