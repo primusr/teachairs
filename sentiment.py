@@ -18,8 +18,9 @@ import google.generativeai as genai
 nltk.download('vader_lexicon')
 nltk.download('stopwords')
 nltk.download('punkt')
-nltk.download('wordnet')
 nltk.download('punkt_tab')
+
+nltk.download('wordnet')
 
 st.set_page_config(page_title="Sentiment & Topic Analysis", layout="wide")
 st.title("📊 Student Feedback Analyzer with AI Recommendations")
@@ -70,7 +71,7 @@ def configure_gemini(api_key):
         return None
 
 uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
-api_key = "AIzaSyCTa1UnujR0fTUQ2tjotO33k71M15-Ja_I"
+api_key = st.text_input("🔑 Enter your Gemini API Key (for AI recommendations):", type="password")
 gemini_model = configure_gemini(api_key) if api_key else None
 
 if uploaded_file:
@@ -86,11 +87,14 @@ if uploaded_file:
     df = df[[feedback_col]].rename(columns={feedback_col: "Feedback"})
     df.dropna(subset=['Feedback'], inplace=True)
     st.subheader("📄 Sample Feedback")
-    st.dataframe(df.head())
+
 
     df['Cleaned'] = df['Feedback'].apply(preprocess)
     df[['VADER_Score', 'VADER_Label']] = df['Feedback'].apply(lambda x: pd.Series(get_vader_sentiment(x)))
+    df['AUG_VADER_Score'] = df['Cleaned'].apply(lambda x: vader_eng.polarity_scores(x)['compound'])
     df[['Fil_Score', 'Fil_Label']] = df['Cleaned'].apply(lambda x: pd.Series(get_filipino_keyword_sentiment(x)))
+    st.dataframe(df[['Feedback', 'Cleaned', 'VADER_Score', 'AUG_VADER_Score', 'VADER_Label', 'Fil_Score', 'Fil_Label']].head())
+
 
     st.subheader("✅ Sentiment Results")
 
@@ -147,6 +151,39 @@ if uploaded_file:
     st.markdown(fil_summary_text)
 
     st.subheader("📈 Sentiment Analysis of Comments")
+
+    st.markdown("**🔍 Scatterplot: VADER vs AUG_VADER Over Comment Index**")
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.scatter(df.index, df['VADER_Score'], color='blue', label='VADER Score', alpha=0.6)
+    ax.scatter(df.index, df['AUG_VADER_Score'], color='green', label='AUG_VADER Score', alpha=0.6)
+    ax.axhline(0, linestyle='--', color='gray')
+    ax.set_title('VADER vs AUG_VADER Score Over Comments')
+    ax.set_xlabel('Comment Index')
+    ax.set_ylabel('Sentiment Score')
+    ax.legend()
+    st.pyplot(fig)
+
+    st.markdown("""
+    **📊 VADER vs AUG_VADER Score Comparison**
+    This chart compares the standard VADER score (based on original/translated text) with the AUG_VADER score (based on cleaned text).
+    """)
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(df['VADER_Score'], label='VADER Score', marker='o', linestyle='-', color='blue', alpha=0.7)
+    ax.set_title('VADER Sentiment Score Over Comments')
+    ax.set_xlabel('Comment Index')
+    ax.set_ylabel('VADER Score')
+    ax.axhline(0, linestyle='--', color='gray')
+    ax.legend()
+    st.pyplot(fig)
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(df['AUG_VADER_Score'], label='AUG_VADER Score', marker='x', linestyle='--', color='green', alpha=0.7)
+    ax.set_title('AUG_VADER Sentiment Score Over Comments')
+    ax.set_xlabel('Comment Index')
+    ax.set_ylabel('AUG_VADER Score')
+    ax.axhline(0, linestyle='--', color='gray')
+    ax.legend()
+    st.pyplot(fig)
     fig, ax = plt.subplots(figsize=(10, 4))
     ax.plot(df['VADER_Score'], label='VADER', marker='o')
     ax.plot(df['Fil_Score'], label='Filipino Keywords', marker='x')
