@@ -1,0 +1,13 @@
+gensim
+streamlit
+pandas
+numpy>=1.24
+nltk
+matplotlib
+wordcloud
+langdetect
+textblob
+googletrans
+stopwordsiso
+google-generativeai
+fpdf
