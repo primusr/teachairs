@@ -22,8 +22,8 @@ nltk.download('punkt_tab')
 
 nltk.download('wordnet')
 
-st.set_page_config(page_title="Sentiment & Topic Analysis", layout="wide")
-st.title("📊 Student Feedback Analyzer with AI Recommendations")
+st.set_page_config(page_title="TeachAIRs: Sentiment & Topic Analysis", layout="wide")
+st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
