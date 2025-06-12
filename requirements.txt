@@ -11,3 +11,4 @@ googletrans
 stopwordsiso
 google-generativeai
 fpdf
+seaborn
