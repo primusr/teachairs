@@ -24,8 +24,8 @@ nltk.download('punkt_tab')
 nltk.download('wordnet')
 
 # Streamlit Setup
-st.set_page_config(page_title="Sentiment & Topic Analysis", layout="centered")
-st.title("📊 Student Feedback Analyzer with AI Recommendations")
+st.set_page_config(page_title="TeachAIRs: Sentiment & Topic Analysis", layout="centered")
+st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 
 # Load custom Filipino VADER Lexicon
 filipino_lexicon_file = st.file_uploader("📤 Upload Filipino VADER Lexicon CSV (word, score)", type=["csv"])
@@ -104,7 +104,7 @@ def configure_gemini(api_key):
     except:
         return None
 
-uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
+uploaded_file = st.file_uploader("📤 Upload Dataset CSV File", type=["csv"])
 api_key = "AIzaSyCTa1UnujR0fTUQ2tjotO33k71M15-Ja_I"
 gemini_model = configure_gemini(api_key) if api_key else None
 
