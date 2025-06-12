@@ -71,7 +71,7 @@ def configure_gemini(api_key):
         return None
 
 uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
-api_key = st.text_input("🔑 Enter your Gemini API Key (for AI recommendations):", type="password")
+api_key = "AIzaSyCTa1UnujR0fTUQ2tjotO33k71M15-Ja_I"
 gemini_model = configure_gemini(api_key) if api_key else None
 
 if uploaded_file:
