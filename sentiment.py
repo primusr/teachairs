@@ -20,6 +20,7 @@ import google.generativeai as genai
 nltk.download('vader_lexicon')
 nltk.download('stopwords')
 nltk.download('punkt')
+nltk.download('punkt_tab')
 nltk.download('wordnet')
 
 # Streamlit Setup
