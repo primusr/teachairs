@@ -204,29 +204,29 @@ if uploaded_file:
 
     st.download_button("📥 Download Sentiment Results as CSV", data=df.to_csv(index=False), file_name="sentiment_results.csv")
 
-    st.subheader("📊 Sentiment Distributions")
-    col1, col2 = st.columns(2)
-    with col1:
-        fig, ax = plt.subplots()
-        sns.countplot(data=df, x='VADER_Label', palette='Set2', ax=ax)
-        ax.set_title('VADER Sentiment')
-        st.pyplot(fig)
-    with col2:
-        fig, ax = plt.subplots()
-        sns.countplot(data=df, x='Fil_Label', palette='Set1', ax=ax)
-        ax.set_title('Filipino Keyword Sentiment')
-        st.pyplot(fig)
+    # st.subheader("📊 Sentiment Distributions")
+    # col1, col2 = st.columns(2)
+    # with col1:
+    #     fig, ax = plt.subplots()
+    #     sns.countplot(data=df, x='VADER_Label', palette='Set2', ax=ax)
+    #     ax.set_title('VADER Sentiment')
+    #     st.pyplot(fig)
+    # with col2:
+    #     fig, ax = plt.subplots()
+    #     sns.countplot(data=df, x='Fil_Label', palette='Set1', ax=ax)
+    #     ax.set_title('Filipino Keyword Sentiment')
+    #    # st.pyplot(fig)
 
-    st.subheader("📈 Sentiment Score Comparison")
-    fig, ax = plt.subplots()
-    ax.scatter(df.index, df['VADER_Score'], label='VADER', alpha=0.7)
-    ax.scatter(df.index, df['Fil_Score'], label='Filipino Keywords', alpha=0.7)
-    ax.axhline(0, color='gray', linestyle='--')
-    ax.set_title('Sentiment Polarity Scores')
-    ax.set_xlabel('Comment Index')
-    ax.set_ylabel('Polarity Score')
-    ax.legend()
-    st.pyplot(fig)
+    # st.subheader("📈 Sentiment Score Comparison")
+    # fig, ax = plt.subplots()
+    # ax.scatter(df.index, df['VADER_Score'], label='VADER', alpha=0.7)
+    # ax.scatter(df.index, df['Fil_Score'], label='Filipino Keywords', alpha=0.7)
+    # ax.axhline(0, color='gray', linestyle='--')
+    # ax.set_title('Sentiment Polarity Scores')
+    # ax.set_xlabel('Comment Index')
+    # ax.set_ylabel('Polarity Score')
+    # ax.legend()
+    # #st.pyplot(fig)
 
     st.subheader("🧠 Topic Modeling with LDA")
     texts = [text.split() for text in df['Cleaned'] if text.strip()]
