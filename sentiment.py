@@ -127,7 +127,7 @@ if uploaded_file:
     df[['VADER_Score', 'VADER_Label']] = df['Feedback'].apply(lambda x: pd.Series(get_vader_sentiment(x)))
     df['AUG_VADER_Score'] = df['Cleaned'].apply(lambda x: vader_eng.polarity_scores(x)['compound'])
     df[['Fil_Score', 'Fil_Label']] = df['Cleaned'].apply(lambda x: pd.Series(get_filipino_keyword_sentiment(x)))
-    st.dataframe(df[['Feedback', 'Cleaned', 'VADER_Score', 'AUG_VADER_Score', 'VADER_Label', 'Fil_Score', 'Fil_Label']].head())
+    st.dataframe(df[['Feedback']].head())
 
 
     st.subheader("✅ Sentiment Results")
@@ -159,84 +159,84 @@ if uploaded_file:
     """
     st.markdown(summary_text)
 
-    # Add Filipino Keyword Summary
-    fil_counts = df['Fil_Label'].value_counts()
-    total_fil = fil_counts.sum()
+    # # Add Filipino Keyword Summary
+    # fil_counts = df['Fil_Label'].value_counts()
+    # total_fil = fil_counts.sum()
 
-    fil_positive = fil_counts.get('Positive', 0)
-    fil_neutral = fil_counts.get('Neutral', 0)
-    fil_negative = fil_counts.get('Negative', 0)
+    # fil_positive = fil_counts.get('Positive', 0)
+    # fil_neutral = fil_counts.get('Neutral', 0)
+    # fil_negative = fil_counts.get('Negative', 0)
 
-    fil_positive_pct = 100 * fil_positive / total_fil
-    fil_neutral_pct = 100 * fil_neutral / total_fil
-    fil_negative_pct = 100 * fil_negative / total_fil
+    # fil_positive_pct = 100 * fil_positive / total_fil
+    # fil_neutral_pct = 100 * fil_neutral / total_fil
+    # fil_negative_pct = 100 * fil_negative / total_fil
 
-    fil_avg_score = df['Fil_Score'].mean()
-    fil_summary_text = f"""
-    **Filipino Keyword Method**  
-    **Methodology:** Keyword scoring (positive-negative matches) on preprocessed feedback. **Score:** {fil_avg_score:.4f}  
-    **Interpretation:** Overall sentiment (Fil Keywords) is generally {'positive' if fil_avg_score > 0 else 'neutral' if fil_avg_score == 0 else 'negative'}.  
-    **Dominant Category:** {'Positive' if fil_positive > fil_neutral and fil_positive > fil_negative else 'Neutral' if fil_neutral >= fil_positive and fil_neutral >= fil_negative else 'Negative'} ({max(fil_positive, fil_neutral, fil_negative)}/{total_fil} comments)  
-    **Distribution (Fil Keywords):**  
-    - Positive: {fil_positive} comments ({fil_positive_pct:.2f}%)  
-    - Neutral: {fil_neutral} comments ({fil_neutral_pct:.2f}%)  
-    - Negative: {fil_negative} comments ({fil_negative_pct:.2f}%)
-    """
-    st.markdown(fil_summary_text)
+    # fil_avg_score = df['Fil_Score'].mean()
+    # fil_summary_text = f"""
+    # **Filipino Keyword Method**  
+    # **Methodology:** Keyword scoring (positive-negative matches) on preprocessed feedback. **Score:** {fil_avg_score:.4f}  
+    # **Interpretation:** Overall sentiment (Fil Keywords) is generally {'positive' if fil_avg_score > 0 else 'neutral' if fil_avg_score == 0 else 'negative'}.  
+    # **Dominant Category:** {'Positive' if fil_positive > fil_neutral and fil_positive > fil_negative else 'Neutral' if fil_neutral >= fil_positive and fil_neutral >= fil_negative else 'Negative'} ({max(fil_positive, fil_neutral, fil_negative)}/{total_fil} comments)  
+    # **Distribution (Fil Keywords):**  
+    # - Positive: {fil_positive} comments ({fil_positive_pct:.2f}%)  
+    # - Neutral: {fil_neutral} comments ({fil_neutral_pct:.2f}%)  
+    # - Negative: {fil_negative} comments ({fil_negative_pct:.2f}%)
+    # """
+    # st.markdown(fil_summary_text)
 
     st.subheader("📈 Sentiment Analysis of Comments")
 
-    st.markdown("**🔍 Scatterplot: VADER vs AUG_VADER Over Comment Index**")
+    st.markdown("**🔍 Scatterplot: AUG_VADER Over Comment Index**")
     fig, ax = plt.subplots(figsize=(10, 4))
-    ax.scatter(df.index, df['VADER_Score'], color='blue', label='VADER Score', alpha=0.6)
+    #ax.scatter(df.index, df['VADER_Score'], color='blue', label='VADER Score', alpha=0.6)
     ax.scatter(df.index, df['AUG_VADER_Score'], color='green', label='AUG_VADER Score', alpha=0.6)
     ax.axhline(0, linestyle='--', color='gray')
-    ax.set_title('VADER vs AUG_VADER Score Over Comments')
+    ax.set_title('AUG_VADER Score Over Comments')
     ax.set_xlabel('Comment Index')
     ax.set_ylabel('Sentiment Score')
     ax.legend()
     st.pyplot(fig)
 
-    st.markdown("""
-    **📊 VADER vs AUG_VADER Score Comparison**
-    This chart compares the standard VADER score (based on original/translated text) with the AUG_VADER score (based on cleaned text).
-    """)
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(df['VADER_Score'], label='VADER Score', marker='o', linestyle='-', color='blue', alpha=0.7)
-    ax.set_title('VADER Sentiment Score Over Comments')
-    ax.set_xlabel('Comment Index')
-    ax.set_ylabel('VADER Score')
-    ax.axhline(0, linestyle='--', color='gray')
-    ax.legend()
-    st.pyplot(fig)
+    # st.markdown("""
+    # **📊 VADER vs AUG_VADER Score Comparison**
+    # This chart compares the standard VADER score (based on original/translated text) with the AUG_VADER score (based on cleaned text).
+    # """)
+    # fig, ax = plt.subplots(figsize=(10, 4))
+    # ax.plot(df['VADER_Score'], label='VADER Score', marker='o', linestyle='-', color='blue', alpha=0.7)
+    # ax.set_title('VADER Sentiment Score Over Comments')
+    # ax.set_xlabel('Comment Index')
+    # ax.set_ylabel('VADER Score')
+    # ax.axhline(0, linestyle='--', color='gray')
+    # ax.legend()
+    # st.pyplot(fig)
 
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(df['AUG_VADER_Score'], label='AUG_VADER Score', marker='x', linestyle='--', color='green', alpha=0.7)
-    ax.set_title('AUG_VADER Sentiment Score Over Comments')
-    ax.set_xlabel('Comment Index')
-    ax.set_ylabel('AUG_VADER Score')
-    ax.axhline(0, linestyle='--', color='gray')
-    ax.legend()
-    st.pyplot(fig)
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(df['VADER_Score'], label='VADER', marker='o')
-    ax.plot(df['Fil_Score'], label='Filipino Keywords', marker='x')
-    ax.set_title('Sentiment Analysis Over Comments')
-    ax.set_xlabel('Comment Index')
-    ax.set_ylabel('Sentiment Score')
-    ax.axhline(0, linestyle='--', color='gray')
-    ax.legend()
-    st.pyplot(fig)
+    # fig, ax = plt.subplots(figsize=(10, 4))
+    # ax.plot(df['AUG_VADER_Score'], label='AUG_VADER Score', marker='x', linestyle='--', color='green', alpha=0.7)
+    # ax.set_title('AUG_VADER Sentiment Score Over Comments')
+    # ax.set_xlabel('Comment Index')
+    # ax.set_ylabel('AUG_VADER Score')
+    # ax.axhline(0, linestyle='--', color='gray')
+    # ax.legend()
+    # st.pyplot(fig)
+    # fig, ax = plt.subplots(figsize=(10, 4))
+    # ax.plot(df['VADER_Score'], label='VADER', marker='o')
+    # ax.plot(df['Fil_Score'], label='Filipino Keywords', marker='x')
+    # ax.set_title('Sentiment Analysis Over Comments')
+    # ax.set_xlabel('Comment Index')
+    # ax.set_ylabel('Sentiment Score')
+    # ax.axhline(0, linestyle='--', color='gray')
+    # ax.legend()
+    # st.pyplot(fig)
 
-    st.subheader("📊 Visual Summary of Sentiment Distribution")
-    fig, ax = plt.subplots()
-    sns.histplot(df['VADER_Score'], kde=True, color='blue', label='VADER', ax=ax)
-    sns.histplot(df['Fil_Score'], kde=True, color='red', label='Filipino', ax=ax)
-    ax.legend()
-    st.pyplot(fig)
-    st.dataframe(df.head())
+    # st.subheader("📊 Visual Summary of Sentiment Distribution")
+    # fig, ax = plt.subplots()
+    # sns.histplot(df['VADER_Score'], kde=True, color='blue', label='VADER', ax=ax)
+    # sns.histplot(df['Fil_Score'], kde=True, color='red', label='Filipino', ax=ax)
+    # ax.legend()
+    # st.pyplot(fig)
+    # st.dataframe(df.head())
 
-    st.download_button("📥 Download Sentiment Results as CSV", data=df.to_csv(index=False), file_name="sentiment_results.csv")
+    # st.download_button("📥 Download Sentiment Results as CSV", data=df.to_csv(index=False), file_name="sentiment_results.csv")
 
     # st.subheader("📊 Sentiment Distributions")
     # col1, col2 = st.columns(2)
@@ -294,12 +294,12 @@ if uploaded_file:
             fil_avg = topic_subset['Fil_Score'].mean()
             topic_sentiments.append({
                 'Topic': f'Topic #{i+1}',
-                'Avg VADER Score': round(vader_avg, 2),
-                'Avg Filipino Score': round(fil_avg, 2),
-                'Comment Count': len(topic_subset)
+                'Aug VADER Score': round(vader_avg, 2),
+                #'Avg Filipino Score': round(fil_avg, 2),
+                #'Comment Count': len(topic_subset)
             })
-            st.markdown(f"- Avg VADER Sentiment: **{vader_avg:.2f}**")
-            st.markdown(f"- Avg Filipino Keyword Score: **{fil_avg:.2f}**")
+            st.markdown(f"- Aug VADER Sentiment: **{vader_avg:.2f}**")
+            #st.markdown(f"- Avg Filipino Keyword Score: **{fil_avg:.2f}**")
 
         if gemini_model:
             prompt = f"Suggest a 3-5 word label for the following topic words: {words}"
@@ -338,7 +338,7 @@ if uploaded_file:
                 detailed_topic_df.loc[i, 'AI Label'] = response.text.strip()
 
     if not detailed_topic_df.empty:
-        show_cols = ['Topic ID', 'AI Label', 'Top Keywords', 'Num Comments', 'Avg VADER Score', 'Avg Filipino Score', 'VADER Eng Dist (%)', 'VADER Aug Dist (%)', 'Fil. Keyword Dist (%)']
+        show_cols = ['Topic ID', 'AI Label', 'Top Keywords', 'Num Comments', 'Aug VADER Score', 'VADER Eng Dist (%)', 'VADER Aug Dist (%)']
         st.dataframe(detailed_topic_df[show_cols])
     if topic_sentiments:
         st.dataframe(pd.DataFrame(topic_sentiments))
