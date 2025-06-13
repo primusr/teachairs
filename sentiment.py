@@ -105,7 +105,7 @@ def configure_gemini(api_key):
         return None
 
 uploaded_file = st.file_uploader("📤 Upload Dataset CSV File", type=["csv"])
-api_key = "AIzaSyCTa1UnujR0fTUQ2tjotO33k71M15-Ja_I"
+api_key = "AIzaSyB0-ljbBVXc9wtX0J9lFMT2ZXyGi_scqfg"
 gemini_model = configure_gemini(api_key) if api_key else None
 
 if uploaded_file:
