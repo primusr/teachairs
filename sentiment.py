@@ -100,7 +100,7 @@ def get_filipino_keyword_sentiment(text):
 def configure_gemini(api_key):
     try:
         genai.configure(api_key=api_key)
-        return genai.GenerativeModel('models/gemini-1.5-flash')
+        return genai.GenerativeModel('models/gemini-2.0-flash')
     except:
         return None
 
