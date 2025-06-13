@@ -116,6 +116,7 @@ if uploaded_file:
     except pd.errors.EmptyDataError:
         st.error("The uploaded CSV file is empty or unreadable.")
         st.stop()
+
     default_cols = ['feedback', 'comments', 'Comment', 'Strengths']
     feedback_col = next((col for col in default_cols if col in df.columns), df.columns[0])
     df = df[[feedback_col]].rename(columns={feedback_col: "Feedback"})
@@ -127,7 +128,7 @@ if uploaded_file:
     df[['VADER_Score', 'VADER_Label']] = df['Feedback'].apply(lambda x: pd.Series(get_vader_sentiment(x)))
     df['AUG_VADER_Score'] = df['Cleaned'].apply(lambda x: vader_eng.polarity_scores(x)['compound'])
     df[['Fil_Score', 'Fil_Label']] = df['Cleaned'].apply(lambda x: pd.Series(get_filipino_keyword_sentiment(x)))
-    st.dataframe(df[['Feedback']].head())
+    st.dataframe(df[['Feedback']])
 
 
     st.subheader("✅ Sentiment Results")
