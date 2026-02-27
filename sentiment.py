@@ -437,10 +437,16 @@ if uploaded_file:
     if gemini_model:
         st.subheader("💡 AI Teaching Recommendations")
 
+        # Ensure correlation exists
+        try:
+            corr_value = f"{correlation:.2f}"
+        except:
+            corr_value = "Not computed"
+
         summary = f"""
         Average Sentiment Score: {avg_score:.2f}
         Distribution: {counts.to_dict()}
-        Correlation Between Models: {correlation:.2f}
+        Correlation Between Models: {corr_value}
         """
 
         response = gemini_model.generate_content(
