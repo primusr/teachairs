@@ -1,27 +1,40 @@
-# Import Libraries
-import streamlit as st
+import os, re, string, time, warnings, textwrap, io
+from collections import Counter, deque
+from datetime import datetime
 import pandas as pd
-import re
-import string
-import nltk
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
-from nltk.corpus import stopwords
+import nltk
+from nltk.corpus import stopwords as nltk_stopwords
 from nltk.stem import WordNetLemmatizer
-from langdetect import detect
-from googletrans import Translator
-from gensim import corpora
-from gensim.models import LdaModel
-from wordcloud import WordCloud
-import google.generativeai as genai
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from stopwordsiso import stopwords as custom_iso_stopwords
+from langdetect import detect, DetectorFactory
+warnings.filterwarnings('ignore')
+try:
+    from IPython.display import Markdown, display
+except ImportError:
+    Markdown = None
 
-# Download necessary NLTK corpora
-nltk.download('vader_lexicon')
-nltk.download('stopwords')
-nltk.download('punkt')
-nltk.download('punkt_tab')
-nltk.download('wordnet')
+def display_wrapped_text(text, width=80):
+    if Markdown:
+        display(Markdown(text))
+    else:
+        wrapped_lines = textwrap.wrap(text, width=width)
+        for line in wrapped_lines:
+            print(line)
+
+#Topic Modeling#
+
+from gensim import corpora
+from gensim.models import LdaModel, CoherenceModel
+from wordcloud import WordCloud
+
+#Generative AI#
+
+import google.generativeai as genai
+from google.colab import userdata
 
 # Streamlit Setup
 st.set_page_config(page_title="TeachAIRs: Sentiment & Topic Analysis", layout="centered")
