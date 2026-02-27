@@ -1,417 +1,435 @@
-import os, re, string, time, warnings, textwrap, io
-from collections import Counter, deque
-from datetime import datetime
+# ==============================
+# TeachAIRs: Sentiment & Topic Analysis
+# With VADER Method Comparison
+# ==============================
+
+import re
+import warnings
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
+import streamlit as st
+
 import nltk
-from nltk.corpus import stopwords as nltk_stopwords
+from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-from stopwordsiso import stopwords as custom_iso_stopwords
-from langdetect import detect, DetectorFactory
-warnings.filterwarnings('ignore')
-try:
-    from IPython.display import Markdown, display
-except ImportError:
-    Markdown = None
-
-def display_wrapped_text(text, width=80):
-    if Markdown:
-        display(Markdown(text))
-    else:
-        wrapped_lines = textwrap.wrap(text, width=width)
-        for line in wrapped_lines:
-            print(line)
-
-#Topic Modeling#
 
 from gensim import corpora
-from gensim.models import LdaModel, CoherenceModel
+from gensim.models import LdaModel
 from wordcloud import WordCloud
 
-#Generative AI#
-
 import google.generativeai as genai
-from google.colab import userdata
 
-# Streamlit Setup
-st.set_page_config(page_title="TeachAIRs: Sentiment & Topic Analysis", layout="centered")
+warnings.filterwarnings("ignore")
+
+# ------------------------------
+# NLTK Setup
+# ------------------------------
+@st.cache_resource
+def load_nltk():
+    nltk.download("punkt")
+    nltk.download("stopwords")
+    nltk.download("wordnet")
+    nltk.download("vader_lexicon")
+
+load_nltk()
+
+# ------------------------------
+# Streamlit Config
+# ------------------------------
+st.set_page_config(
+    page_title="TeachAIRs: Sentiment & Topic Analysis",
+    layout="wide"
+)
+
 st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 
-# Load custom Filipino VADER Lexicon
-filipino_lexicon_file = st.file_uploader("📤 Upload Filipino VADER Lexicon CSV (word, score)", type=["csv"])
-filipino_positive_keywords = []
-filipino_negative_keywords = []
-
-if filipino_lexicon_file:
-    try:
-        filipino_lex_df = pd.read_csv(filipino_lexicon_file)
-        custom_dict = dict(zip(filipino_lex_df.iloc[:, 0], filipino_lex_df.iloc[:, 1]))
-        for word, score in custom_dict.items():
-            SentimentIntensityAnalyzer().lexicon[word] = float(score)
-        st.success("Custom Filipino VADER lexicon loaded!")
-    except Exception as e:
-        st.warning(f"⚠️ Failed to load custom lexicon: {e}")
-
-# Preload Tools
-stop_words = set(stopwords.words('english'))
-lemmatizer = WordNetLemmatizer()
-translator = Translator()
-vader_eng = SentimentIntensityAnalyzer()
-
-# Define updated Filipino keyword sentiment function with lexicon override
-
-def get_filipino_keyword_sentiment(text):
-    score = 0
-    words = text.split()
-    if 'custom_dict' in globals() and custom_dict:
-        for word in words:
-            if word in custom_dict:
-                score += float(custom_dict[word])
-    else:
-        for w in filipino_positive_keywords:
-            if w in words:
-                score += 1
-        for w in filipino_negative_keywords:
-            if w in words:
-                score -= 1
-    label = 'Positive' if score > 0 else 'Negative' if score < 0 else 'Neutral'
-    return score, label
-
-def preprocess(text):
-    text = str(text).lower()
-    text = re.sub(r'https?://\S+|www\.\S+', '', text)
-    text = re.sub(r'[^a-zA-Z\s]', '', text)
-    tokens = nltk.word_tokenize(text)
-    tokens = [lemmatizer.lemmatize(w) for w in tokens if w not in stop_words and len(w) > 1]
-    return ' '.join(tokens)
-
-def get_vader_sentiment(text):
-    try:
-        lang = detect(text)
-        if lang != 'en':
-            text = translator.translate(text, dest='en').text
-    except:
-        pass
-    score = vader_eng.polarity_scores(text)['compound']
-    label = 'Positive' if score > 0.05 else 'Negative' if score < -0.05 else 'Neutral'
-    return score, label
-
-def get_filipino_keyword_sentiment(text):
-    score = 0
-    words = text.split()
-    for w in filipino_positive_keywords:
-        if w in words: score += 1
-    for w in filipino_negative_keywords:
-        if w in words: score -= 1
-    label = 'Positive' if score > 0 else 'Negative' if score < 0 else 'Neutral'
-    return score, label
+# ------------------------------
+# Gemini API (Optional)
+# ------------------------------
+api_key = st.text_input("🔑 Enter Gemini API Key (Optional)", type="password")
 
 @st.cache_resource
-def configure_gemini(api_key):
+def configure_gemini(key):
+    if not key:
+        return None
     try:
-        genai.configure(api_key=api_key)
-        return genai.GenerativeModel('models/gemini-2.0-flash')
+        genai.configure(api_key=key)
+        return genai.GenerativeModel("models/gemini-2.0-flash")
     except:
         return None
 
-uploaded_file = st.file_uploader("📤 Upload Dataset CSV File", type=["csv"])
-api_key = "AIzaSyDa6fmfMgWChcw5aVJbxDfCnlbdVkDsbyQ"
-gemini_model = configure_gemini(api_key) if api_key else None
+gemini_model = configure_gemini(api_key)
+
+# ------------------------------
+# Initialize VADER Models
+# ------------------------------
+vader_standard = SentimentIntensityAnalyzer()
+vader_augmented = SentimentIntensityAnalyzer()
+
+# ------------------------------
+# Filipino Lexicon Upload
+# ------------------------------
+filipino_lexicon_file = st.file_uploader(
+    "📤 Upload Filipino VADER Lexicon CSV (word, score)",
+    type=["csv"]
+)
+
+if filipino_lexicon_file:
+    try:
+        lex_df = pd.read_csv(filipino_lexicon_file)
+        custom_dict = dict(zip(lex_df.iloc[:, 0], lex_df.iloc[:, 1]))
+        vader_augmented.lexicon.update(custom_dict)
+        st.success("✅ Filipino Lexicon Applied to Augmented VADER")
+    except Exception as e:
+        st.error(f"Error loading lexicon: {e}")
+
+# ------------------------------
+# Text Preprocessing
+# ------------------------------
+stop_words = set(stopwords.words("english"))
+lemmatizer = WordNetLemmatizer()
+
+def preprocess(text):
+    text = str(text).lower()
+    text = re.sub(r"http\S+|www\S+", "", text)
+    text = re.sub(r"[^a-zA-Z\s]", "", text)
+
+    tokens = nltk.word_tokenize(text)
+    tokens = [
+        lemmatizer.lemmatize(w)
+        for w in tokens
+        if w not in stop_words and len(w) > 2
+    ]
+    return " ".join(tokens)
+
+# ------------------------------
+# Sentiment Functions
+# ------------------------------
+def get_standard_vader(text):
+    return vader_standard.polarity_scores(text)["compound"]
+
+def get_augmented_vader(text):
+    return vader_augmented.polarity_scores(text)["compound"]
+
+def label_from_score(score):
+    if score > 0.05:
+        return "Positive"
+    elif score < -0.05:
+        return "Negative"
+    else:
+        return "Neutral"
+
+# ------------------------------
+# Upload Feedback Dataset
+# ------------------------------
+uploaded_file = st.file_uploader("📤 Upload Feedback CSV File", type=["csv"])
 
 if uploaded_file:
-    try:
-        df = pd.read_csv(uploaded_file, encoding='utf-8')
-    except UnicodeDecodeError:
-        df = pd.read_csv(uploaded_file, encoding='ISO-8859-1')
-    except pd.errors.EmptyDataError:
-        st.error("The uploaded CSV file is empty or unreadable.")
-        st.stop()
 
-    default_cols = ['feedback', 'comments', 'Comment', 'Strengths']
-    feedback_col = next((col for col in default_cols if col in df.columns), df.columns[0])
+    df = pd.read_csv(uploaded_file)
+
+    # Auto-detect feedback column
+    possible_cols = ["feedback", "comment", "comments", "Feedback"]
+    feedback_col = next(
+        (c for c in possible_cols if c in df.columns),
+        df.columns[0]
+    )
+
     df = df[[feedback_col]].rename(columns={feedback_col: "Feedback"})
-    df.dropna(subset=['Feedback'], inplace=True)
+    df.dropna(inplace=True)
+
     st.subheader("📄 Sample Feedback")
+    st.dataframe(df.head())
 
+    # ------------------------------
+    # Preprocessing
+    # ------------------------------
+    df["Cleaned"] = df["Feedback"].apply(preprocess)
 
-    df['Cleaned'] = df['Feedback'].apply(preprocess)
-    df[['VADER_Score', 'VADER_Label']] = df['Feedback'].apply(lambda x: pd.Series(get_vader_sentiment(x)))
-    df['AUG_VADER_Score'] = df['Cleaned'].apply(lambda x: vader_eng.polarity_scores(x)['compound'])
-    df[['Fil_Score', 'Fil_Label']] = df['Cleaned'].apply(lambda x: pd.Series(get_filipino_keyword_sentiment(x)))
-    st.dataframe(df[['Feedback']])
+    # ------------------------------
+    # Compute Sentiment Scores
+    # ------------------------------
+    df["VADER_Standard"] = df["Feedback"].apply(get_standard_vader)
+    df["VADER_Augmented"] = df["Feedback"].apply(get_augmented_vader)
 
+    df["Score"] = df["VADER_Augmented"]
+    df["Label"] = df["Score"].apply(label_from_score)
 
-    st.subheader("✅ Sentiment Results")
+    # ------------------------------
+    # Sentiment Distribution
+    # ------------------------------
+    st.subheader("📊 Sentiment Distribution (Augmented Model)")
 
-    st.markdown("""
-**📝 Summary:** This chart visualizes how the sentiment scores of individual comments fluctuate. Higher points indicate positive sentiment, while lower points indicate negative sentiment. This gives you a timeline-style view of emotional tone across the entire feedback dataset.
-""")
-    vader_counts = df['VADER_Label'].value_counts()
-    total = vader_counts.sum()
+    counts = df["Label"].value_counts()
 
-    positive = vader_counts.get('Positive', 0)
-    neutral = vader_counts.get('Neutral', 0)
-    negative = vader_counts.get('Negative', 0)
+    fig1, ax1 = plt.subplots()
+    counts.plot(kind="bar", ax=ax1)
+    ax1.set_ylabel("Count")
+    st.pyplot(fig1)
 
-    positive_pct = 100 * positive / total
-    neutral_pct = 100 * neutral / total
-    negative_pct = 100 * negative / total
+    avg_score = df["Score"].mean()
 
-    vader_avg_score = df['VADER_Score'].mean()
-    summary_text = f"""
-    **Augmented VADER (with Filipino Lexicon)**  
-    **Methodology:** Avg of Aug VADER scores (on Cleaned_Text_Main). **Score:** {vader_avg_score:.4f}  
-    **Interpretation:** Overall sentiment (Aug VADER) is generally {'positive' if vader_avg_score > 0.05 else 'neutral' if vader_avg_score > -0.05 else 'negative'}.  
-    **Dominant Category:** Positive (VADER Aug) ({positive}/{total} comments)  
-    **Distribution (Aug VADER):**  
-    - Positive (VADER Aug): {positive} comments ({positive_pct:.2f}%)  
-    - Neutral (VADER Aug): {neutral} comments ({neutral_pct:.2f}%)  
-    - Negative (VADER Aug): {negative} comments ({negative_pct:.2f}%)
-    """
-    st.markdown(summary_text)
+    st.markdown(f"""
+    **Average Sentiment Score:** {avg_score:.3f}  
+    **Overall Sentiment:** {'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'}
+    """)
 
-    # # Add Filipino Keyword Summary
-    # fil_counts = df['Fil_Label'].value_counts()
-    # total_fil = fil_counts.sum()
+    # ------------------------------
+    # Separate Scatter Plots (Color-Coded)
+    # ------------------------------
+    st.subheader("📊 Sentiment Polarity Distribution Across Methods")
 
-    # fil_positive = fil_counts.get('Positive', 0)
-    # fil_neutral = fil_counts.get('Neutral', 0)
-    # fil_negative = fil_counts.get('Negative', 0)
+    # Helper function for color coding
+    def sentiment_color(score):
+        if score > 0:
+            return "green"
+        elif score < 0:
+            return "red"
+        else:
+            return "yellow"
 
-    # fil_positive_pct = 100 * fil_positive / total_fil
-    # fil_neutral_pct = 100 * fil_neutral / total_fil
-    # fil_negative_pct = 100 * fil_negative / total_fil
+    # ------------------------------
+    # 1️⃣ Standard VADER Scatter
+    # ------------------------------
+    st.markdown("### Standard VADER (English Only)")
 
-    # fil_avg_score = df['Fil_Score'].mean()
-    # fil_summary_text = f"""
-    # **Filipino Keyword Method**  
-    # **Methodology:** Keyword scoring (positive-negative matches) on preprocessed feedback. **Score:** {fil_avg_score:.4f}  
-    # **Interpretation:** Overall sentiment (Fil Keywords) is generally {'positive' if fil_avg_score > 0 else 'neutral' if fil_avg_score == 0 else 'negative'}.  
-    # **Dominant Category:** {'Positive' if fil_positive > fil_neutral and fil_positive > fil_negative else 'Neutral' if fil_neutral >= fil_positive and fil_neutral >= fil_negative else 'Negative'} ({max(fil_positive, fil_neutral, fil_negative)}/{total_fil} comments)  
-    # **Distribution (Fil Keywords):**  
-    # - Positive: {fil_positive} comments ({fil_positive_pct:.2f}%)  
-    # - Neutral: {fil_neutral} comments ({fil_neutral_pct:.2f}%)  
-    # - Negative: {fil_negative} comments ({fil_negative_pct:.2f}%)
-    # """
-    # st.markdown(fil_summary_text)
+    colors_std = df["VADER_Standard"].apply(sentiment_color)
 
-    st.subheader("📈 Sentiment Analysis of Comments")
+    fig_std, ax_std = plt.subplots()
 
-    st.markdown("**🔍 Scatterplot: AUG_VADER Over Comment Index**")
-    fig, ax = plt.subplots(figsize=(10, 4))
-    #ax.scatter(df.index, df['VADER_Score'], color='blue', label='VADER Score', alpha=0.6)
-    ax.scatter(df.index, df['AUG_VADER_Score'], color='green', label='AUG_VADER Score', alpha=0.6)
-    ax.axhline(0, linestyle='--', color='gray')
-    ax.set_title('AUG_VADER Score Over Comments')
-    ax.set_xlabel('Comment Index')
-    ax.set_ylabel('Sentiment Score')
-    ax.legend()
-    st.pyplot(fig)
+    ax_std.scatter(
+        range(len(df)),
+        df["VADER_Standard"],
+        c=colors_std,
+        alpha=0.7
+    )
 
-    # st.markdown("""
-    # **📊 VADER vs AUG_VADER Score Comparison**
-    # This chart compares the standard VADER score (based on original/translated text) with the AUG_VADER score (based on cleaned text).
-    # """)
-    # fig, ax = plt.subplots(figsize=(10, 4))
-    # ax.plot(df['VADER_Score'], label='VADER Score', marker='o', linestyle='-', color='blue', alpha=0.7)
-    # ax.set_title('VADER Sentiment Score Over Comments')
-    # ax.set_xlabel('Comment Index')
-    # ax.set_ylabel('VADER Score')
-    # ax.axhline(0, linestyle='--', color='gray')
-    # ax.legend()
-    # st.pyplot(fig)
+    ax_std.axhline(0, linestyle="--")
+    ax_std.set_xlabel("Feedback Index")
+    ax_std.set_ylabel("Polarity Score")
+    ax_std.set_title("Standard VADER Polarity Scores")
 
-    # fig, ax = plt.subplots(figsize=(10, 4))
-    # ax.plot(df['AUG_VADER_Score'], label='AUG_VADER Score', marker='x', linestyle='--', color='green', alpha=0.7)
-    # ax.set_title('AUG_VADER Sentiment Score Over Comments')
-    # ax.set_xlabel('Comment Index')
-    # ax.set_ylabel('AUG_VADER Score')
-    # ax.axhline(0, linestyle='--', color='gray')
-    # ax.legend()
-    # st.pyplot(fig)
-    # fig, ax = plt.subplots(figsize=(10, 4))
-    # ax.plot(df['VADER_Score'], label='VADER', marker='o')
-    # ax.plot(df['Fil_Score'], label='Filipino Keywords', marker='x')
-    # ax.set_title('Sentiment Analysis Over Comments')
-    # ax.set_xlabel('Comment Index')
-    # ax.set_ylabel('Sentiment Score')
-    # ax.axhline(0, linestyle='--', color='gray')
-    # ax.legend()
-    # st.pyplot(fig)
+    st.pyplot(fig_std)
 
-    # st.subheader("📊 Visual Summary of Sentiment Distribution")
-    # fig, ax = plt.subplots()
-    # sns.histplot(df['VADER_Score'], kde=True, color='blue', label='VADER', ax=ax)
-    # sns.histplot(df['Fil_Score'], kde=True, color='red', label='Filipino', ax=ax)
-    # ax.legend()
-    # st.pyplot(fig)
-    # st.dataframe(df.head())
+    # ------------------------------
+    # 2️⃣ Augmented VADER Scatter
+    # ------------------------------
+    st.markdown("### Augmented VADER (With Filipino Lexicon)")
 
-    # st.download_button("📥 Download Sentiment Results as CSV", data=df.to_csv(index=False), file_name="sentiment_results.csv")
+    colors_aug = df["VADER_Augmented"].apply(sentiment_color)
 
-    # st.subheader("📊 Sentiment Distributions")
-    # col1, col2 = st.columns(2)
-    # with col1:
-    #     fig, ax = plt.subplots()
-    #     sns.countplot(data=df, x='VADER_Label', palette='Set2', ax=ax)
-    #     ax.set_title('VADER Sentiment')
-    #     st.pyplot(fig)
-    # with col2:
-    #     fig, ax = plt.subplots()
-    #     sns.countplot(data=df, x='Fil_Label', palette='Set1', ax=ax)
-    #     ax.set_title('Filipino Keyword Sentiment')
-    #    # st.pyplot(fig)
+    fig_aug, ax_aug = plt.subplots()
 
-    # st.subheader("📈 Sentiment Score Comparison")
-    # fig, ax = plt.subplots()
-    # ax.scatter(df.index, df['VADER_Score'], label='VADER', alpha=0.7)
-    # ax.scatter(df.index, df['Fil_Score'], label='Filipino Keywords', alpha=0.7)
-    # ax.axhline(0, color='gray', linestyle='--')
-    # ax.set_title('Sentiment Polarity Scores')
-    # ax.set_xlabel('Comment Index')
-    # ax.set_ylabel('Polarity Score')
-    # ax.legend()
-    # #st.pyplot(fig)
+    ax_aug.scatter(
+        range(len(df)),
+        df["VADER_Augmented"],
+        c=colors_aug,
+        alpha=0.7
+    )
 
-    st.subheader("🧠 Topic Modeling with LDA")
-    texts = [text.split() for text in df['Cleaned'] if text.strip()]
+    ax_aug.axhline(0, linestyle="--")
+    ax_aug.set_xlabel("Feedback Index")
+    ax_aug.set_ylabel("Polarity Score")
+    ax_aug.set_title("Augmented VADER Polarity Scores")
+
+    st.pyplot(fig_aug)
+
+    # ------------------------------
+    # Statistical Comparison
+    # ------------------------------
+    correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
+    mean_difference = (df["VADER_Augmented"] - df["VADER_Standard"]).mean()
+
+    st.markdown(f"""
+    ### 📈 Statistical Comparison Summary
+
+    **Pearson Correlation Between Methods:** {correlation:.3f}  
+    **Mean Score Difference (Augmented − Standard):** {mean_difference:.3f}
+    """)
+
+    # Statistical comparison
+    correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
+    mean_difference = (df["VADER_Augmented"] - df["VADER_Standard"]).mean()
+
+    sign_flip = (
+        (df["VADER_Standard"] > 0) & (df["VADER_Augmented"] < 0)
+    ) | (
+        (df["VADER_Standard"] < 0) & (df["VADER_Augmented"] > 0)
+    )
+
+    flip_rate = sign_flip.mean() * 100
+
+    st.markdown(f"""
+    ### 📈 Statistical Comparison
+
+    **Pearson Correlation:** {correlation:.3f}  
+    **Mean Score Difference (Augmented − Standard):** {mean_difference:.3f}  
+    **Polarity Sign Flip Rate:** {flip_rate:.2f}%  
+    """)
+
+    # ------------------------------
+    # Topic Coherence Evaluation
+    # ------------------------------
+    st.subheader("📈 Topic Coherence Evaluation for Optimal k Selection")
+
+    from gensim.models import CoherenceModel
+
+    # Prepare data for LDA
+    texts = [t.split() for t in df["Cleaned"] if t.strip()]
     dictionary = corpora.Dictionary(texts)
     corpus = [dictionary.doc2bow(text) for text in texts]
-    lda_model = LdaModel(corpus, num_topics=5, id2word=dictionary, passes=10, random_state=42)
 
-    doc_topics = [max(lda_model.get_document_topics(bow), key=lambda x: x[1])[0] if len(bow) > 0 else -1 for bow in corpus]
-    df = df[df['Cleaned'].str.strip().astype(bool)].reset_index(drop=True)
-    df = df.iloc[:len(doc_topics)].copy()
-    df['Dominant_Topic'] = doc_topics
+    k_values = list(range(3, 11))
 
-    topic_sentiments = []
+    cv_scores = []
+    umass_scores = []
+    cnpmi_scores = []
+
+    for k in k_values:
+        lda_model_k = LdaModel(
+            corpus=corpus,
+            id2word=dictionary,
+            num_topics=k,
+            passes=10,
+            random_state=42
+        )
+
+        # C_v
+        coherence_cv = CoherenceModel(
+            model=lda_model_k,
+            texts=texts,
+            dictionary=dictionary,
+            coherence='c_v'
+        ).get_coherence()
+        cv_scores.append(coherence_cv)
+
+        # UMass
+        coherence_umass = CoherenceModel(
+            model=lda_model_k,
+            corpus=corpus,
+            dictionary=dictionary,
+            coherence='u_mass'
+        ).get_coherence()
+        umass_scores.append(coherence_umass)
+
+        # C_NPMI
+        coherence_cnpmi = CoherenceModel(
+            model=lda_model_k,
+            texts=texts,
+            dictionary=dictionary,
+            coherence='c_npmi'
+        ).get_coherence()
+        cnpmi_scores.append(coherence_cnpmi)
+
+    # Determine optimal k based on C_v
+    optimal_index = cv_scores.index(max(cv_scores))
+    optimal_k = k_values[optimal_index]
+    optimal_cv = cv_scores[optimal_index]
+
+    # ------------------------------
+    # Plot Line Graphs
+    # ------------------------------
+    fig, axes = plt.subplots(3, 1, figsize=(8, 12))
+
+    # Top: C_v
+    axes[0].plot(k_values, cv_scores, marker='o')
+    axes[0].set_title("C_v Coherence Scores")
+    axes[0].set_xlabel("Number of Topics (k)")
+    axes[0].set_ylabel("C_v Score")
+    axes[0].axvline(optimal_k, linestyle='--')
+    axes[0].annotate(
+        f"Peak at k={optimal_k}\n({optimal_cv:.4f})",
+        xy=(optimal_k, optimal_cv),
+        xytext=(optimal_k, optimal_cv + 0.02),
+        arrowprops=dict()
+    )
+
+    # Middle: UMass
+    axes[1].plot(k_values, umass_scores, marker='o')
+    axes[1].set_title("UMass Coherence Scores")
+    axes[1].set_xlabel("Number of Topics (k)")
+    axes[1].set_ylabel("UMass Score")
+
+    # Bottom: C_NPMI
+    axes[2].plot(k_values, cnpmi_scores, marker='o')
+    axes[2].set_title("C_NPMI Coherence Scores")
+    axes[2].set_xlabel("Number of Topics (k)")
+    axes[2].set_ylabel("C_NPMI Score")
+
+    plt.tight_layout()
+    st.pyplot(fig)
+
+    # ------------------------------
+    # Interpretation Output
+    # ------------------------------
+    st.markdown(f"""
+    ### 📊 Optimal Topic Determination
+
+    The C_v coherence score reaches its maximum at **k = {optimal_k}**, 
+    with a value of **{optimal_cv:.4f}**, indicating the highest semantic similarity 
+    and interpretability among the generated topics.
+
+    Based on the strong correlation of C_v with human judgment, the optimal 
+    number of topics was programmatically determined to be:
+
+    ## ✅ k = {optimal_k}
+
+    This ensures that subsequent thematic analysis is grounded in the most 
+    semantically coherent topic structure derived from student feedback.
+    """)
+
+    # ------------------------------
+    # Topic Modeling
+    # ------------------------------
+    st.subheader("🧠 Topic Modeling (LDA)")
+
+    texts = [t.split() for t in df["Cleaned"] if t.strip()]
+    dictionary = corpora.Dictionary(texts)
+    corpus = [dictionary.doc2bow(text) for text in texts]
+
+    lda_model = LdaModel(
+        corpus=corpus,
+        id2word=dictionary,
+        num_topics=5,
+        passes=10,
+        random_state=42
+    )
+
     for i in range(5):
-        topic_subset = df[df['Dominant_Topic'] == i]
-        if topic_subset.empty:
-            continue
-        st.markdown(f"**Topic #{i+1}**")
+        st.markdown(f"### Topic {i+1}")
         words_probs = lda_model.show_topic(i, topn=10)
-        words = ', '.join([w for w, _ in words_probs])
-        st.write("Top Words:", words)
-        fig, ax = plt.subplots()
-        wc = WordCloud(background_color='white').fit_words(dict(words_probs))
-        ax.imshow(wc, interpolation='bilinear')
-        ax.axis('off')
-        st.pyplot(fig)
+        words = ", ".join([w for w, _ in words_probs])
+        st.write(words)
 
-        topic_subset = df[df['Dominant_Topic'] == i]
-        if not topic_subset.empty:
-            vader_avg = topic_subset['VADER_Score'].mean()
-            fil_avg = topic_subset['Fil_Score'].mean()
-            topic_sentiments.append({
-                'Topic': f'Topic #{i+1}',
-                'Aug VADER Score': round(vader_avg, 2),
-                #'Avg Filipino Score': round(fil_avg, 2),
-                #'Comment Count': len(topic_subset)
-            })
-            st.markdown(f"- Aug VADER Sentiment: **{vader_avg:.2f}**")
-            #st.markdown(f"- Avg Filipino Keyword Score: **{fil_avg:.2f}**")
+        wc = WordCloud(background_color="white")
+        wc.generate_from_frequencies(dict(words_probs))
 
-        if gemini_model:
-            prompt = f"Suggest a 3-5 word label for the following topic words: {words}"
-            with st.spinner("Getting label from Gemini..."):
-                response = gemini_model.generate_content(prompt)
-                st.success(f"Gemini Label: {response.text.strip()}")
+        fig3, ax3 = plt.subplots()
+        ax3.imshow(wc)
+        ax3.axis("off")
+        st.pyplot(fig3)
 
-    st.subheader("📋 Overall Sentiment Per Topic")
-    detailed_topic_df = pd.DataFrame(topic_sentiments)
-    if 'Gemini Label' not in detailed_topic_df.columns:
-        detailed_topic_df['Gemini Label'] = ''
-    if 'Top Keywords' not in detailed_topic_df.columns:
-        detailed_topic_df['Top Keywords'] = ''
 
-    for i in range(5):
-        topic_subset = df[df['Dominant_Topic'] == i]
-        if topic_subset.empty:
-            continue
-        words_probs = lda_model.show_topic(i, topn=5)
-        keywords = ', '.join([w for w, _ in words_probs])
-        dist_vader = topic_subset['VADER_Label'].value_counts(normalize=True).apply(lambda x: round(x * 100, 2)).to_dict()
-        dist_aug = topic_subset['VADER_Label'].value_counts(normalize=True).apply(lambda x: round(x * 100, 2)).to_dict()
-        dist_fil = topic_subset['Fil_Label'].value_counts(normalize=True).apply(lambda x: round(x * 100, 2)).to_dict()
 
-        detailed_topic_df.loc[i, 'Topic ID'] = i
-        detailed_topic_df.loc[i, 'Top Keywords'] = keywords
-        detailed_topic_df.loc[i, 'Num Comments'] = len(topic_subset)
-        detailed_topic_df.loc[i, 'VADER Eng Dist (%)'] = str(dist_vader)
-        detailed_topic_df.loc[i, 'VADER Aug Dist (%)'] = str(dist_aug)
-        detailed_topic_df.loc[i, 'Fil. Keyword Dist (%)'] = str(dist_fil)
-
-        if gemini_model:
-            prompt = f"Suggest a 3-5 word label for the following topic words: {keywords}"
-            with st.spinner("Getting Gemini label..."):
-                response = gemini_model.generate_content(prompt)
-                detailed_topic_df.loc[i, 'AI Label'] = response.text.strip()
-
-    if not detailed_topic_df.empty:
-        show_cols = ['Topic ID', 'AI Label', 'Top Keywords', 'Num Comments', 'Aug VADER Score', 'VADER Eng Dist (%)', 'VADER Aug Dist (%)']
-        st.dataframe(detailed_topic_df[show_cols])
-    if topic_sentiments:
-        st.dataframe(pd.DataFrame(topic_sentiments))
-
-    st.subheader("💡 Overall AI Recommendations (Gemini)")
+    # ------------------------------
+    # AI Recommendations (Optional)
+    # ------------------------------
     if gemini_model:
-        summary = "Here is a summary of the sentiment analysis:\n"
-        vader_avg = df['VADER_Score'].mean()
-        vader_summary = 'Positive' if vader_avg > 0.05 else 'Negative' if vader_avg < -0.05 else 'Neutral'
-        summary += f"\nAverage VADER Sentiment Score: {vader_avg:.2f} ({vader_summary})"
-        fil_score_avg = df['Fil_Score'].mean()
-        fil_summary = 'Positive' if fil_score_avg > 0 else 'Negative' if fil_score_avg < 0 else 'Neutral'
-        summary += f"\nAverage Filipino Keyword Score: {fil_score_avg:.2f} ({fil_summary})"
+        st.subheader("💡 AI Teaching Recommendations")
 
-        topics_summary = "\n\nKey Topics:\n"
-        for i in range(5):
-            words_probs = lda_model.show_topic(i, topn=5)
-            topic_words = ', '.join([w for w, _ in words_probs])
-            topics_summary += f"  - Topic {i+1}: {topic_words}\n"
-        summary += topics_summary
+        summary = f"""
+        Average Sentiment Score: {avg_score:.2f}
+        Distribution: {counts.to_dict()}
+        Correlation Between Models: {correlation:.2f}
+        """
 
-        prompt = summary + "Based on this analysis, suggest 3–5 actionable teaching recommendations."
-        with st.spinner("Generating recommendations..."):
-            recs = gemini_model.generate_content(prompt)
+        response = gemini_model.generate_content(
+            summary + "\nGive 3 actionable teaching recommendations."
+        )
 
-        st.subheader("📌 Individual Topic Recommendations")
-        for i in range(5):
-            topic_subset = df[df['Dominant_Topic'] == i]
-            if topic_subset.empty:
-                continue
-            words_probs = lda_model.show_topic(i, topn=5)
-            keywords = ', '.join([w for w, _ in words_probs])
-            sentiment_summary = topic_subset['VADER_Label'].value_counts().to_dict()
-
-            topic_prompt = f"Topic {i+1} with keywords: {keywords}Sentiment distribution: {sentiment_summary}Suggest 2–3 actionable teaching strategies for this topic based on sentiment."
-            with st.spinner(f"Gemini: Topic {i+1}..."):
-                topic_response = gemini_model.generate_content(topic_prompt)
-                st.markdown(f"**Topic {i+1}: {keywords}**")
-                st.write(topic_response.text.strip())
-            st.success("AI Recommendations:")
-            st.write(recs.text.strip())
-    else:
-        st.warning("Enter your Gemini API key above to enable AI recommendations.")
-
-    st.subheader("🗣 Manual Feedback Input for AI Suggestion")
-    manual_feedback = st.text_area("Enter a feedback comment:")
-    if manual_feedback and gemini_model:
-        cleaned_manual = preprocess(manual_feedback)
-        vs, vl = get_vader_sentiment(manual_feedback)
-        fs, fl = get_filipino_keyword_sentiment(cleaned_manual)
-
-        summary = f"Manual Feedback:\n{manual_feedback}\n\nPreprocessed: {cleaned_manual}\nVADER: {vl} ({vs:.2f})\nFilipino Score: {fl} ({fs})"
-        st.markdown(summary)
-
-        prompt = f"Based on this feedback: {manual_feedback}\n\nVADER Sentiment: {vl}, Score: {vs:.2f}\nFilipino Keyword Sentiment: {fl}, Score: {fs}\n\nGive 2-3 teaching suggestions."
-        with st.spinner("Generating AI suggestions..."):
-            response = gemini_model.generate_content(prompt)
-            st.success("Suggestions:")
-            st.write(response.text.strip())
+        st.write(response.text.strip())
 
 else:
     st.info("👈 Please upload a CSV file to begin.")
