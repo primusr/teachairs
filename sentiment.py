@@ -165,9 +165,26 @@ if uploaded_file:
 
     counts = df["Label"].value_counts()
 
+    # Ensure consistent order
+    sentiment_order = ["Positive", "Neutral", "Negative"]
+    counts = counts.reindex(sentiment_order, fill_value=0)
+
+    # Define custom colors
+    color_map = {
+        "Positive": "green",
+        "Neutral": "blue",
+        "Negative": "red"
+    }
+
+    colors = [color_map[label] for label in counts.index]
+
     fig1, ax1 = plt.subplots()
-    counts.plot(kind="bar", ax=ax1)
+    counts.plot(kind="bar", ax=ax1, color=colors)
+
     ax1.set_ylabel("Count")
+    ax1.set_xlabel("Sentiment")
+    ax1.set_title("Sentiment Distribution")
+
     st.pyplot(fig1)
 
     avg_score = df["Score"].mean()
@@ -237,149 +254,149 @@ if uploaded_file:
 
     st.pyplot(fig_aug)
 
-    # ------------------------------
-    # Statistical Comparison
-    # ------------------------------
-    correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
-    mean_difference = (df["VADER_Augmented"] - df["VADER_Standard"]).mean()
-
-    st.markdown(f"""
-    ### 📈 Statistical Comparison Summary
-
-    **Pearson Correlation Between Methods:** {correlation:.3f}  
-    **Mean Score Difference (Augmented − Standard):** {mean_difference:.3f}
-    """)
-
-    # # Statistical comparison
+    # # ------------------------------
+    # # Statistical Comparison
+    # # ------------------------------
     # correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
     # mean_difference = (df["VADER_Augmented"] - df["VADER_Standard"]).mean()
 
-    # sign_flip = (
-    #     (df["VADER_Standard"] > 0) & (df["VADER_Augmented"] < 0)
-    # ) | (
-    #     (df["VADER_Standard"] < 0) & (df["VADER_Augmented"] > 0)
-    # )
-
-    # flip_rate = sign_flip.mean() * 100
-
     # st.markdown(f"""
-    # ### 📈 Statistical Comparison
+    # ### 📈 Statistical Comparison Summary
 
-    # **Pearson Correlation:** {correlation:.3f}  
-    # **Mean Score Difference (Augmented − Standard):** {mean_difference:.3f}  
-    # **Polarity Sign Flip Rate:** {flip_rate:.2f}%  
+    # **Pearson Correlation Between Methods:** {correlation:.3f}  
+    # **Mean Score Difference (Augmented − Standard):** {mean_difference:.3f}
     # """)
 
-    # ------------------------------
-    # Topic Coherence Evaluation
-    # ------------------------------
-    st.subheader("📈 Topic Coherence Evaluation for Optimal k Selection")
+    # # # Statistical comparison
+    # # correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
+    # # mean_difference = (df["VADER_Augmented"] - df["VADER_Standard"]).mean()
 
-    from gensim.models import CoherenceModel
+    # # sign_flip = (
+    # #     (df["VADER_Standard"] > 0) & (df["VADER_Augmented"] < 0)
+    # # ) | (
+    # #     (df["VADER_Standard"] < 0) & (df["VADER_Augmented"] > 0)
+    # # )
 
-    # Prepare data for LDA
-    texts = [t.split() for t in df["Cleaned"] if t.strip()]
-    dictionary = corpora.Dictionary(texts)
-    corpus = [dictionary.doc2bow(text) for text in texts]
+    # # flip_rate = sign_flip.mean() * 100
 
-    k_values = list(range(3, 11))
+    # # st.markdown(f"""
+    # # ### 📈 Statistical Comparison
 
-    cv_scores = []
-    umass_scores = []
-    cnpmi_scores = []
+    # # **Pearson Correlation:** {correlation:.3f}  
+    # # **Mean Score Difference (Augmented − Standard):** {mean_difference:.3f}  
+    # # **Polarity Sign Flip Rate:** {flip_rate:.2f}%  
+    # # """)
 
-    for k in k_values:
-        lda_model_k = LdaModel(
-            corpus=corpus,
-            id2word=dictionary,
-            num_topics=k,
-            passes=10,
-            random_state=42
-        )
+    # # ------------------------------
+    # # Topic Coherence Evaluation
+    # # ------------------------------
+    # st.subheader("📈 Topic Coherence Evaluation for Optimal k Selection")
 
-        # C_v
-        coherence_cv = CoherenceModel(
-            model=lda_model_k,
-            texts=texts,
-            dictionary=dictionary,
-            coherence='c_v'
-        ).get_coherence()
-        cv_scores.append(coherence_cv)
+    # from gensim.models import CoherenceModel
 
-        # UMass
-        coherence_umass = CoherenceModel(
-            model=lda_model_k,
-            corpus=corpus,
-            dictionary=dictionary,
-            coherence='u_mass'
-        ).get_coherence()
-        umass_scores.append(coherence_umass)
+    # # Prepare data for LDA
+    # texts = [t.split() for t in df["Cleaned"] if t.strip()]
+    # dictionary = corpora.Dictionary(texts)
+    # corpus = [dictionary.doc2bow(text) for text in texts]
 
-        # C_NPMI
-        coherence_cnpmi = CoherenceModel(
-            model=lda_model_k,
-            texts=texts,
-            dictionary=dictionary,
-            coherence='c_npmi'
-        ).get_coherence()
-        cnpmi_scores.append(coherence_cnpmi)
+    # k_values = list(range(3, 11))
 
-    # Determine optimal k based on C_v
-    optimal_index = cv_scores.index(max(cv_scores))
-    optimal_k = k_values[optimal_index]
-    optimal_cv = cv_scores[optimal_index]
+    # cv_scores = []
+    # umass_scores = []
+    # cnpmi_scores = []
 
-    # ------------------------------
-    # Plot Line Graphs
-    # ------------------------------
-    fig, axes = plt.subplots(3, 1, figsize=(8, 12))
+    # for k in k_values:
+    #     lda_model_k = LdaModel(
+    #         corpus=corpus,
+    #         id2word=dictionary,
+    #         num_topics=k,
+    #         passes=10,
+    #         random_state=42
+    #     )
 
-    # Top: C_v
-    axes[0].plot(k_values, cv_scores, marker='o')
-    axes[0].set_title("C_v Coherence Scores")
-    axes[0].set_xlabel("Number of Topics (k)")
-    axes[0].set_ylabel("C_v Score")
-    axes[0].axvline(optimal_k, linestyle='--')
-    axes[0].annotate(
-        f"Peak at k={optimal_k}\n({optimal_cv:.4f})",
-        xy=(optimal_k, optimal_cv),
-        xytext=(optimal_k, optimal_cv + 0.02),
-        arrowprops=dict()
-    )
+    #     # C_v
+    #     coherence_cv = CoherenceModel(
+    #         model=lda_model_k,
+    #         texts=texts,
+    #         dictionary=dictionary,
+    #         coherence='c_v'
+    #     ).get_coherence()
+    #     cv_scores.append(coherence_cv)
 
-    # Middle: UMass
-    axes[1].plot(k_values, umass_scores, marker='o')
-    axes[1].set_title("UMass Coherence Scores")
-    axes[1].set_xlabel("Number of Topics (k)")
-    axes[1].set_ylabel("UMass Score")
+    #     # UMass
+    #     coherence_umass = CoherenceModel(
+    #         model=lda_model_k,
+    #         corpus=corpus,
+    #         dictionary=dictionary,
+    #         coherence='u_mass'
+    #     ).get_coherence()
+    #     umass_scores.append(coherence_umass)
 
-    # Bottom: C_NPMI
-    axes[2].plot(k_values, cnpmi_scores, marker='o')
-    axes[2].set_title("C_NPMI Coherence Scores")
-    axes[2].set_xlabel("Number of Topics (k)")
-    axes[2].set_ylabel("C_NPMI Score")
+    #     # C_NPMI
+    #     coherence_cnpmi = CoherenceModel(
+    #         model=lda_model_k,
+    #         texts=texts,
+    #         dictionary=dictionary,
+    #         coherence='c_npmi'
+    #     ).get_coherence()
+    #     cnpmi_scores.append(coherence_cnpmi)
 
-    plt.tight_layout()
-    st.pyplot(fig)
+    # # Determine optimal k based on C_v
+    # optimal_index = cv_scores.index(max(cv_scores))
+    # optimal_k = k_values[optimal_index]
+    # optimal_cv = cv_scores[optimal_index]
 
-    # ------------------------------
-    # Interpretation Output
-    # ------------------------------
-    st.markdown(f"""
-    ### 📊 Optimal Topic Determination
+    # # ------------------------------
+    # # Plot Line Graphs
+    # # ------------------------------
+    # fig, axes = plt.subplots(3, 1, figsize=(8, 12))
 
-    The C_v coherence score reaches its maximum at **k = {optimal_k}**, 
-    with a value of **{optimal_cv:.4f}**, indicating the highest semantic similarity 
-    and interpretability among the generated topics.
+    # # Top: C_v
+    # axes[0].plot(k_values, cv_scores, marker='o')
+    # axes[0].set_title("C_v Coherence Scores")
+    # axes[0].set_xlabel("Number of Topics (k)")
+    # axes[0].set_ylabel("C_v Score")
+    # axes[0].axvline(optimal_k, linestyle='--')
+    # axes[0].annotate(
+    #     f"Peak at k={optimal_k}\n({optimal_cv:.4f})",
+    #     xy=(optimal_k, optimal_cv),
+    #     xytext=(optimal_k, optimal_cv + 0.02),
+    #     arrowprops=dict()
+    # )
 
-    Based on the strong correlation of C_v with human judgment, the optimal 
-    number of topics was programmatically determined to be:
+    # # Middle: UMass
+    # axes[1].plot(k_values, umass_scores, marker='o')
+    # axes[1].set_title("UMass Coherence Scores")
+    # axes[1].set_xlabel("Number of Topics (k)")
+    # axes[1].set_ylabel("UMass Score")
 
-    ## ✅ k = {optimal_k}
+    # # Bottom: C_NPMI
+    # axes[2].plot(k_values, cnpmi_scores, marker='o')
+    # axes[2].set_title("C_NPMI Coherence Scores")
+    # axes[2].set_xlabel("Number of Topics (k)")
+    # axes[2].set_ylabel("C_NPMI Score")
 
-    This ensures that subsequent thematic analysis is grounded in the most 
-    semantically coherent topic structure derived from student feedback.
-    """)
+    # plt.tight_layout()
+    # st.pyplot(fig)
+
+    # # ------------------------------
+    # # Interpretation Output
+    # # ------------------------------
+    # st.markdown(f"""
+    # ### 📊 Optimal Topic Determination
+
+    # The C_v coherence score reaches its maximum at **k = {optimal_k}**, 
+    # with a value of **{optimal_cv:.4f}**, indicating the highest semantic similarity 
+    # and interpretability among the generated topics.
+
+    # Based on the strong correlation of C_v with human judgment, the optimal 
+    # number of topics was programmatically determined to be:
+
+    # ## ✅ k = {optimal_k}
+
+    # This ensures that subsequent thematic analysis is grounded in the most 
+    # semantically coherent topic structure derived from student feedback.
+    # """)
 
     # ------------------------------
     # Topic Modeling
