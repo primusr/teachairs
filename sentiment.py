@@ -250,25 +250,25 @@ if uploaded_file:
     **Mean Score Difference (Augmented − Standard):** {mean_difference:.3f}
     """)
 
-    # Statistical comparison
-    correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
-    mean_difference = (df["VADER_Augmented"] - df["VADER_Standard"]).mean()
+    # # Statistical comparison
+    # correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
+    # mean_difference = (df["VADER_Augmented"] - df["VADER_Standard"]).mean()
 
-    sign_flip = (
-        (df["VADER_Standard"] > 0) & (df["VADER_Augmented"] < 0)
-    ) | (
-        (df["VADER_Standard"] < 0) & (df["VADER_Augmented"] > 0)
-    )
+    # sign_flip = (
+    #     (df["VADER_Standard"] > 0) & (df["VADER_Augmented"] < 0)
+    # ) | (
+    #     (df["VADER_Standard"] < 0) & (df["VADER_Augmented"] > 0)
+    # )
 
-    flip_rate = sign_flip.mean() * 100
+    # flip_rate = sign_flip.mean() * 100
 
-    st.markdown(f"""
-    ### 📈 Statistical Comparison
+    # st.markdown(f"""
+    # ### 📈 Statistical Comparison
 
-    **Pearson Correlation:** {correlation:.3f}  
-    **Mean Score Difference (Augmented − Standard):** {mean_difference:.3f}  
-    **Polarity Sign Flip Rate:** {flip_rate:.2f}%  
-    """)
+    # **Pearson Correlation:** {correlation:.3f}  
+    # **Mean Score Difference (Augmented − Standard):** {mean_difference:.3f}  
+    # **Polarity Sign Flip Rate:** {flip_rate:.2f}%  
+    # """)
 
     # ------------------------------
     # Topic Coherence Evaluation
