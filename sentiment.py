@@ -41,9 +41,7 @@ load_nltk()
 # ------------------------------
 st.set_page_config(
     page_title="TeachAIRs: Sentiment & Topic Analysis",
-    layout="none"
-   
-
+    
 )
 
 st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
