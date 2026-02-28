@@ -55,7 +55,8 @@ st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 # ------------------------------
 # Gemini API (Optional)
 # ------------------------------
-api_key = st.text_input("🔑 Enter Gemini API Key (Optional)", type="password")
+api_key ="AIzaSyCpiaUAkdvek9tjDSLnVKE_yjWzxXazQ2U"
+#st.text_input("🔑 Enter Gemini API Key (Optional)", type="password")
 
 @st.cache_resource
 def configure_gemini(key):
