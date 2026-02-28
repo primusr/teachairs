@@ -55,8 +55,8 @@ st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 # ------------------------------
 # Gemini API (Optional)
 # ------------------------------
-api_key ="AIzaSyCpiaUAkdvek9tjDSLnVKE_yjWzxXazQ2U"
-#st.text_input("🔑 Enter Gemini API Key (Optional)", type="password")
+api_key = "AIzaSyCpiaUAkdvek9tjDSLnVKE_yjWzxXazQ2U" 
+# st.text_input("🔑 Enter Gemini API Key (Optional)", type="password")
 
 @st.cache_resource
 def configure_gemini(key):
@@ -616,7 +616,7 @@ if uploaded_file:
 
     topic_summary_df = pd.DataFrame(topic_rows)
 
-    st.dataframe(topic_summary_df, use_container_width=True)
+    st.dataframe(topic_summary_df, use_container_width=True,)
     st.subheader("🧠 Topic Modeling (LDA)")
 
     texts = [t.split() for t in df["Cleaned"] if t.strip()]
