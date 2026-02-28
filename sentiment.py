@@ -601,7 +601,7 @@ if uploaded_file:
         fil_dist_str = f"P:{fil_dist['Positive']:.1f}% | N:{fil_dist['Neutral']:.1f}% | Neg:{fil_dist['Negative']:.1f}%"
 
         topic_rows.append({
-            "Topic ID": topic_id,
+            #"Topic ID": topic_id,
             "AI Label": ai_label,
             "Top Keywords": top_keywords,
             "Num Comments": num_comments,
