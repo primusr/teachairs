@@ -615,7 +615,7 @@ if uploaded_file:
 
     topic_summary_df = pd.DataFrame(topic_rows)
 
-    st.dataframe(topic_summary_df, use_container_width=True, wrap=True)
+    st.dataframe(topic_summary_df, use_container_width=True)
     st.subheader("🧠 Topic Modeling (LDA)")
 
     texts = [t.split() for t in df["Cleaned"] if t.strip()]
