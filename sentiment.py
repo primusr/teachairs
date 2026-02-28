@@ -459,9 +459,9 @@ if uploaded_file:
         cnpmi_scores.append(coherence_cnpmi)
 
      # Determine optimal k based on C_v
-    optimal_index = cv_scores.index(max(cv_scores))
-    optimal_k = k_values[optimal_index]
-    optimal_cv = cv_scores[optimal_index]
+        optimal_index = cv_scores.index(max(cv_scores))
+        optimal_k = k_values[optimal_index]
+        optimal_cv = cv_scores[optimal_index]
 
     # # ------------------------------
     # # Plot Line Graphs
