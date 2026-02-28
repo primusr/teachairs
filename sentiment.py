@@ -41,7 +41,9 @@ load_nltk()
 # ------------------------------
 st.set_page_config(
     page_title="TeachAIRs: Sentiment & Topic Analysis",
-    layout="wide"
+    layout="none",
+    page_icon=":shark:"
+
 )
 
 st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
@@ -235,9 +237,7 @@ if uploaded_file:
     # 2️⃣ Augmented VADER Scatter
     # ------------------------------
     st.markdown("### Augmented VADER (With Filipino Lexicon)")
-
     colors_aug = df["VADER_Augmented"].apply(sentiment_color)
-
     fig_aug, ax_aug = plt.subplots()
 
     ax_aug.scatter(
@@ -254,12 +254,10 @@ if uploaded_file:
 
     st.pyplot(fig_aug)
 
-
     # ------------------------------
     # Overall System Sentiment Scores & Distributions
     # ------------------------------
     st.subheader("📊 Overall System Sentiment Scores & Distributions")
-
     total_comments = len(df)
 
     # ------------------------------
@@ -374,11 +372,11 @@ if uploaded_file:
         percent = (count / total_comments) * 100
         st.markdown(f"- {label} (Filipino Keywords): {count} comments ({percent:.2f}%)")
 
-    # # ------------------------------
-    # # Statistical Comparison
-    # # ------------------------------
-    # correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
-    # mean_difference = (df["VADER_Augmented"] - df["VADER_Standard"]).mean()
+    # ------------------------------
+    # Statistical Comparison
+    # ------------------------------
+    correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
+    mean_difference = (df["VADER_Augmented"] - df["VADER_Standard"]).mean()
 
     # st.markdown(f"""
     # ### 📈 Statistical Comparison Summary
@@ -391,13 +389,13 @@ if uploaded_file:
     # # correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
     # # mean_difference = (df["VADER_Augmented"] - df["VADER_Standard"]).mean()
 
-    # # sign_flip = (
-    # #     (df["VADER_Standard"] > 0) & (df["VADER_Augmented"] < 0)
-    # # ) | (
-    # #     (df["VADER_Standard"] < 0) & (df["VADER_Augmented"] > 0)
-    # # )
+    sign_flip = (
+         (df["VADER_Standard"] > 0) & (df["VADER_Augmented"] < 0)
+     ) | (
+         (df["VADER_Standard"] < 0) & (df["VADER_Augmented"] > 0)
+    )
 
-    # # flip_rate = sign_flip.mean() * 100
+    flip_rate = sign_flip.mean() * 100
 
     # # st.markdown(f"""
     # # ### 📈 Statistical Comparison
@@ -412,59 +410,59 @@ if uploaded_file:
     # # ------------------------------
     # st.subheader("📈 Topic Coherence Evaluation for Optimal k Selection")
 
-    # from gensim.models import CoherenceModel
+    from gensim.models import CoherenceModel
 
     # # Prepare data for LDA
-    # texts = [t.split() for t in df["Cleaned"] if t.strip()]
-    # dictionary = corpora.Dictionary(texts)
-    # corpus = [dictionary.doc2bow(text) for text in texts]
+    texts = [t.split() for t in df["Cleaned"] if t.strip()]
+    dictionary = corpora.Dictionary(texts)
+    corpus = [dictionary.doc2bow(text) for text in texts]
 
-    # k_values = list(range(3, 11))
+    k_values = list(range(3, 11))
 
-    # cv_scores = []
-    # umass_scores = []
-    # cnpmi_scores = []
+    cv_scores = []
+    umass_scores = []
+    cnpmi_scores = []
 
-    # for k in k_values:
-    #     lda_model_k = LdaModel(
-    #         corpus=corpus,
-    #         id2word=dictionary,
-    #         num_topics=k,
-    #         passes=10,
-    #         random_state=42
-    #     )
+    for k in k_values:
+        lda_model_k = LdaModel(
+            corpus=corpus,
+            id2word=dictionary,
+            num_topics=k,
+            passes=10,
+            random_state=42
+        )
 
-    #     # C_v
-    #     coherence_cv = CoherenceModel(
-    #         model=lda_model_k,
-    #         texts=texts,
-    #         dictionary=dictionary,
-    #         coherence='c_v'
-    #     ).get_coherence()
-    #     cv_scores.append(coherence_cv)
+    C_v
+        coherence_cv = CoherenceModel(
+            model=lda_model_k,
+            texts=texts,
+            dictionary=dictionary,
+            coherence='c_v'
+        ).get_coherence()
+        cv_scores.append(coherence_cv)
 
-    #     # UMass
-    #     coherence_umass = CoherenceModel(
-    #         model=lda_model_k,
-    #         corpus=corpus,
-    #         dictionary=dictionary,
-    #         coherence='u_mass'
-    #     ).get_coherence()
-    #     umass_scores.append(coherence_umass)
+    UMass
+        coherence_umass = CoherenceModel(
+            model=lda_model_k,
+            corpus=corpus,
+            dictionary=dictionary,
+            coherence='u_mass'
+        ).get_coherence()
+        umass_scores.append(coherence_umass)
 
-    #     # C_NPMI
-    #     coherence_cnpmi = CoherenceModel(
-    #         model=lda_model_k,
-    #         texts=texts,
-    #         dictionary=dictionary,
-    #         coherence='c_npmi'
-    #     ).get_coherence()
-    #     cnpmi_scores.append(coherence_cnpmi)
+    C_NPMI
+        coherence_cnpmi = CoherenceModel(
+            model=lda_model_k,
+            texts=texts,
+            dictionary=dictionary,
+            coherence='c_npmi'
+        ).get_coherence()
+        cnpmi_scores.append(coherence_cnpmi)
 
-    # # Determine optimal k based on C_v
-    # optimal_index = cv_scores.index(max(cv_scores))
-    # optimal_k = k_values[optimal_index]
-    # optimal_cv = cv_scores[optimal_index]
+     # Determine optimal k based on C_v
+    optimal_index = cv_scores.index(max(cv_scores))
+    optimal_k = k_values[optimal_index]
+    optimal_cv = cv_scores[optimal_index]
 
     # # ------------------------------
     # # Plot Line Graphs
@@ -521,6 +519,100 @@ if uploaded_file:
     # ------------------------------
     # Topic Modeling
     # ------------------------------
+
+    # ------------------------------
+    # Overall Sentiment per Topic (Tabular)
+    # ------------------------------
+    st.subheader("📊 Overall Sentiment per Topic")
+
+    # Ensure final LDA model exists (using optimal_k if computed earlier)
+    try:
+        final_k = optimal_k
+    except:
+        final_k = 4  # fallback if not computed
+
+    lda_model_final = LdaModel(
+        corpus=corpus,
+        id2word=dictionary,
+        num_topics=final_k,
+        passes=10,
+        random_state=42
+    )
+
+    # Assign dominant topic to each comment
+    def get_dominant_topic(bow):
+        topics = lda_model_final.get_document_topics(bow)
+        return max(topics, key=lambda x: x[1])[0]
+
+    df["Topic_ID"] = [get_dominant_topic(bow) for bow in corpus]
+
+    # Convert Filipino label to numeric score
+    fil_score_map = {"Positive": 1, "Neutral": 0, "Negative": -1}
+    df["Filipino_Score"] = df["Label_Filipino"].map(fil_score_map)
+
+    # Prepare results table
+    topic_rows = []
+
+    for topic_id in range(final_k):
+
+        topic_df = df[df["Topic_ID"] == topic_id]
+        num_comments = len(topic_df)
+
+        if num_comments == 0:
+            continue
+
+        # Top Keywords
+        words_probs = lda_model_final.show_topic(topic_id, topn=5)
+        top_keywords = ", ".join([w for w, _ in words_probs])
+
+        # AI Label (if Gemini available)
+        if gemini_model:
+            prompt = f"Provide a concise 3-word academic topic label for: {top_keywords}"
+            response = gemini_model.generate_content(prompt)
+            ai_label = response.text.strip()
+        else:
+            ai_label = f"Topic {topic_id}"
+
+        # --------------------------
+        # Standard VADER
+        # --------------------------
+        avg_std = topic_df["VADER_Standard"].mean()
+        std_dist = topic_df["Label_Std"].value_counts(normalize=True) * 100
+        std_dist = std_dist.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+        std_dist_str = f"P:{std_dist['Positive']:.1f}% | N:{std_dist['Neutral']:.1f}% | Neg:{std_dist['Negative']:.1f}%"
+
+        # --------------------------
+        # Augmented VADER
+        # --------------------------
+        avg_aug = topic_df["VADER_Augmented"].mean()
+        aug_dist = topic_df["Label_Aug"].value_counts(normalize=True) * 100
+        aug_dist = aug_dist.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+        aug_dist_str = f"P:{aug_dist['Positive']:.1f}% | N:{aug_dist['Neutral']:.1f}% | Neg:{aug_dist['Negative']:.1f}%"
+
+        # --------------------------
+        # Filipino Keyword
+        # --------------------------
+        avg_fil = topic_df["Filipino_Score"].mean()
+        fil_dist = topic_df["Label_Filipino"].value_counts(normalize=True) * 100
+        fil_dist = fil_dist.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+        fil_dist_str = f"P:{fil_dist['Positive']:.1f}% | N:{fil_dist['Neutral']:.1f}% | Neg:{fil_dist['Negative']:.1f}%"
+
+        topic_rows.append({
+            "Topic ID": topic_id,
+            "AI Label": ai_label,
+            "Top Keywords": top_keywords,
+            "Num Comments": num_comments,
+            "Avg VADER Eng Score": round(avg_std, 4),
+            "VADER Eng Dist (%)": std_dist_str,
+            "Avg VADER Aug Score": round(avg_aug, 4),
+            "VADER Aug Dist (%)": aug_dist_str,
+            "Avg Fil. Keyword Score": round(avg_fil, 4),
+            "Fil. Keyword Dist (%)": fil_dist_str
+        })
+
+    topic_summary_df = pd.DataFrame(topic_rows)
+
+    st.dataframe(topic_summary_df, use_container_width=True)
     st.subheader("🧠 Topic Modeling (LDA)")
 
     texts = [t.split() for t in df["Cleaned"] if t.strip()]
