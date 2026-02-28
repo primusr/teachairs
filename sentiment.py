@@ -43,9 +43,7 @@ st.set_page_config(
     page_title="TeachAIRs: Sentiment & Topic Analysis",
     page_icon="🧊",
     menu_items={
-        'Get Help': 'https://www.extremelycoolapp.com/help',
-        'Report a bug': "https://www.extremelycoolapp.com/bug",
-        'About': "# This is a header. This is an *extremely* cool app!"
+       'About': "Developed by TheMatrix"
     }
    
 )
@@ -55,7 +53,7 @@ st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 # ------------------------------
 # Gemini API (Optional)
 # ------------------------------
-api_key = "AIzaSyCpiaUAkdvek9tjDSLnVKE_yjWzxXazQ2U" 
+api_key = "AIzaSyDMi2bikpzkuD8EAfHqvGWebL5EzYrCzc0" 
 # st.text_input("🔑 Enter Gemini API Key (Optional)", type="password")
 
 @st.cache_resource
