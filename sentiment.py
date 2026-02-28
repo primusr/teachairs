@@ -416,7 +416,11 @@ if uploaded_file:
     from gensim.models import CoherenceModel
 
     # # Prepare data for LDA
-    texts = [t.split() for t in df["Cleaned"] if t.strip()]
+    # Ensure no empty cleaned rows
+    df = df[df["Cleaned"].str.strip() != ""].reset_index(drop=True)
+
+    texts = df["Cleaned"].apply(lambda x: x.split()).tolist()
+
     dictionary = corpora.Dictionary(texts)
     corpus = [dictionary.doc2bow(text) for text in texts]
 
