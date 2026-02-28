@@ -254,6 +254,126 @@ if uploaded_file:
 
     st.pyplot(fig_aug)
 
+
+    # ------------------------------
+    # Overall System Sentiment Scores & Distributions
+    # ------------------------------
+    st.subheader("📊 Overall System Sentiment Scores & Distributions")
+
+    total_comments = len(df)
+
+    # ------------------------------
+    # Helper: Label from score
+    # ------------------------------
+    def classify(score):
+        if score > 0.05:
+            return "Positive"
+        elif score < -0.05:
+            return "Negative"
+        else:
+            return "Neutral"
+
+    # ==============================
+    # 1️⃣ Standard VADER
+    # ==============================
+    df["Label_Std"] = df["VADER_Standard"].apply(classify)
+
+    std_avg = df["VADER_Standard"].mean()
+    std_counts = df["Label_Std"].value_counts()
+    std_counts = std_counts.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+    std_dominant = std_counts.idxmax()
+
+    # ==============================
+    # 2️⃣ Augmented VADER
+    # ==============================
+    df["Label_Aug"] = df["VADER_Augmented"].apply(classify)
+
+    aug_avg = df["VADER_Augmented"].mean()
+    aug_counts = df["Label_Aug"].value_counts()
+    aug_counts = aug_counts.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+    aug_dominant = aug_counts.idxmax()
+
+    # ==============================
+    # 3️⃣ Filipino Keyword Direct Count
+    # ==============================
+    # Basic keyword lists (expandable)
+    filipino_positive = ["maganda", "mabuti", "mahusay", "salamat", "okay"]
+    filipino_negative = ["pangit", "masama", "mahina", "problema", "hindi"]
+
+    def filipino_keyword_sentiment(text):
+        text = str(text).lower()
+        pos = sum(word in text for word in filipino_positive)
+        neg = sum(word in text for word in filipino_negative)
+
+        if pos > neg:
+            return "Positive"
+        elif neg > pos:
+            return "Negative"
+        else:
+            return "Neutral"
+
+    df["Label_Filipino"] = df["Feedback"].apply(filipino_keyword_sentiment)
+
+    fil_counts = df["Label_Filipino"].value_counts()
+    fil_counts = fil_counts.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+    fil_dominant = fil_counts.idxmax()
+
+    # ------------------------------
+    # DISPLAY RESULTS
+    # ------------------------------
+
+    st.markdown("## Standard VADER (English / Translated)")
+
+    st.markdown(f"""
+    **Methodology:** Average of Standard VADER scores (on Feedback_Text)  
+    **Score:** {std_avg:.4f}  
+
+    **Interpretation:** Overall sentiment (Eng VADER) is generally 
+    {'positive' if std_avg > 0.05 else 'negative' if std_avg < -0.05 else 'neutral'}.
+
+    **Dominant Category:** {std_dominant} (VADER Eng) ({std_counts[std_dominant]}/{total_comments} comments)
+    """)
+
+    st.markdown("**Distribution (Std VADER):**")
+    for label in ["Positive", "Neutral", "Negative"]:
+        count = std_counts[label]
+        percent = (count / total_comments) * 100
+        st.markdown(f"- {label} (VADER Eng): {count} comments ({percent:.2f}%)")
+
+    # ------------------------------
+
+    st.markdown("## Augmented VADER (With Filipino Lexicon)")
+
+    st.markdown(f"""
+    **Methodology:** Average of Augmented VADER scores (on Cleaned_Text_Main)  
+    **Score:** {aug_avg:.4f}  
+
+    **Interpretation:** Overall sentiment (Aug VADER) is generally 
+    {'positive' if aug_avg > 0.05 else 'negative' if aug_avg < -0.05 else 'neutral'}.
+
+    **Dominant Category:** {aug_dominant} (VADER Aug) ({aug_counts[aug_dominant]}/{total_comments} comments)
+    """)
+
+    st.markdown("**Distribution (Aug VADER):**")
+    for label in ["Positive", "Neutral", "Negative"]:
+        count = aug_counts[label]
+        percent = (count / total_comments) * 100
+        st.markdown(f"- {label} (VADER Aug): {count} comments ({percent:.2f}%)")
+
+    # ------------------------------
+
+    st.markdown("## Filipino Keyword Sentiment (Direct Count)")
+
+    st.markdown(f"""
+    **Dominant Category:** {fil_dominant} (Filipino Keywords) ({fil_counts[fil_dominant]}/{total_comments} comments)
+    """)
+
+    st.markdown("**Distribution (Filipino Keywords):**")
+    for label in ["Positive", "Neutral", "Negative"]:
+        count = fil_counts[label]
+        percent = (count / total_comments) * 100
+        st.markdown(f"- {label} (Filipino Keywords): {count} comments ({percent:.2f}%)")
+
     # # ------------------------------
     # # Statistical Comparison
     # # ------------------------------
