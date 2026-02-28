@@ -41,8 +41,8 @@ load_nltk()
 # ------------------------------
 st.set_page_config(
     page_title="TeachAIRs: Sentiment & Topic Analysis",
-    layout="none",
-    page_icon=":shark:"
+    layout="none"
+   
 
 )
 
