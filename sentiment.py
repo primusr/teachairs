@@ -432,7 +432,6 @@ if uploaded_file:
             random_state=42
         )
 
-    C_v
         coherence_cv = CoherenceModel(
             model=lda_model_k,
             texts=texts,
@@ -441,7 +440,7 @@ if uploaded_file:
         ).get_coherence()
         cv_scores.append(coherence_cv)
 
-    UMass
+   
         coherence_umass = CoherenceModel(
             model=lda_model_k,
             corpus=corpus,
@@ -450,7 +449,7 @@ if uploaded_file:
         ).get_coherence()
         umass_scores.append(coherence_umass)
 
-    C_NPMI
+   
         coherence_cnpmi = CoherenceModel(
             model=lda_model_k,
             texts=texts,
