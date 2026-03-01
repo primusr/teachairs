@@ -11,8 +11,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 
 
-import os
-from dotenv 
+import os from dotenv 
 import load_dotenv
 
 import nltk
