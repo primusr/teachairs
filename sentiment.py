@@ -57,7 +57,7 @@ st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 # ------------------------------
 # Gemini API (Optional)
 # ------------------------------
-api_key =  "AIzaSyBrSaLuoeoE82mZjQh5ZeSqDDhZniwqn5Q" 
+api_key =  os.getenv("GEMINI_API_KEY")
 # st.text_input("🔑 Enter Gemini API Key (Optional)", type="password")
 
 load_dotenv()
