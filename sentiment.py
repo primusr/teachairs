@@ -9,11 +9,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
-
-
-import os from dotenv 
-import load_dotenv
-
+import os
+from dotenv import load_dotenv
 import nltk
 nltk.download('punkt_tab')
 from nltk.corpus import stopwords
