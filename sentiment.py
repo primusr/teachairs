@@ -10,9 +10,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
 
-import os
-from dotenv import load_dotenv
-
 import nltk
 nltk.download('punkt_tab')
 from nltk.corpus import stopwords
@@ -56,7 +53,7 @@ st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 # ------------------------------
 # Gemini API (Optional)
 # ------------------------------
-api_key =  os.getenv("GEMINI_API_KEY")
+api_key = "AIzaSyDCqEdMgIiw6Fdt_e8GkToxtmq9Uot5BIU"
 # st.text_input("🔑 Enter Gemini API Key (Optional)", type="password")
 
 load_dotenv()
@@ -66,8 +63,7 @@ def configure_gemini(key):
     if not key:
         return None
     try:
-        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-        #genai.configure(api_key=key)
+        genai.configure(api_key=key)
         return genai.GenerativeModel("models/gemini-3-flash-preview")
     except:
         return None
