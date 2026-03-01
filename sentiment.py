@@ -56,12 +56,15 @@ st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 api_key =  "AIzaSyBrSaLuoeoE82mZjQh5ZeSqDDhZniwqn5Q" 
 # st.text_input("🔑 Enter Gemini API Key (Optional)", type="password")
 
+load_dotenv()
+
 @st.cache_resource
 def configure_gemini(key):
     if not key:
         return None
     try:
-        genai.configure(api_key=key)
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+        #genai.configure(api_key=key)
         return genai.GenerativeModel("models/gemini-3-flash-preview")
     except:
         return None
