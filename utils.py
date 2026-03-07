@@ -35,6 +35,13 @@ h1, h2, h3, h4, h5, h6 {
 button {
     font-family: 'Poppins', sans-serif;
 }
+
+.stApp {
+    background-color: #0E1117;
+}
+[data-testid="stSidebar"] {
+    background-color: #161A23;
+}
 </style>
 """, unsafe_allow_html=True)
 
