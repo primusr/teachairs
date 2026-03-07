@@ -56,13 +56,13 @@ html, body, [class*="css"] {
 
 /* Sidebar */
 [data-testid="stSidebar"] {
-   font-family: "Poppins", sans-serif;
+  font-family: "Poppins", sans-serif;
 
 }
 
 /* Buttons */
 button {
-   font-family: "Poppins", sans-serif;
+  font-family: "Poppins", sans-serif;
   
 }
 </style>
