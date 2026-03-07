@@ -91,43 +91,47 @@ if filipino_lexicon_file:
     except Exception as e:
         st.error(f"Error loading lexicon: {e}")
 
+    
+    st.text_area("Edit Stopwords", value=stopwords_text, height=300)
+    st.code(stopwords_text, language="python")
+
 # ------------------------------
 # Text Preprocessing
 # ------------------------------
 # ------------------------------
 # Base English Stopwords (NLTK)
 # ------------------------------
-    stop_words = set(stopwords.words("english"))
+   #stop_words = set(stopwords.words("english"))
 
     # ------------------------------
     # Filipino Stopwords
     # ------------------------------
-    filipino_stopwords = {
-    "ang","ng","sa","si","ni","mga","ito","iyan","iyon","ako","ikaw","siya",
-    "kami","tayo","kayo","sila","natin","amin","nila","mo","ko","ka","pa",
-    "din","rin","lang","naman","po","opo","ata","kasi","pero","dahil",
-    "kung","kapag","habang","mula","para","gaya","tulad","ganito",
-    "ganyan","ganoon","dito","diyan","doon"
-    }
+# filipino_stopwords = {
+# "ang","ng","sa","si","ni","mga","ito","iyan","iyon","ako","ikaw","siya",
+# "kami","tayo","kayo","sila","natin","amin","nila","mo","ko","ka","pa",
+# "din","rin","lang","naman","po","opo","ata","kasi","pero","dahil",
+# "kung","kapag","habang","mula","para","gaya","tulad","ganito",
+# "ganyan","ganoon","dito","diyan","doon"
+# }
 
-    # ------------------------------
-    # Student Feedback Domain Words
-    # ------------------------------
-    domain_stopwords = {
-    "teacher","professor","sir","maam","mam","ma'am",
-    "subject","course","class","lesson","topic","discussion",
-    "activity","activities","student","students","school",
-    "semester","learning","teach","teaching"
-    }
+# # ------------------------------
+# # Student Feedback Domain Words
+# # ------------------------------
+# domain_stopwords = {
+# "teacher","professor","sir","maam","mam","ma'am",
+# "subject","course","class","lesson","topic","discussion",
+# "activity","activities","student","students","school",
+# "semester","learning","teach","teaching",":)"
+# }
 
-    # ------------------------------
-    # Generic Feedback Fillers
-    # ------------------------------
-    filler_words = {
-    "good","nice","great","really","very","much","many","lot","lots",
-    "quite","something","anything","everything","nothing",
-    "ok","okay","yes","no","maybe","also","still","even","well","yet"
-    }
+# # ------------------------------
+# # Generic Feedback Fillers
+# # ------------------------------
+# filler_words = {
+# "good","nice","great","really","very","much","many","lot","lots",
+# "quite","something","anything","everything","nothing",
+# "ok","okay","yes","no","maybe","also","still","even","well","yet"
+# }
 
     # ------------------------------
     # Combine All Stopwords
