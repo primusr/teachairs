@@ -53,8 +53,9 @@ st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 # ------------------------------
 # Gemini API (Optional)
 # ------------------------------
+#api_key = st.text_input("🔑 Enter Gemini API Key (Optional)", type="password") 
 api_key = st.secrets["api_key"] 
-#st.text_input("🔑 Enter Gemini API Key (Optional)", type="password")
+
 
 @st.cache_resource
 def configure_gemini(key):
@@ -91,9 +92,8 @@ if filipino_lexicon_file:
     except Exception as e:
         st.error(f"Error loading lexicon: {e}")
 
-    
-    st.text_area("Edit Stopwords", value=stopwords_text, height=300)
-    st.code(stopwords_text, language="python")
+    st.text_area("Edit Stopwords", value=stopwords, height=300)
+    #st.code(stopwords, language="english")
 
 # ------------------------------
 # Text Preprocessing
@@ -101,42 +101,54 @@ if filipino_lexicon_file:
 # ------------------------------
 # Base English Stopwords (NLTK)
 # ------------------------------
-   #stop_words = set(stopwords.words("english"))
+    # Initial stopwords sets
+    filipino_stopwords = {
+    "ang","ng","sa","si","ni","mga","ito","iyan","iyon","ako","ikaw","siya",
+    "kami","tayo","kayo","sila","natin","amin","nila","mo","ko","ka","pa",
+    "din","rin","lang","naman","po","opo","ata","kasi","pero","dahil",
+    "kung","kapag","habang","mula","para","gaya","tulad","ganito",
+    "ganyan","ganoon","dito","diyan","doon"
+    }
 
-    # ------------------------------
-    # Filipino Stopwords
-    # ------------------------------
-# filipino_stopwords = {
-# "ang","ng","sa","si","ni","mga","ito","iyan","iyon","ako","ikaw","siya",
-# "kami","tayo","kayo","sila","natin","amin","nila","mo","ko","ka","pa",
-# "din","rin","lang","naman","po","opo","ata","kasi","pero","dahil",
-# "kung","kapag","habang","mula","para","gaya","tulad","ganito",
-# "ganyan","ganoon","dito","diyan","doon"
-# }
+    domain_stopwords = {
+    "teacher","professor","sir","maam","mam","ma'am",
+    "subject","course","class","lesson","topic","discussion",
+    "activity","activities","student","students","school",
+    "semester","learning","teach","teaching",":)"
+    }
 
-# # ------------------------------
-# # Student Feedback Domain Words
-# # ------------------------------
-# domain_stopwords = {
-# "teacher","professor","sir","maam","mam","ma'am",
-# "subject","course","class","lesson","topic","discussion",
-# "activity","activities","student","students","school",
-# "semester","learning","teach","teaching",":)"
-# }
+    filler_words = {
+    "good","nice","great","really","very","much","many","lot","lots",
+    "quite","something","anything","everything","nothing",
+    "ok","okay","yes","no","maybe","also","still","even","well","yet"
+    }
 
-# # ------------------------------
-# # Generic Feedback Fillers
-# # ------------------------------
-# filler_words = {
-# "good","nice","great","really","very","much","many","lot","lots",
-# "quite","something","anything","everything","nothing",
-# "ok","okay","yes","no","maybe","also","still","even","well","yet"
-# }
+    # Editable text areas
+    filipino_input = st.text_area(
+        "Filipino Stopwords",
+        "\n".join(sorted(filipino_stopwords)),
+        height=150
+    )
 
-    # ------------------------------
-    # Combine All Stopwords
-    # ------------------------------
-    stop_words = stop_words.union(
+    domain_input = st.text_area(
+        "Domain Stopwords",
+        "\n".join(sorted(domain_stopwords)),
+        height=150
+    )
+
+    filler_input = st.text_area(
+        "Filler Words",
+        "\n".join(sorted(filler_words)),
+        height=150
+    )
+
+    # Parse inputs back into sets
+    filipino_stopwords = set(w.strip() for w in filipino_input.split("\n") if w.strip())
+    domain_stopwords = set(w.strip() for w in domain_input.split("\n") if w.strip())
+    filler_words = set(w.strip() for w in filler_input.split("\n") if w.strip())
+
+    # Combine all stopwords
+    stop_words = set(stopwords.words("english")).union(
         filipino_stopwords,
         domain_stopwords,
         filler_words
@@ -207,52 +219,39 @@ if uploaded_file:
 
     st.subheader("📄 Sample Feedback")
     st.dataframe(df.head())
-
     # ------------------------------
     # Preprocessing
     # ------------------------------
     df["Cleaned"] = df["Feedback"].apply(preprocess)
-
     # ------------------------------
     # Compute Sentiment Scores
     # ------------------------------
     df["VADER_Standard"] = df["Feedback"].apply(get_standard_vader)
     df["VADER_Augmented"] = df["Feedback"].apply(get_augmented_vader)
-
     df["Score"] = df["VADER_Augmented"]
     df["Label"] = df["Score"].apply(label_from_score)
-
     # ------------------------------
     # Sentiment Distribution
     # ------------------------------
     st.subheader("📊 Sentiment Distribution (Augmented Model)")
-
     counts = df["Label"].value_counts()
-
     # Ensure consistent order
     sentiment_order = ["Positive", "Neutral", "Negative"]
     counts = counts.reindex(sentiment_order, fill_value=0)
-
     # Define custom colors
     color_map = {
         "Positive": "green",
         "Neutral": "blue",
         "Negative": "red"
     }
-
     colors = [color_map[label] for label in counts.index]
-
     fig1, ax1 = plt.subplots()
     counts.plot(kind="bar", ax=ax1, color=colors)
-
     ax1.set_ylabel("Count")
     ax1.set_xlabel("Sentiment")
     ax1.set_title("Sentiment Distribution")
-
     st.pyplot(fig1)
-
     avg_score = df["Score"].mean()
-
     st.markdown(f"""
     **Average Sentiment Score:** {avg_score:.3f}  
     **Overall Sentiment:** {'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'}
@@ -262,7 +261,6 @@ if uploaded_file:
     # Separate Scatter Plots (Color-Coded)
     # ------------------------------
     st.subheader("📊 Sentiment Polarity Distribution Across Methods")
-
     # Helper function for color coding
     def sentiment_color(score):
         if score > 0:
@@ -407,10 +405,8 @@ if uploaded_file:
     st.markdown(f"""
     **Methodology:** Average of Augmented VADER scores (on Cleaned_Text_Main)  
     **Score:** {aug_avg:.4f}  
-
     **Interpretation:** Overall sentiment (Aug VADER) is generally 
     {'positive' if aug_avg > 0.05 else 'negative' if aug_avg < -0.05 else 'neutral'}.
-
     **Dominant Category:** {aug_dominant} (VADER Aug) ({aug_counts[aug_dominant]}/{total_comments} comments)
     """)
 
