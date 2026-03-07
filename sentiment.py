@@ -248,8 +248,9 @@ if uploaded_file:
     df = df[[feedback_col]].rename(columns={feedback_col: "Feedback"})
     df.dropna(inplace=True)
 
-    st.subheader("📄 Sample Feedback")
-    st.dataframe(df.head())
+    if st.button("Show Sample Feedback"):
+        st.subheader("📄 Sample Feedback")
+        st.dataframe(df.head())
     # ------------------------------
     # Preprocessing
     # ------------------------------
