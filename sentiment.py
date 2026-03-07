@@ -92,7 +92,7 @@ if filipino_lexicon_file:
     except Exception as e:
         st.error(f"Error loading lexicon: {e}")
 
-    st.text_area("Edit Stopwords", value=stopwords, height=300)
+    #st.text_area("Edit Stopwords", value=stopwords, height=300)
     #st.code(stopwords, language="english")
 
 # ------------------------------
