@@ -53,8 +53,8 @@ st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 # ------------------------------
 # Gemini API (Optional)
 # ------------------------------
-#api_key = st.text_input("🔑 Enter Gemini API Key (Optional)", type="password") 
-api_key = st.secrets["api_key"] 
+api_key = st.text_input("🔑 Enter Gemini API Key (Optional)", type="password") 
+#api_key = st.secrets["api_key"] 
 
 
 @st.cache_resource
@@ -92,6 +92,39 @@ if filipino_lexicon_file:
     except Exception as e:
         st.error(f"Error loading lexicon: {e}")
 
+
+
+if "page" not in st.session_state:
+    st.session_state.page = 0
+
+def nextpage(): st.session_state.page += 1
+def restart(): st.session_state.page = 0
+
+placeholder = st.empty()
+st.button("Proceed",on_click=nextpage,disabled=(st.session_state.page > 3))
+
+if st.session_state.page == 0:
+    # Replace the placeholder with some text:
+    placeholder.text(f"Hello, this is page {st.session_state.page}")
+
+elif st.session_state.page == 1:
+    # Replace the text with a chart:
+    placeholder.line_chart({"data": [1, 5, 2, 6]})
+
+elif st.session_state.page == 2:
+# Replace the chart with several elements:
+    with placeholder.container():
+        st.write("This is one element")
+        st.write("This is another")
+        st.metric("Page:", value=st.session_state.page)
+
+elif st.session_state.page == 3:
+    placeholder.markdown(r"$f(x) = \exp{\left(x^🐈\right)}$")
+
+else:
+    with placeholder:
+        st.write("This is the end")
+        st.button("Restart",on_click=restart)
 # ------------------------------
 # Text Preprocessing
 # ------------------------------
@@ -113,7 +146,8 @@ lda_stopwords = {
 "out", "over", "own", "same", "she", "should", "so", "some", "such", "than", "that", "the", "their", "them", "then", "there", "these", "they", "this", "those", "through", "to", "until", "up", "very", "was", "we", "were", "what", "when", "where", "which", "while", "who", "whom", "why", "will", "with", "you", "your", "mam", "maam", "sir", "po", "lang", "naman", "wala", "nya", "sana", "da", "en", "mag", "pala", "kasi", "wag", "tsaka", "di", "pang", "pag", "thankyou", "ako", "naman", "kita", "ur", "jan", "kay", "niyo", "rin", "paki", "ta", "ata", "kayo"
 }
 
-st.empty()
+
+          
 # Editable text areas
 # st.subheader("⚙️ Stopwords Configuration")
 
@@ -191,11 +225,15 @@ def label_from_score(score):
     else:
         return "Neutral"
 
+
+
+
+
 # ------------------------------
 # Upload Feedback Dataset
 # ------------------------------
-uploaded_file = st.file_uploader("📤 Upload Feedback CSV File", type=["csv"])
 
+uploaded_file = st.file_uploader("📤 Upload Feedback CSV File", type=["csv"])
 if uploaded_file:
 
     df = pd.read_csv(uploaded_file)
