@@ -40,7 +40,8 @@ load_nltk()
 st.set_page_config(
     page_title="TeachAIRs",
     page_icon="🧊",
-    page_layout="wide",
+    layout="wide",
+    initial_sidebar_state="expanded",
     menu_items={
        'About': "Developed by TheMatrix"
     }
