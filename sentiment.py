@@ -3,77 +3,55 @@
 # With VADER Method Comparison
 # ==============================
 
-import re
-import warnings
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
 
-import nltk
-nltk.download('punkt_tab')
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
-
 from gensim import corpora
 from gensim.models import LdaModel
+from gensim.models import CoherenceModel
 from wordcloud import WordCloud
 
-import google.generativeai as genai
+# Import utility functions
+from utils import (
+    load_nltk,
+    configure_gemini,
+    vader_standard,
+    vader_augmented,
+    update_vader_lexicon,
+    preprocess,
+    get_standard_vader,
+    get_augmented_vader,
+    label_from_score,
+    classify_sentiment,
+    sentiment_color,
+    filipino_keyword_sentiment,
+    SENTIMENT_SCORE_MAP
+)
 
-warnings.filterwarnings("ignore")
-
-# ------------------------------
-# NLTK Setup
-# ------------------------------
-@st.cache_resource
-def load_nltk():
-    nltk.download("punkt")
-    nltk.download("stopwords")
-    nltk.download("wordnet")
-    nltk.download("vader_lexicon")
-
+# Load NLTK resources
 load_nltk()
 
 # ------------------------------
 # Streamlit Config
 # ------------------------------
+
 st.set_page_config(
-    page_title="TeachAIRs: Sentiment & Topic Analysis",
+    page_title="TeachAIRs",
     page_icon="🧊",
     menu_items={
        'About': "Developed by TheMatrix"
     }
-   
 )
 
-st.title("📊 TeachAIRs: Student Feedback Analyzer with AI Recommendations")
+st.title("TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 
 # ------------------------------
 # Gemini API (Optional)
 # ------------------------------
-#api_key = st.text_input("🔑 Enter Gemini API Key (Optional)", type="password") 
-api_key = st.secrets["api_key"] 
-
-
-@st.cache_resource
-def configure_gemini(key):
-    if not key:
-        return None
-    try:
-        genai.configure(api_key=key)
-        return genai.GenerativeModel("models/gemini-2.5-flash")
-    except:
-        return None
-
+api_key = st.text_input("🔑 Enter Gemini API Key (Optional)", type="password") 
 gemini_model = configure_gemini(api_key)
-
-# ------------------------------
-# Initialize VADER Models
-# ------------------------------
-vader_standard = SentimentIntensityAnalyzer()
-vader_augmented = SentimentIntensityAnalyzer()
 
 # ------------------------------
 # Filipino Lexicon Upload
@@ -84,148 +62,11 @@ filipino_lexicon_file = st.file_uploader(
 )
 
 if filipino_lexicon_file:
-    try:
-        lex_df = pd.read_csv(filipino_lexicon_file)
-        custom_dict = dict(zip(lex_df.iloc[:, 0], lex_df.iloc[:, 1]))
-        vader_augmented.lexicon.update(custom_dict)
-        st.success("✅ Filipino Lexicon Applied to Augmented VADER")
-    except Exception as e:
-        st.error(f"Error loading lexicon: {e}")
-
-
-
-if "page" not in st.session_state:
-    st.session_state.page = 0
-
-def nextpage(): st.session_state.page += 1
-def restart(): st.session_state.page = 0
-
-placeholder = st.empty()
-st.button("Proceed",on_click=nextpage,disabled=(st.session_state.page > 3))
-
-if st.session_state.page == 0:
-    # Replace the placeholder with some text:
-    placeholder.text(f"Hello, this is page {st.session_state.page}")
-
-elif st.session_state.page == 1:
-    # Replace the text with a chart:
-    placeholder.line_chart({"data": [1, 5, 2, 6]})
-
-elif st.session_state.page == 2:
-# Replace the chart with several elements:
-    with placeholder.container():
-        st.write("This is one element")
-        st.write("This is another")
-        st.metric("Page:", value=st.session_state.page)
-
-elif st.session_state.page == 3:
-    placeholder.markdown(r"$f(x) = \exp{\left(x^🐈\right)}$")
-
-else:
-    with placeholder:
-        st.write("This is the end")
-        st.button("Restart",on_click=restart)
-# ------------------------------
-# Text Preprocessing
-# ------------------------------
-# Initial stopwords sets
-filipino_stopwords = {
-"ang","ng","sa","si","ni","mga","ito","iyan","iyon","ako","ikaw","siya", "kami","tayo","kayo","sila","natin","amin","nila","mo","ko","ka","pa", "din","rin","lang","naman","po","opo","ata","kasi","pero","dahil", "kung","kapag","habang","mula","para","gaya","tulad","ganito","ganyan","ganoon","dito","diyan","doon"
-}
-
-domain_stopwords = {
-"teacher","professor","sir","maam","mam","ma'am", "subject","course","class","lesson","topic","discussion", "activity","activities","student","students","school", "semester","learning","teach","teaching",":)"
-}
-
-filler_words = {
-"good","nice","great","really","very","much","many","lot","lots", "quite","something","anything","everything","nothing", "ok","okay","yes","no","maybe","also","still","even","well","yet"
-}
-
-lda_stopwords = {
-"a", "about", "all", "am", "an", "and", "any", "are", "as", "at", "be", "because", "been", "but", "by", "can", "do", "does", "for", "from", "had", "has", "have", "he", "her", "here", "hers", "him", "his", "how", "i", "if", "in", "into", "is", "it", "its", "just", "me", "more", "most", "my", "no", "not", "of", "on", "only", "or", "other", "our",
-"out", "over", "own", "same", "she", "should", "so", "some", "such", "than", "that", "the", "their", "them", "then", "there", "these", "they", "this", "those", "through", "to", "until", "up", "very", "was", "we", "were", "what", "when", "where", "which", "while", "who", "whom", "why", "will", "with", "you", "your", "mam", "maam", "sir", "po", "lang", "naman", "wala", "nya", "sana", "da", "en", "mag", "pala", "kasi", "wag", "tsaka", "di", "pang", "pag", "thankyou", "ako", "naman", "kita", "ur", "jan", "kay", "niyo", "rin", "paki", "ta", "ata", "kayo"
-}
-
-
-          
-# Editable text areas
-# st.subheader("⚙️ Stopwords Configuration")
-
-# filipino_input = st.text_area(
-#     "Filipino Stopwords",
-#     "\n".join(sorted(filipino_stopwords)),
-#     height=150
-# )
-
-# domain_input = st.text_area(
-#     "Domain Stopwords",
-#     "\n".join(sorted(domain_stopwords)),
-#     height=150
-# )
-
-# filler_input = st.text_area(
-#     "Filler Words",
-#     "\n".join(sorted(filler_words)),
-#     height=150
-# )
-
-# Parse inputs back into sets
-# filipino_stopwords = set(w.strip() for w in filipino_input.split("\n") if w.strip())
-# domain_stopwords = set(w.strip() for w in domain_input.split("\n") if w.strip())
-# filler_words = set(w.strip() for w in filler_input.split("\n") if w.strip())
-
-# Combine all stopwords
-stop_words = set(stopwords.words("english")).union(
-    filipino_stopwords,
-    domain_stopwords,
-    filler_words, lda_stopwords
-)
-
-lemmatizer = WordNetLemmatizer()
-
-# ------------------------------
-# Text Preprocessing Function
-# ------------------------------
-def preprocess(text):
-
-    text = str(text).lower()
-
-    # remove URLs
-    text = re.sub(r"http\S+|www\S+", "", text)
-
-    # remove non letters
-    text = re.sub(r"[^a-zA-Z\s]", "", text)
-
-    # tokenize
-    tokens = nltk.word_tokenize(text)
-
-    # remove stopwords + lemmatize
-    tokens = [
-        lemmatizer.lemmatize(w)
-        for w in tokens
-        if w not in stop_words and len(w) > 2
-    ]
-
-    return " ".join(tokens)
-
-# ------------------------------
-# Sentiment Functions
-# ------------------------------
-def get_standard_vader(text):
-    return vader_standard.polarity_scores(text)["compound"]
-
-def get_augmented_vader(text):
-    return vader_augmented.polarity_scores(text)["compound"]
-
-def label_from_score(score):
-    if score > 0.05:
-        return "Positive"
-    elif score < -0.05:
-        return "Negative"
+    success, message = update_vader_lexicon(filipino_lexicon_file)
+    if success:
+        st.success(message)
     else:
-        return "Neutral"
-
-
+        st.error(message)
 
 
 
@@ -234,6 +75,9 @@ def label_from_score(score):
 # ------------------------------
 
 uploaded_file = st.file_uploader("📤 Upload Feedback CSV File", type=["csv"])
+
+
+
 if uploaded_file:
 
     df = pd.read_csv(uploaded_file)
@@ -248,24 +92,19 @@ if uploaded_file:
     df = df[[feedback_col]].rename(columns={feedback_col: "Feedback"})
     df.dropna(inplace=True)
 
-    if st.button("Show Sample Feedback"):
-        st.subheader("📄 Sample Feedback")
-        st.dataframe(df.head())
-    # ------------------------------
-    # Preprocessing
-    # ------------------------------
+    st.divider()
+    st.header("Feedback Dataset Overview")
+    st.dataframe(df.head())
+  
     df["Cleaned"] = df["Feedback"].apply(preprocess)
-    # ------------------------------
-    # Compute Sentiment Scores
-    # ------------------------------
+   
     df["VADER_Standard"] = df["Feedback"].apply(get_standard_vader)
     df["VADER_Augmented"] = df["Feedback"].apply(get_augmented_vader)
     df["Score"] = df["VADER_Augmented"]
     df["Label"] = df["Score"].apply(label_from_score)
-    # ------------------------------
-    # Sentiment Distribution
-    # ------------------------------
-    st.subheader("📊 Sentiment Distribution (Augmented Model)")
+  
+    st.divider()
+    st.header("Sentiment Distribution (Augmented Model)")
     counts = df["Label"].value_counts()
     # Ensure consistent order
     sentiment_order = ["Positive", "Neutral", "Negative"]
@@ -292,20 +131,11 @@ if uploaded_file:
     # ------------------------------
     # Separate Scatter Plots (Color-Coded)
     # ------------------------------
-    st.subheader("📊 Sentiment Polarity Distribution Across Methods")
-    # Helper function for color coding
-    def sentiment_color(score):
-        if score > 0:
-            return "green"
-        elif score < 0:
-            return "red"
-        else:
-            return "yellow"
-
-    # ------------------------------
+    st.divider()
+    st.header("Sentiment Polarity Distribution Across Methods")
+    
     # 1️⃣ Standard VADER Scatter
-    # ------------------------------
-    st.markdown("### Standard VADER (English Only)")
+    st.markdown("## Standard VADER (English Only)")
 
     colors_std = df["VADER_Standard"].apply(sentiment_color)
 
@@ -322,13 +152,12 @@ if uploaded_file:
     ax_std.set_xlabel("Feedback Index")
     ax_std.set_ylabel("Polarity Score")
     ax_std.set_title("Standard VADER Polarity Scores")
-
     st.pyplot(fig_std)
 
     # ------------------------------
     # 2️⃣ Augmented VADER Scatter
     # ------------------------------
-    st.markdown("### Augmented VADER (With Filipino Lexicon)")
+    st.markdown("## Augmented VADER (With Filipino Lexicon)")
     colors_aug = df["VADER_Augmented"].apply(sentiment_color)
     fig_aug, ax_aug = plt.subplots()
 
@@ -349,24 +178,19 @@ if uploaded_file:
     # ------------------------------
     # Overall System Sentiment Scores & Distributions
     # ------------------------------
-    st.subheader("📊 Overall System Sentiment Scores & Distributions")
+    st.divider()
+    st.header("Overall System Sentiment Scores & Distributions")
     total_comments = len(df)
 
-    # ------------------------------
+    # ==============================
     # Helper: Label from score
-    # ------------------------------
-    def classify(score):
-        if score > 0.05:
-            return "Positive"
-        elif score < -0.05:
-            return "Negative"
-        else:
-            return "Neutral"
+    # ==============================
+    # Using classify_sentiment from utils
 
     # ==============================
     # 1️⃣ Standard VADER
     # ==============================
-    df["Label_Std"] = df["VADER_Standard"].apply(classify)
+    df["Label_Std"] = df["VADER_Standard"].apply(classify_sentiment)
 
     std_avg = df["VADER_Standard"].mean()
     std_counts = df["Label_Std"].value_counts()
@@ -376,7 +200,7 @@ if uploaded_file:
     # ==============================
     # 2️⃣ Augmented VADER
     # ==============================
-    df["Label_Aug"] = df["VADER_Augmented"].apply(classify)
+    df["Label_Aug"] = df["VADER_Augmented"].apply(classify_sentiment)
 
     aug_avg = df["VADER_Augmented"].mean()
     aug_counts = df["Label_Aug"].value_counts()
@@ -386,22 +210,7 @@ if uploaded_file:
     # ==============================
     # 3️⃣ Filipino Keyword Direct Count
     # ==============================
-    # Basic keyword lists (expandable)
-    filipino_positive = ["maganda", "mabuti", "mahusay", "salamat", "okay"]
-    filipino_negative = ["pangit", "masama", "mahina", "problema", "hindi"]
-
-    def filipino_keyword_sentiment(text):
-        text = str(text).lower()
-        pos = sum(word in text for word in filipino_positive)
-        neg = sum(word in text for word in filipino_negative)
-
-        if pos > neg:
-            return "Positive"
-        elif neg > pos:
-            return "Negative"
-        else:
-            return "Neutral"
-
+    # Using filipino_keyword_sentiment from utilss
     df["Label_Filipino"] = df["Feedback"].apply(filipino_keyword_sentiment)
 
     fil_counts = df["Label_Filipino"].value_counts()
@@ -413,7 +222,6 @@ if uploaded_file:
     # ------------------------------
 
     st.markdown("## Standard VADER (English / Translated)")
-
     st.markdown(f"""
     **Methodology:** Average of Standard VADER scores (on Feedback_Text)  
     **Score:** {std_avg:.4f}  
@@ -616,7 +424,8 @@ if uploaded_file:
     # ------------------------------
     # Overall Sentiment per Topic (Tabular)
     # ------------------------------
-    st.subheader("📊 Overall Sentiment per Topic")
+    st.divider()
+    st.header("Overall Sentiment per Topic")
 
     # Ensure final LDA model exists (using optimal_k if computed earlier)
     try:
@@ -640,8 +449,7 @@ if uploaded_file:
     df["Topic_ID"] = [get_dominant_topic(bow) for bow in corpus]
 
     # Convert Filipino label to numeric score
-    fil_score_map = {"Positive": 1, "Neutral": 0, "Negative": -1}
-    df["Filipino_Score"] = df["Label_Filipino"].map(fil_score_map)
+    df["Filipino_Score"] = df["Label_Filipino"].map(SENTIMENT_SCORE_MAP)
 
     # Prepare results table
     topic_rows = []
@@ -706,7 +514,8 @@ if uploaded_file:
     topic_summary_df = pd.DataFrame(topic_rows)
 
     st.dataframe(topic_summary_df, use_container_width=True,)
-    st.subheader("🧠 Topic Modeling (LDA)")
+    st.divider()
+    st.header("Topic Modeling (LDA)")
 
     texts = [t.split() for t in df["Cleaned"] if t.strip()]
     dictionary = corpora.Dictionary(texts)
@@ -740,7 +549,8 @@ if uploaded_file:
     # AI Recommendations (Optional)
     # ------------------------------
     if gemini_model:
-        st.subheader("💡 AI Teaching Recommendations")
+        st.divider()
+        st.subheader("💡AI Teaching Recommendations")
 
         # Ensure correlation exists
         try:
@@ -761,4 +571,5 @@ if uploaded_file:
         st.write(response.text.strip())
 
 else:
-    st.info("👈 Please upload a CSV file to begin.")
+    st.info("Please upload a CSV file to begin.")
+    st.divider()
