@@ -12,6 +12,25 @@ from nltk.stem import WordNetLemmatizer
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import google.generativeai as genai
 import streamlit as st
+st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Cascadia+Code:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+html, body, [class*="css"] {
+    font-family: 'Cascadia Code', monospace;
+}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    font-family: 'Cascadia Code', monospace;
+}
+
+/* Buttons */
+button {
+    font-family: 'Cascadia Code', monospace;
+}
+</style>
+""", unsafe_allow_html=True)
 
 warnings.filterwarnings("ignore")
 
