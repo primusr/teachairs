@@ -94,75 +94,76 @@ if filipino_lexicon_file:
 # ------------------------------
 # Text Preprocessing
 # ------------------------------
-stop_words = {
+# ------------------------------
+# Base English Stopwords (NLTK)
+# ------------------------------
+    stop_words = set(stopwords.words("english"))
 
-# -------------------------
-# Basic English Stopwords
-# -------------------------
-"a","about","above","after","again","against","all","am","an","and","any","are",
-"as","at","be","because","been","before","being","below","between","both","but",
-"by","can","did","do","does","doing","down","during","each","few","for","from",
-"further","had","has","have","having","he","her","here","hers","herself","him",
-"himself","his","how","i","if","in","into","is","it","its","itself","just",
-"me","more","most","my","myself","no","nor","not","now","of","off","on","once",
-"only","or","other","our","ours","ourselves","out","over","own","same","she",
-"should","so","some","such","than","that","the","their","theirs","them",
-"themselves","then","there","these","they","this","those","through","to","too",
-"under","until","up","very","was","we","were","what","when","where","which",
-"while","who","whom","why","will","with","you","your","yours","yourself",
-"yourselves",
+    # ------------------------------
+    # Filipino Stopwords
+    # ------------------------------
+    filipino_stopwords = {
+    "ang","ng","sa","si","ni","mga","ito","iyan","iyon","ako","ikaw","siya",
+    "kami","tayo","kayo","sila","natin","amin","nila","mo","ko","ka","pa",
+    "din","rin","lang","naman","po","opo","ata","kasi","pero","dahil",
+    "kung","kapag","habang","mula","para","gaya","tulad","ganito",
+    "ganyan","ganoon","dito","diyan","doon"
+    }
 
-# -------------------------
-# Filipino Stopwords
-# -------------------------
-"ang","ng","sa","si","ni","mga","ito","iyan","iyon","ako","ikaw","siya","kami",
-"tayo","kayo","sila","natin","amin","nila","mo","ko","ka","pa","din","rin",
-"lang","naman","po","opo","ata","kasi","pero","dahil","kung","kapag","habang",
-"mula","para","gaya","tulad","ganito","ganyan","ganoon","dito","diyan","doon",
+    # ------------------------------
+    # Student Feedback Domain Words
+    # ------------------------------
+    domain_stopwords = {
+    "teacher","professor","sir","maam","mam","ma'am",
+    "subject","course","class","lesson","topic","discussion",
+    "activity","activities","student","students","school",
+    "semester","learning","teach","teaching"
+    }
 
-# -------------------------
-# Student Feedback Fillers
-# -------------------------
-"teacher","professor","sir","maam","mam","ma'am","subject","course","class",
-"lesson","topic","discussion","activity","activities","student","students",
-"school","semester","learning","teach","teaching",
+    # ------------------------------
+    # Generic Feedback Fillers
+    # ------------------------------
+    filler_words = {
+    "good","nice","great","really","very","much","many","lot","lots",
+    "quite","something","anything","everything","nothing",
+    "ok","okay","yes","no","maybe","also","still","even","well","yet"
+    }
 
-# -------------------------
-# Generic Feedback Words
-# -------------------------
-"good","nice","great","very","really","much","many","lot","lots","quite",
-"somewhat","something","anything","everything","nothing",
+    # ------------------------------
+    # Combine All Stopwords
+    # ------------------------------
+    stop_words = stop_words.union(
+        filipino_stopwords,
+        domain_stopwords,
+        filler_words
+    )
 
-# -------------------------
-# Common Short Words
-# -------------------------
-"ok","okay","yes","no","maybe","also","still","even","well","yet"
-}
+    lemmatizer = WordNetLemmatizer()
 
-def clean_text(text):
-    tokens = text.lower().split()
-    tokens = [
-        word for word in tokens
-        if word not in stop_words and len(word) > 2
-    ]
-    return " ".join(tokens)
+    # ------------------------------
+    # Text Preprocessing Function
+    # ------------------------------
+    def preprocess(text):
 
+        text = str(text).lower()
 
-# stop_words = set(stopwords.words("english"))
-# lemmatizer = WordNetLemmatizer()
+        # remove URLs
+        text = re.sub(r"http\S+|www\S+", "", text)
 
-# def preprocess(text):
-#     text = str(text).lower()
-#     text = re.sub(r"http\S+|www\S+", "", text)
-#     text = re.sub(r"[^a-zA-Z\s]", "", text)
+        # remove non letters
+        text = re.sub(r"[^a-zA-Z\s]", "", text)
 
-#     tokens = nltk.word_tokenize(text)
-#     tokens = [
-#         lemmatizer.lemmatize(w)
-#         for w in tokens
-#         if w not in stop_words and len(w) > 2
-#     ]
-#     return " ".join(tokens)
+        # tokenize
+        tokens = nltk.word_tokenize(text)
+
+        # remove stopwords + lemmatize
+        tokens = [
+            lemmatizer.lemmatize(w)
+            for w in tokens
+            if w not in stop_words and len(w) > 2
+        ]
+
+        return " ".join(tokens)
 
 # ------------------------------
 # Sentiment Functions
