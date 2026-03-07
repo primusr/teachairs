@@ -92,94 +92,86 @@ if filipino_lexicon_file:
     except Exception as e:
         st.error(f"Error loading lexicon: {e}")
 
-    #st.text_area("Edit Stopwords", value=stopwords, height=300)
-    #st.code(stopwords, language="english")
-
 # ------------------------------
 # Text Preprocessing
 # ------------------------------
+# Initial stopwords sets
+filipino_stopwords = {
+"ang","ng","sa","si","ni","mga","ito","iyan","iyon","ako","ikaw","siya", "kami","tayo","kayo","sila","natin","amin","nila","mo","ko","ka","pa", "din","rin","lang","naman","po","opo","ata","kasi","pero","dahil", "kung","kapag","habang","mula","para","gaya","tulad","ganito","ganyan","ganoon","dito","diyan","doon"
+}
+
+domain_stopwords = {
+"teacher","professor","sir","maam","mam","ma'am", "subject","course","class","lesson","topic","discussion", "activity","activities","student","students","school", "semester","learning","teach","teaching",":)"
+}
+
+filler_words = {
+"good","nice","great","really","very","much","many","lot","lots", "quite","something","anything","everything","nothing", "ok","okay","yes","no","maybe","also","still","even","well","yet"
+}
+
+lda_stopwords = {
+"a", "about", "all", "am", "an", "and", "any", "are", "as", "at", "be", "because", "been", "but", "by", "can", "do", "does", "for", "from", "had", "has", "have", "he", "her", "here", "hers", "him", "his", "how", "i", "if", "in", "into", "is", "it", "its", "just", "me", "more", "most", "my", "no", "not", "of", "on", "only", "or", "other", "our",
+"out", "over", "own", "same", "she", "should", "so", "some", "such", "than", "that", "the", "their", "them", "then", "there", "these", "they", "this", "those", "through", "to", "until", "up", "very", "was", "we", "were", "what", "when", "where", "which", "while", "who", "whom", "why", "will", "with", "you", "your", "mam", "maam", "sir", "po", "lang", "naman", "wala", "nya", "sana", "da", "en", "mag", "pala", "kasi", "wag", "tsaka", "di", "pang", "pag", "thankyou", "ako", "naman", "kita", "ur", "jan", "kay", "niyo", "rin", "paki", "ta", "ata", "kayo"
+}
+
+# Editable text areas
+# st.subheader("⚙️ Stopwords Configuration")
+
+# filipino_input = st.text_area(
+#     "Filipino Stopwords",
+#     "\n".join(sorted(filipino_stopwords)),
+#     height=150
+# )
+
+# domain_input = st.text_area(
+#     "Domain Stopwords",
+#     "\n".join(sorted(domain_stopwords)),
+#     height=150
+# )
+
+# filler_input = st.text_area(
+#     "Filler Words",
+#     "\n".join(sorted(filler_words)),
+#     height=150
+# )
+
+# Parse inputs back into sets
+# filipino_stopwords = set(w.strip() for w in filipino_input.split("\n") if w.strip())
+# domain_stopwords = set(w.strip() for w in domain_input.split("\n") if w.strip())
+# filler_words = set(w.strip() for w in filler_input.split("\n") if w.strip())
+
+# Combine all stopwords
+stop_words = set(stopwords.words("english")).union(
+    filipino_stopwords,
+    domain_stopwords,
+    filler_words, lda_stopwords
+)
+
+lemmatizer = WordNetLemmatizer()
+
 # ------------------------------
-# Base English Stopwords (NLTK)
+# Text Preprocessing Function
 # ------------------------------
-    # Initial stopwords sets
-    filipino_stopwords = {
-    "ang","ng","sa","si","ni","mga","ito","iyan","iyon","ako","ikaw","siya",
-    "kami","tayo","kayo","sila","natin","amin","nila","mo","ko","ka","pa",
-    "din","rin","lang","naman","po","opo","ata","kasi","pero","dahil",
-    "kung","kapag","habang","mula","para","gaya","tulad","ganito",
-    "ganyan","ganoon","dito","diyan","doon"
-    }
+def preprocess(text):
 
-    domain_stopwords = {
-    "teacher","professor","sir","maam","mam","ma'am",
-    "subject","course","class","lesson","topic","discussion",
-    "activity","activities","student","students","school",
-    "semester","learning","teach","teaching",":)"
-    }
+    text = str(text).lower()
 
-    filler_words = {
-    "good","nice","great","really","very","much","many","lot","lots",
-    "quite","something","anything","everything","nothing",
-    "ok","okay","yes","no","maybe","also","still","even","well","yet"
-    }
+    # remove URLs
+    text = re.sub(r"http\S+|www\S+", "", text)
 
-    # Editable text areas
-    filipino_input = st.text_area(
-        "Filipino Stopwords",
-        "\n".join(sorted(filipino_stopwords)),
-        height=150
-    )
+    # remove non letters
+    text = re.sub(r"[^a-zA-Z\s]", "", text)
 
-    domain_input = st.text_area(
-        "Domain Stopwords",
-        "\n".join(sorted(domain_stopwords)),
-        height=150
-    )
+    # tokenize
+    tokens = nltk.word_tokenize(text)
 
-    filler_input = st.text_area(
-        "Filler Words",
-        "\n".join(sorted(filler_words)),
-        height=150
-    )
+    # remove stopwords + lemmatize
+    tokens = [
+        lemmatizer.lemmatize(w)
+        for w in tokens
+        if w not in stop_words and len(w) > 2
+    ]
 
-    # Parse inputs back into sets
-    filipino_stopwords = set(w.strip() for w in filipino_input.split("\n") if w.strip())
-    domain_stopwords = set(w.strip() for w in domain_input.split("\n") if w.strip())
-    filler_words = set(w.strip() for w in filler_input.split("\n") if w.strip())
-
-    # Combine all stopwords
-    stop_words = set(stopwords.words("english")).union(
-        filipino_stopwords,
-        domain_stopwords,
-        filler_words
-    )
-
-    lemmatizer = WordNetLemmatizer()
-
-    # ------------------------------
-    # Text Preprocessing Function
-    # ------------------------------
-    def preprocess(text):
-
-        text = str(text).lower()
-
-        # remove URLs
-        text = re.sub(r"http\S+|www\S+", "", text)
-
-        # remove non letters
-        text = re.sub(r"[^a-zA-Z\s]", "", text)
-
-        # tokenize
-        tokens = nltk.word_tokenize(text)
-
-        # remove stopwords + lemmatize
-        tokens = [
-            lemmatizer.lemmatize(w)
-            for w in tokens
-            if w not in stop_words and len(w) > 2
-        ]
-
-        return " ".join(tokens)
+    return " ".join(tokens)
 
 # ------------------------------
 # Sentiment Functions
