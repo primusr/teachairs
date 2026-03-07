@@ -113,6 +113,7 @@ lda_stopwords = {
 "out", "over", "own", "same", "she", "should", "so", "some", "such", "than", "that", "the", "their", "them", "then", "there", "these", "they", "this", "those", "through", "to", "until", "up", "very", "was", "we", "were", "what", "when", "where", "which", "while", "who", "whom", "why", "will", "with", "you", "your", "mam", "maam", "sir", "po", "lang", "naman", "wala", "nya", "sana", "da", "en", "mag", "pala", "kasi", "wag", "tsaka", "di", "pang", "pag", "thankyou", "ako", "naman", "kita", "ur", "jan", "kay", "niyo", "rin", "paki", "ta", "ata", "kayo"
 }
 
+st.empty()
 # Editable text areas
 # st.subheader("⚙️ Stopwords Configuration")
 
