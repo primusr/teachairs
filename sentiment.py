@@ -46,8 +46,6 @@ st.set_page_config(
     }
 )
 
-with open('./styles.css') as f:
-    css = f.read()
 
 st.title("TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 
