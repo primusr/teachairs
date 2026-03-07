@@ -40,6 +40,7 @@ load_nltk()
 st.set_page_config(
     page_title="TeachAIRs",
     page_icon="🧊",
+    page_layout="wide",
     menu_items={
        'About': "Developed by TheMatrix"
     }
@@ -77,8 +78,6 @@ if filipino_lexicon_file:
 
 uploaded_file = st.file_uploader("📤 Upload Feedback CSV File", type=["csv"])
 
-
-
 if uploaded_file:
 
     df = pd.read_csv(uploaded_file)
@@ -98,7 +97,6 @@ if uploaded_file:
     st.dataframe(df.head())
   
     df["Cleaned"] = df["Feedback"].apply(preprocess)
-   
     df["VADER_Standard"] = df["Feedback"].apply(get_standard_vader)
     df["VADER_Augmented"] = df["Feedback"].apply(get_augmented_vader)
     df["Score"] = df["VADER_Augmented"]
