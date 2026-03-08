@@ -43,7 +43,8 @@ st.set_page_config(
     page_icon="🧊",
     initial_sidebar_state="expanded",
     menu_items={
-       'About': "Developed by TheMatrix"
+       'About': "Developed by TheMatrix. Visit this link for a video tutorial: https://www.youtube.com/shorts/OvRlMiYURhM"
+    
     }
 )
 
@@ -73,21 +74,6 @@ h1, h2, h3, h4, h5, h6 {
 """, unsafe_allow_html=True)
 
 st.title("TeachAIRs: Student Feedback Analyzer with AI Recommendations")
-st.divider()
-
-
-video_file = open("demo.mp4", "rb")
-video_bytes = video_file.read()
-video_base64 = base64.b64encode(video_bytes).decode()
-
-video_html = f"""
-<video autoplay muted loop width="700">
-    <source src="data:video/mp4;base64,{video_base64}" type="video/mp4">
-</video>
-"""
-
-st.markdown(video_html, unsafe_allow_html=True)
-
 
 # ------------------------------
 # Gemini API (Optional)
