@@ -70,7 +70,7 @@ def configure_gemini(key):
         return None
     try:
         genai.configure(api_key=key)
-        return genai.GenerativeModel("models/gemini-3.1-pro-preview")
+        return genai.GenerativeModel("models/gemini-3.1-flash-lite-preview")
     except:
         return None
 
