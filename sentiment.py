@@ -12,6 +12,7 @@ from gensim import corpora
 from gensim.models import LdaModel
 from gensim.models import CoherenceModel
 from wordcloud import WordCloud
+import base64
 
 # Import utility functions
 from utils import (
@@ -47,6 +48,8 @@ st.set_page_config(
 )
 
 
+
+
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -70,6 +73,21 @@ h1, h2, h3, h4, h5, h6 {
 """, unsafe_allow_html=True)
 
 st.title("TeachAIRs: Student Feedback Analyzer with AI Recommendations")
+st.divider()
+
+
+video_file = open("demo.mp4", "rb")
+video_bytes = video_file.read()
+video_base64 = base64.b64encode(video_bytes).decode()
+
+video_html = f"""
+<video autoplay muted loop width="700">
+    <source src="data:video/mp4;base64,{video_base64}" type="video/mp4">
+</video>
+"""
+
+st.markdown(video_html, unsafe_allow_html=True)
+st.video("demo.mp4")
 
 # ------------------------------
 # Gemini API (Optional)
