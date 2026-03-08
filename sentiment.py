@@ -87,7 +87,7 @@ video_html = f"""
 """
 
 st.markdown(video_html, unsafe_allow_html=True)
-st.video("demo.mp4")
+
 
 # ------------------------------
 # Gemini API (Optional)
