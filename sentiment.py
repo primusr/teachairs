@@ -538,7 +538,7 @@ if uploaded_file:
 
     topic_summary_df = pd.DataFrame(topic_rows)
 
-    st.dataframe(topic_summary_df, use_container_width=True,)
+    st.dataframe(topic_summary_df, width='stretch',)
     st.divider()
     st.header("Topic Modeling (LDA)")
 
