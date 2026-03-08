@@ -43,9 +43,11 @@ st.set_page_config(
     page_icon="🧊",
     initial_sidebar_state="expanded",
     menu_items={
-       'About': "Developed by TheMatrix. Visit this link for a video tutorial: https://www.youtube.com/shorts/OvRlMiYURhM"
-    
-    }
+        "About": "Developed by Neo under the supervision of the Oracle. Watch this short video for a tutorial on how to use the app:  https://www.youtube.com/shorts/OvRlMiYURhM",
+        "Get Help": "https://www.linkedin.com/in/unclebreaker/",
+        "Report a bug": "https://www.linkedin.com/in/unclebreaker/"
+    }    
+  
 )
 
 
