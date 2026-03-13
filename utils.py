@@ -98,7 +98,7 @@ FILIPINO_STOPWORDS = {
     "ang","ng","sa","si","ni","mga","ito","iyan","iyon","ako","ikaw","siya", 
     "kami","tayo","kayo","sila","natin","amin","nila","mo","ko","ka","pa", 
     "din","rin","lang","naman","po","opo","ata","kasi","pero","dahil", 
-    "kung","kapag","habang","mula","para","gaya","tulad","ganito","ganyan","ganoon","dito","diyan","doon"
+    "kung","kapag","habang","mula","para","gaya","tulad","ganito","ganyan","ganoon","dito","diyan","doon","shes","yong","kanyang","kaniya," "kayo", "none", "None"
 }
 
 DOMAIN_STOPWORDS = {
