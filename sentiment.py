@@ -608,8 +608,7 @@ if uploaded_file:
         - Do NOT add extra sections
 
         FORMAT:
-        Generating Overall AI Recommendations
-        Overall AI Recommendations:
+       
         1. Leverage Positive Feedback: Focus on Reinforcing Current Strengths
         Rationale:
         (Explain based on positive sentiment)
