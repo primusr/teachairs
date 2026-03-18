@@ -613,27 +613,30 @@ if uploaded_file:
         Rationale:
         (Explain based on positive sentiment)
 
-        Actionable Steps:
-        - (4–5 steps)
+           Actionable Steps:
+           - (4–5 steps)
 
         2. Address Perceived Ineffective Teaching Speed (Pace)
         Rationale:
         (Explain based on negative sentiment)
-        Actionable Steps:
-        - (4–5 steps)
+        
+           Actionable Steps:
+           - (4–5 steps)
 
         3. Explore Filipino Keyword Sentiment and Tone
         Rationale:
         (Explain based on Filipino sentiment results)
-        Actionable Steps:
-        - (4–5 steps)
+        
+           Actionable Steps:
+           - (4–5 steps)
 
         4. Align Teaching Strategies with Key Topics: Voice of Teaching, Considerate Teaching, Student Engagement
         Rationale:
         (Explain based on topic insights and engagement)
 
-        Actionable Steps:
-        - (4–5 steps)
+           Actionable Steps:
+           - (4–5 steps)
+        
         DATA:
         {summary}
         """
