@@ -575,8 +575,8 @@ if uploaded_file:
     # ------------------------------
     if gemini_model:
         st.divider()
-        st.subheader("Generating Overall AI Recommendations (based on CSV Analysis)")
-        st.markdown("Overall AI Recommendations:")  
+        st.header("Generating Overall AI Recommendations (based on CSV Analysis)")
+        st.subheader("Overall AI Recommendations:")  
 
         # Ensure correlation exists
         try:
@@ -584,17 +584,88 @@ if uploaded_file:
         except:
             corr_value = "Not computed"
 
+        # Include ALL important computed metrics
         summary = f"""
-        Average Sentiment Score: {avg_score:.2f}
-        Distribution: {counts.to_dict()}
-        Correlation Between Models: {corr_value}
-        """
+            Average Sentiment Score: {avg_score:.2f}
+            Sentiment Distribution: {counts.to_dict()}
+            Standard VADER Average: {std_avg:.2f}
+            Augmented VADER Average: {aug_avg:.2f}
+            Filipino Dominant Sentiment: {fil_dominant}
+            Correlation Between Models: {corr_value}
+            """
 
-        response = gemini_model.generate_content(
-            summary + "\nGive 3 actionable teaching recommendations."
-        )
+        # Structured prompt
+        structured_prompt = f"""
+            You are an academic assistant analyzing student feedback data.
+            Generate a structured set of teaching recommendations.
+            STRICT RULES:
+            - Provide EXACTLY 4 sections
+            - Each section MUST include:
+            Title
+            Rationale
+            Actionable Steps (bullet list)
+            - Do NOT skip any section
+            - Do NOT add extra sections
 
-        st.write(response.text.strip())
+            FORMAT:
+            Generating Overall AI Recommendations
+            Overall AI Recommendations:
+            1. Leverage Positive Feedback: Focus on Reinforcing Current Strengths
+            Rationale:
+            (Explain based on positive sentiment)
+
+            Actionable Steps:
+            - (4–5 steps)
+
+            2. Address Perceived Ineffective Teaching Speed (Pace)
+            Rationale:
+            (Explain based on negative sentiment)
+            Actionable Steps:
+            - (4–5 steps)
+
+            3. Explore Filipino Keyword Sentiment and Tone
+            Rationale:
+            (Explain based on Filipino sentiment results)
+            Actionable Steps:
+            - (4–5 steps)
+
+            4. Align Teaching Strategies with Key Topics: Voice of Teaching, Considerate Teaching, Student Engagement
+            Rationale:
+            (Explain based on topic insights and engagement)
+
+            Actionable Steps:
+            - (4–5 steps)
+            DATA:
+            {summary}
+            """
+
+            response = gemini_model.generate_content(structured_prompt)
+            st.markdown(response.text)
+
+    # # Use markdown to preserve formatting
+    # st.markdown(response.text)
+    # if gemini_model:
+    #     st.divider()
+    #     st.header("Generating Overall AI Recommendations (based on CSV Analysis)")
+    #     st.subheader("Overall AI Recommendations:")  
+
+    #     # Ensure correlation exists
+    #     try:
+    #         corr_value = f"{correlation:.2f}"
+    #     except:
+    #         corr_value = "Not computed"
+
+    #     summary = f"""
+    #     Average Sentiment Score: {avg_score:.2f}
+    #     Distribution: {counts.to_dict()}
+    #     Correlation Between Models: {corr_value}
+    #     """
+
+    #     response = gemini_model.generate_content(
+    #         summary + "\nGive 3 actionable teaching recommendations."
+    #     )
+
+    #     st.write(response.text.strip())
 
 else:
     st.info("Please upload a CSV file to begin.")
