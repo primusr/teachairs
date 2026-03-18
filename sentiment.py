@@ -575,7 +575,8 @@ if uploaded_file:
     # ------------------------------
     if gemini_model:
         st.divider()
-        st.subheader("💡AI Teaching Recommendations")
+        st.subheader("Generating Overall AI Recommendations (based on CSV Analysis)")
+        st.markdown("Overall AI Recommendations:")  
 
         # Ensure correlation exists
         try:
