@@ -580,9 +580,9 @@ if uploaded_file:
 
         # Ensure correlation exists
         try:
-        corr_value = f"{correlation:.2f}"
+            corr_value = f"{correlation:.2f}"
         except:
-        corr_value = "Not computed"
+            corr_value = "Not computed"
 
         # Include ALL important computed metrics
         summary = f"""
