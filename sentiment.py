@@ -26,9 +26,7 @@ from utils import (
     SENTIMENT_SCORE_MAP
 )
 
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from io import BytesIO
+
 
 # Load NLTK resources
 load_nltk()
