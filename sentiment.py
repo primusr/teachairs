@@ -141,6 +141,21 @@ if uploaded_file:
                 st.subheader("Top keywords per topic")
                 for tid, kws in topics.items():
                     st.write(f"Topic {tid}: {', '.join(kws)}")
+                # Generate word clouds for each topic
+                try:
+                    st.subheader("Topic Word Clouds")
+                    for tid in range(lda_model.num_topics):
+                        # get (word, weight) pairs for topic
+                        pairs = lda_model.show_topic(tid, topn=40)
+                        freqs = {word: float(weight) for word, weight in pairs}
+                        wc = WordCloud(width=600, height=360, background_color='white').generate_from_frequencies(freqs)
+                        fig_wc, ax_wc = plt.subplots(figsize=(6, 4))
+                        ax_wc.imshow(wc, interpolation='bilinear')
+                        ax_wc.axis('off')
+                        ax_wc.set_title(f"Topic {tid}")
+                        st.pyplot(fig_wc)
+                except Exception:
+                    st.warning("Could not generate topic word clouds.")
   
     st.divider()
     st.header("Sentiment Distribution (Augmented Model)")
@@ -248,7 +263,7 @@ if uploaded_file:
     ax1.legend(handles=[agree_patch, disagree_patch])
 
     # Right: Translated Standard vs Augmented, colored by Filipino keyword sentiment
-    color_map = {1: 'green', 0: 'blue', -1: 'red'}
+    color_map = {1: 'green', 0: 'orange', -1: 'red'}
     filipino_colors = df['Filipino_Score'].map(color_map)
     ax2.scatter(df['VADER_Standard_Translated'], df['VADER_Augmented'], c=filipino_colors, alpha=0.7)
     ax2.plot([-1, 1], [-1, 1], ls='--', color='gray')
