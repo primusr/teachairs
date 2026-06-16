@@ -152,7 +152,10 @@ if uploaded_file:
                         fig_wc, ax_wc = plt.subplots(figsize=(6, 4))
                         ax_wc.imshow(wc, interpolation='bilinear')
                         ax_wc.axis('off')
-                        ax_wc.set_title(f"Topic {tid}")
+                        # include top keywords in the figure title
+                        top_keywords = ', '.join([w for w, _ in pairs[:8]])
+                        title = f"Topic {tid} — {top_keywords}"
+                        ax_wc.set_title(title, fontsize=10)
                         st.pyplot(fig_wc)
                 except Exception:
                     st.warning("Could not generate topic word clouds.")
