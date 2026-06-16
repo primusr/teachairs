@@ -215,48 +215,56 @@ if uploaded_file:
         st.write("Sample changes (first 5):")
         st.dataframe(changes[['Feedback','Std_Label','Aug_Label']].head())
 
-    # Scatter plot comparing scores across methods
+    # Side-by-side scatter plots comparing Standard (English-translated) vs Augmented (with Filipino lexicon)
+    # Prepare translated standard VADER (English translation) if translator is available
+    try:
+        from googletrans import Translator
+        translator = Translator()
+        df['Feedback_Translated'] = df['Feedback'].apply(lambda t: translator.translate(str(t), dest='en').text if str(t).strip() else "")
+        df['VADER_Standard_Translated'] = df['Feedback_Translated'].apply(get_standard_vader)
+        _translation_available = True
+    except Exception:
+        # Fallback: use original text/scores if translation not available
+        df['Feedback_Translated'] = df['Feedback']
+        df['VADER_Standard_Translated'] = df['VADER_Standard']
+        _translation_available = False
+
+    # Filipino keyword score and label for coloring
     df['Filipino_Score'] = df['Cleaned'].apply(lambda text: 1 if filipino_keyword_sentiment(text) == 'Positive' else (-1 if filipino_keyword_sentiment(text) == 'Negative' else 0))
-    fig_sc, ax_sc = plt.subplots(figsize=(8,6))
-    scatter_colors = ['green' if s == a else 'orange' for s, a in zip(df['Std_Label'], df['Aug_Label'])]
-    ax_sc.scatter(df['VADER_Standard'], df['VADER_Augmented'], c=scatter_colors, alpha=0.7, label='VADER comparisons')
-    ax_sc.plot([-1,1], [-1,1], ls='--', color='gray', label='Agreement line')
-    ax_sc.set_xlabel('VADER Standard Score')
-    ax_sc.set_ylabel('VADER Augmented Score')
-    ax_sc.set_title('Comparison of Sentiment Polarity Scores Across Methods')
-    ax_sc.legend()
+    df['Filipino_Label'] = df['Cleaned'].apply(filipino_keyword_sentiment)
+
+    fig_sc, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6), sharey=True)
+
+    # Left: Translated Standard vs Augmented, colored by agreement
+    agree_colors = ['green' if s == a else 'orange' for s, a in zip(df['Std_Label'], df['Aug_Label'])]
+    ax1.scatter(df['VADER_Standard_Translated'], df['VADER_Augmented'], c=agree_colors, alpha=0.7)
+    ax1.plot([-1, 1], [-1, 1], ls='--', color='gray')
+    ax1.set_xlabel('VADER Standard (Translated) Score')
+    ax1.set_ylabel('VADER Augmented Score')
+    ax1.set_title('Standard (Translated) vs Augmented — Agreement')
+    import matplotlib.patches as mpatches
+    agree_patch = mpatches.Patch(color='green', label='Agree')
+    disagree_patch = mpatches.Patch(color='orange', label='Disagree')
+    ax1.legend(handles=[agree_patch, disagree_patch])
+
+    # Right: Translated Standard vs Augmented, colored by Filipino keyword sentiment
+    color_map = {1: 'green', 0: 'blue', -1: 'red'}
+    filipino_colors = df['Filipino_Score'].map(color_map)
+    ax2.scatter(df['VADER_Standard_Translated'], df['VADER_Augmented'], c=filipino_colors, alpha=0.7)
+    ax2.plot([-1, 1], [-1, 1], ls='--', color='gray')
+    ax2.set_xlabel('VADER Standard (Translated) Score')
+    ax2.set_title('Standard (Translated) vs Augmented — Filipino keyword sentiment')
+    pos_patch = mpatches.Patch(color='green', label='Filipino Positive')
+    neu_patch = mpatches.Patch(color='blue', label='Filipino Neutral')
+    neg_patch = mpatches.Patch(color='red', label='Filipino Negative')
+    ax2.legend(handles=[pos_patch, neu_patch, neg_patch])
 
     st.pyplot(fig_sc)
 
-    st.markdown("**Additional insight:** green points indicate label agreement between Standard and Augmented VADER; orange points indicate label disagreement.")
+    if not _translation_available:
+        st.info("Translation not available; using original feedback text for Standard VADER scores.")
 
-    # Word Cloud
-    st.divider()
-    st.header("Word Cloud")
-    if st.checkbox("Generate word cloud from cleaned feedback"):
-        combined_text = " ".join(df["Cleaned"].astype(str).tolist())
-        if not combined_text.strip():
-            st.warning("No text available to generate a word cloud.")
-        else:
-            wc = WordCloud(width=900, height=400, background_color='white', stopwords=STOP_WORDS).generate(combined_text)
-            fig_wc, ax_wc = plt.subplots(figsize=(12, 6))
-            ax_wc.imshow(wc, interpolation='bilinear')
-            ax_wc.axis('off')
-            st.pyplot(fig_wc)
-
-    if topics:
-        st.divider()
-        st.header("Word Clouds by Identified Topic")
-        for tid, kws in topics.items():
-            topic_text = " ".join([word for word_list in df["Cleaned"].astype(str).tolist() for word in word_list.split() if word in kws])
-            if not topic_text.strip():
-                continue
-            wc_topic = WordCloud(width=700, height=350, background_color='white', stopwords=STOP_WORDS).generate(topic_text)
-            fig_topic, ax_topic = plt.subplots(figsize=(10, 5))
-            ax_topic.imshow(wc_topic, interpolation='bilinear')
-            ax_topic.axis('off')
-            ax_topic.set_title(f"Topic {tid}: {', '.join(kws)}")
-            st.pyplot(fig_topic)
+    st.markdown("**Additional insight:** left: green=agreement, orange=disagreement; right: color shows Filipino keyword sentiment.")
 
     # Gemini AI Recommendations
     st.divider()
