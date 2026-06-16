@@ -12,6 +12,11 @@ from nltk.stem import WordNetLemmatizer
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import google.generativeai as genai
 import streamlit as st
+from collections import deque
+import time
+import os
+from gensim import corpora
+from gensim.models import LdaModel, CoherenceModel
 
 
 st.markdown("""
@@ -84,12 +89,126 @@ vader_augmented = SentimentIntensityAnalyzer()
 def update_vader_lexicon(lexicon_file):
     """Update vader_augmented with custom Filipino lexicon"""
     try:
-        lex_df = pd.read_csv(lexicon_file)
-        custom_dict = dict(zip(lex_df.iloc[:, 0], lex_df.iloc[:, 1]))
+        # Support both file-like (Streamlit upload) and file path
+        if hasattr(lexicon_file, 'read'):
+            lex_df = pd.read_csv(lexicon_file)
+        else:
+            lex_df = pd.read_csv(str(lexicon_file))
+        custom_dict = {str(k).lower(): float(v) for k, v in zip(lex_df.iloc[:, 0], lex_df.iloc[:, 1])}
         vader_augmented.lexicon.update(custom_dict)
         return True, "✅ Filipino Lexicon Applied to Augmented VADER"
     except Exception as e:
         return False, f"Error loading lexicon: {e}"
+
+
+def load_filipino_vader_lexicon(csv_path):
+    """Load a Filipino lexicon CSV with columns ('Word','Sentiment_Score') and return dict."""
+    try:
+        if not os.path.exists(csv_path):
+            # attempt to read directly (e.g., file-like)
+            lex_df = pd.read_csv(csv_path)
+        else:
+            lex_df = pd.read_csv(csv_path)
+        # tolerate different column names
+        cols = [c.lower() for c in lex_df.columns]
+        if 'word' in cols and ('sentiment_score' in cols or 'score' in cols or 'sentiment' in cols):
+            word_col = lex_df.columns[cols.index('word')]
+            # find score column
+            for candidate in ('sentiment_score', 'score', 'sentiment'):
+                if candidate in cols:
+                    score_col = lex_df.columns[cols.index(candidate)]; break
+            else:
+                score_col = lex_df.columns[1]
+        else:
+            # fallback: first two columns
+            word_col, score_col = lex_df.columns[0], lex_df.columns[1]
+
+        filipino_lexicon = {str(row[word_col]).lower(): float(row[score_col]) for _, row in lex_df.iterrows() if pd.notnull(row[word_col])}
+        return filipino_lexicon
+    except Exception:
+        return {}
+
+
+def get_filipino_keyword_sentiment(cleaned_text, positive_keywords=None, negative_keywords=None):
+    """Return (score, label, positive_matches_csv, negative_matches_csv) similar to the notebook."""
+    if not isinstance(cleaned_text, str):
+        cleaned_text = ""
+    if positive_keywords is None:
+        positive_keywords = [w.lower() for w in FILIPINO_POSITIVE]
+    if negative_keywords is None:
+        negative_keywords = [w.lower() for w in FILIPINO_NEGATIVE]
+    score = 0
+    positive_matches = []
+    negative_matches = []
+    tokens = cleaned_text.lower().split()
+    for word in positive_keywords:
+        if word in tokens:
+            score += 1
+            positive_matches.append(word)
+    for word in negative_keywords:
+        if word in tokens:
+            score -= 1
+            negative_matches.append(word)
+    if score > 0:
+        sentiment_label = "Positive"
+    elif score < 0:
+        sentiment_label = "Negative"
+    else:
+        sentiment_label = "Neutral"
+    return score, sentiment_label, ", ".join(sorted(set(positive_matches))), ", ".join(sorted(set(negative_matches)))
+
+
+class APIRateLimiter:
+    """Simple conservative rate limiter (requests per minute, min delay)."""
+    def __init__(self, rpm_limit=5, min_delay=12):
+        self.request_times = deque()
+        self.total_requests = 0
+        self.failed_requests = 0
+        self.start_time = time.time()
+        self.RPM_LIMIT = rpm_limit
+        self.MIN_DELAY = min_delay
+
+    def wait_if_needed(self):
+        current_time = time.time()
+        while self.request_times and current_time - self.request_times[0] > 60:
+            self.request_times.popleft()
+        requests_in_window = len(self.request_times)
+        # enforce window limit
+        if requests_in_window >= self.RPM_LIMIT:
+            oldest = self.request_times[0]
+            wait_time = 60 - (current_time - oldest) + 1
+            time.sleep(max(wait_time, 0))
+            current_time = time.time()
+        # enforce minimum delay
+        if self.request_times:
+            time_since_last = current_time - self.request_times[-1]
+            if time_since_last < self.MIN_DELAY:
+                time.sleep(self.MIN_DELAY - time_since_last)
+                current_time = time.time()
+        self.request_times.append(current_time)
+        self.total_requests += 1
+
+
+def train_lda(tokenized_texts, num_topics=4, passes=25, random_state=42, no_below=2, no_above=0.85):
+    """Train an LDA model and return (model, dictionary, corpus). Tokenized_texts is list[list[str]]."""
+    dictionary = corpora.Dictionary(tokenized_texts)
+    dictionary.filter_extremes(no_below=no_below, no_above=no_above)
+    corpus = [dictionary.doc2bow(text) for text in tokenized_texts]
+    corpus = [c for c in corpus if c]
+    if not corpus or len(dictionary.keys()) == 0:
+        return None, None, None
+    model = LdaModel(corpus=corpus, id2word=dictionary, num_topics=min(num_topics, len(dictionary.keys())), passes=passes, random_state=random_state)
+    return model, dictionary, corpus
+
+
+def get_topic_keywords(model, topn=8):
+    """Return dict topic_id -> list of keywords"""
+    if not model:
+        return {}
+    out = {}
+    for tid in range(model.num_topics):
+        out[tid] = [w for w, p in model.show_topic(tid, topn=topn)]
+    return out
 
 # ------------------------------
 # Stopwords Definition
