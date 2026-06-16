@@ -202,6 +202,14 @@ if uploaded_file:
     summary_df.index.name = "Sentiment"
     st.table(summary_df)
 
+    sentiment_csv = df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        "Download Sentiment Analysis Results",
+        sentiment_csv,
+        file_name="sentiment_results.csv",
+        mime="text/csv"
+    )
+
     avg_score = df["Score"].mean()
     st.markdown(f"""
     **Average Sentiment Score:** {avg_score:.3f}  
@@ -303,7 +311,11 @@ if uploaded_file:
                     rec_text = resp.text if hasattr(resp, 'text') else str(resp)
                     st.subheader("AI Recommendations")
                     st.text(rec_text)
-                    # allow download
-                    st.download_button("Download Recommendations", rec_text, file_name="ai_recommendations.txt")
+                    st.download_button(
+                        "Download Gemini Recommendations",
+                        rec_text,
+                        file_name="ai_recommendations.txt",
+                        mime="text/plain"
+                    )
                 except Exception as e:
                     st.error(f"AI request failed: {e}")
