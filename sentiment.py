@@ -273,11 +273,36 @@ if uploaded_file:
     ax2.set_xlabel('VADER Standard (Translated) Score')
     ax2.set_title('Standard (Translated) vs Augmented — Filipino keyword sentiment')
     pos_patch = mpatches.Patch(color='green', label='Filipino Positive')
-    neu_patch = mpatches.Patch(color='blue', label='Filipino Neutral')
+    neu_patch = mpatches.Patch(color='orange', label='Filipino Neutral')
     neg_patch = mpatches.Patch(color='red', label='Filipino Negative')
     ax2.legend(handles=[pos_patch, neu_patch, neg_patch])
 
     st.pyplot(fig_sc)
+
+    # Detailed index-based scatter plot for each comment
+    df['Comment_Index'] = list(range(len(df)))
+    fig_detail, ax_det = plt.subplots(figsize=(12, 5))
+    index_colors = df['Filipino_Score'].map(color_map)
+    ax_det.scatter(df['Comment_Index'], df['VADER_Standard_Translated'], c=index_colors, marker='o', alpha=0.7, label='Standard VADER')
+    ax_det.scatter(df['Comment_Index'], df['VADER_Augmented'], c=index_colors, marker='x', alpha=0.7, label='Augmented VADER')
+    ax_det.axhline(0, color='gray', linestyle='--', linewidth=1)
+    ax_det.set_xlabel('Feedback Comment Index')
+    ax_det.set_ylabel('Sentiment Polarity Score')
+    ax_det.set_title('Individual Comment Sentiment Scores: Standard vs Augmented VADER')
+    from matplotlib.lines import Line2D
+    method_legend = [
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='black', markersize=8, label='Standard VADER'),
+        Line2D([0], [0], marker='x', color='black', markersize=8, label='Augmented VADER')
+    ]
+    sentiment_legend = [
+        mpatches.Patch(color='green', label='Positive'),
+        mpatches.Patch(color='orange', label='Neutral'),
+        mpatches.Patch(color='red', label='Negative')
+    ]
+    legend1 = ax_det.legend(handles=method_legend, title='Method', loc='upper left')
+    ax_det.add_artist(legend1)
+    ax_det.legend(handles=sentiment_legend, title='Category', loc='upper right')
+    st.pyplot(fig_detail)
 
     if not _translation_available:
         st.info("Translation not available; using original feedback text for Standard VADER scores.")
