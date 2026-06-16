@@ -26,6 +26,8 @@ from utils import (
     SENTIMENT_SCORE_MAP
 )
 from utils import train_lda, get_topic_keywords, load_filipino_vader_lexicon
+from utils import STOP_WORDS
+from utils import APIRateLimiter
 
 # Load NLTK resources
 load_nltk()
@@ -72,6 +74,7 @@ st.title("TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 # ------------------------------
 api_key = st.secrets["api_key"]
 gemini_model = configure_gemini(api_key)
+rate_limiter = APIRateLimiter()
 
 # ------------------------------
 # Filipino Lexicon Upload
@@ -119,6 +122,9 @@ if uploaded_file:
     # Optional: Topic modeling
     st.divider()
     st.header("Topic Modeling (Optional)")
+    lda_model = None
+    dictionary = None
+    corpus = None
     if st.checkbox("Run LDA topic modeling on cleaned feedback"):
         tokenized = df["Cleaned"].apply(lambda x: x.split()).tolist()
         tokenized = [t for t in tokenized if t]
@@ -159,3 +165,61 @@ if uploaded_file:
     **Average Sentiment Score:** {avg_score:.3f}  
     **Overall Sentiment:** {'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'}
     """)
+
+    # Word Cloud
+    st.divider()
+    st.header("Word Cloud")
+    if st.checkbox("Generate word cloud from cleaned feedback"):
+        combined_text = " ".join(df["Cleaned"].astype(str).tolist())
+        if not combined_text.strip():
+            st.warning("No text available to generate a word cloud.")
+        else:
+            wc = WordCloud(width=900, height=400, background_color='white', stopwords=STOP_WORDS).generate(combined_text)
+            fig_wc, ax_wc = plt.subplots(figsize=(12, 6))
+            ax_wc.imshow(wc, interpolation='bilinear')
+            ax_wc.axis('off')
+            st.pyplot(fig_wc)
+
+    # Gemini AI Recommendations
+    st.divider()
+    st.header("AI Recommendations (Gemini)")
+    if not gemini_model:
+        st.info("Gemini not configured. Set `api_key` in Streamlit secrets to enable AI recommendations.")
+    else:
+        if st.button("Generate Overall AI Recommendations"):
+            # build a concise summary
+            with st.spinner("Generating AI recommendations..."):
+                avg_score = df["Score"].mean() if "Score" in df else 0
+                summary = f"Overall Avg Augmented VADER Score: {avg_score:.3f}\n"
+                counts = df["Label"].value_counts().to_dict()
+                summary += "Distribution:\n"
+                for k, v in counts.items():
+                    summary += f" - {k}: {v}\n"
+                # include topics if available
+                if lda_model is not None:
+                    topics = get_topic_keywords(lda_model, topn=6)
+                    summary += "\nTop Topics:\n"
+                    for tid, kws in topics.items():
+                        summary += f" - Topic {tid}: {', '.join(kws)}\n"
+                # include sample positive/negative
+                pos_sample = df[df["Label"] == 'Positive']["Feedback"].head(1).tolist()
+                neg_sample = df[df["Label"] == 'Negative']["Feedback"].head(1).tolist()
+                summary += f"\nExample Positive: {pos_sample[0] if pos_sample else 'N/A'}\n"
+                summary += f"Example Negative: {neg_sample[0] if neg_sample else 'N/A'}\n"
+
+                prompt = (
+                    "You are an educational consultant. Given the feedback summary below, provide 3 actionable teaching recommendations with short headings and rationale.\n\n"
+                    f"Summary:\n{summary}\n"
+                    "Output as plain text."
+                )
+
+                try:
+                    rate_limiter.wait_if_needed()
+                    resp = gemini_model.generate_content(prompt)
+                    rec_text = resp.text if hasattr(resp, 'text') else str(resp)
+                    st.subheader("AI Recommendations")
+                    st.text(rec_text)
+                    # allow download
+                    st.download_button("Download Recommendations", rec_text, file_name="ai_recommendations.txt")
+                except Exception as e:
+                    st.error(f"AI request failed: {e}")
