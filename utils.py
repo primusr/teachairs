@@ -13,6 +13,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import google.generativeai as genai
 import streamlit as st
 
+
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -44,6 +45,7 @@ button {
 </style>
 """, unsafe_allow_html=True)
 
+
 warnings.filterwarnings("ignore")
 
 # ------------------------------
@@ -51,11 +53,11 @@ warnings.filterwarnings("ignore")
 # ------------------------------
 @st.cache_resource
 def load_nltk():
-    nltk.download("punkt", quiet=True)
-    nltk.download("stopwords", quiet=True)
-    nltk.download("wordnet", quiet=True)
-    nltk.download("vader_lexicon", quiet=True)
-    nltk.download('punkt_tab', quiet=True)
+    nltk.download("punkt")
+    nltk.download("stopwords")
+    nltk.download("wordnet")
+    nltk.download("vader_lexicon")
+    nltk.download('punkt_tab')
 
 load_nltk()
 
@@ -68,8 +70,7 @@ def configure_gemini(key):
         return None
     try:
         genai.configure(api_key=key)
-        # Updated to match the model specified in copy_of_ai_teacher_feedback_system.py
-        return genai.GenerativeModel("gemini-2.5-flash")
+        return genai.GenerativeModel("models/gemini-3.1-flash-lite-preview")
     except:
         return None
 
@@ -97,7 +98,7 @@ FILIPINO_STOPWORDS = {
     "ang","ng","sa","si","ni","mga","ito","iyan","iyon","ako","ikaw","siya", 
     "kami","tayo","kayo","sila","natin","amin","nila","mo","ko","ka","pa", 
     "din","rin","lang","naman","po","opo","ata","kasi","pero","dahil", 
-    "kung","kapag","habang","mula","para","gaya","tulad","ganito","ganyan","ganoon","dito","diyan","doon","shes","yong","kanyang","kaniya", "kayo", "none", "None"
+    "kung","kapag","habang","mula","para","gaya","tulad","ganito","ganyan","ganoon","dito","diyan","doon","shes","yong","kanyang","kaniya," "kayo", "none", "None"
 }
 
 DOMAIN_STOPWORDS = {
