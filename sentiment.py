@@ -1,8 +1,3 @@
-# ==============================
-# TeachAIRs: Sentiment & Topic Analysis
-# With VADER Method Comparison
-# ==============================
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,6 +25,10 @@ from utils import (
     filipino_keyword_sentiment,
     SENTIMENT_SCORE_MAP
 )
+
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from io import BytesIO
 
 # Load NLTK resources
 load_nltk()
@@ -606,7 +605,23 @@ if uploaded_file:
 
         st.pyplot(fig3)
 
+    # ------------------------------
+    # Download Sentiment Analysis Results
+    # ------------------------------
 
+    st.divider()
+    st.subheader("📥 Download Analysis Results")
+
+    export_df = df.copy()
+
+    csv_data = export_df.to_csv(index=False).encode("utf-8")
+
+    st.download_button(
+        label="📊 Download Sentiment Analysis CSV",
+        data=csv_data,
+        file_name="TeachAIRs_Sentiment_Analysis.csv",
+        mime="text/csv"
+    )
     # ------------------------------
     # AI Recommendations (Optional)
     # ------------------------------
@@ -680,7 +695,14 @@ if uploaded_file:
 
     response = gemini_model.generate_content(structured_prompt)
     st.markdown(response.text)
+    recommendation_text = response.text
 
+    st.download_button(
+        label="🤖 Download AI Recommendations",
+        data=recommendation_text,
+        file_name="TeachAIRs_AI_Recommendations.txt",
+        mime="text/plain"
+    )
     # # Use markdown to preserve formatting
     # st.markdown(response.text)
     # if gemini_model:
