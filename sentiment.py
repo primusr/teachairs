@@ -125,6 +125,7 @@ if uploaded_file:
     lda_model = None
     dictionary = None
     corpus = None
+    topics = {}
     if st.checkbox("Run LDA topic modeling on cleaned feedback"):
         tokenized = df["Cleaned"].apply(lambda x: x.split()).tolist()
         tokenized = [t for t in tokenized if t]
@@ -159,12 +160,74 @@ if uploaded_file:
     ax1.set_xlabel("Sentiment")
     ax1.set_title("Sentiment Distribution")
     st.pyplot(fig1)
-    
+
+    # Overall System Sentiment Scores & Distribution
+    st.divider()
+    st.header("Overall System Sentiment Scores & Distribution")
+    avg_std_score = df["VADER_Standard"].mean()
+    avg_aug_score = df["VADER_Augmented"].mean()
+    st.markdown(f"""
+    **Average Standard VADER Score:** {avg_std_score:.3f}  
+    **Average Augmented VADER Score:** {avg_aug_score:.3f}  
+    **Overall Sentiment (Augmented):** {'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'}
+    """)
+
+    dist_std = df["VADER_Standard"].apply(label_from_score).value_counts().reindex(sentiment_order, fill_value=0)
+    dist_aug = df["VADER_Augmented"].apply(label_from_score).value_counts().reindex(sentiment_order, fill_value=0)
+    dist_fil = df["Cleaned"].apply(filipino_keyword_sentiment).value_counts().reindex(sentiment_order, fill_value=0)
+    summary_df = pd.DataFrame({
+        "Standard VADER": dist_std,
+        "Augmented VADER": dist_aug,
+        "Filipino Keywords": dist_fil
+    })
+    summary_df.index.name = "Sentiment"
+    st.table(summary_df)
+
     avg_score = df["Score"].mean()
     st.markdown(f"""
     **Average Sentiment Score:** {avg_score:.3f}  
     **Overall Sentiment:** {'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'}
     """)
+
+    # VADER vs Augmented VADER Comparison
+    st.divider()
+    st.header("VADER vs Augmented VADER Comparison")
+    # derive labels
+    df['Std_Label'] = df['VADER_Standard'].apply(label_from_score)
+    df['Aug_Label'] = df['VADER_Augmented'].apply(label_from_score)
+    # agreement rate
+    try:
+        agreement_rate = (df['Std_Label'] == df['Aug_Label']).mean()
+    except Exception:
+        agreement_rate = 0.0
+    st.write(f"Agreement rate: {agreement_rate:.2%}")
+
+    # Confusion matrix (Std rows, Aug cols)
+    conf = pd.crosstab(df['Std_Label'], df['Aug_Label'])
+    st.subheader("Label Confusion Matrix")
+    st.table(conf)
+
+    # Show counts of changed labels
+    changes = df[df['Std_Label'] != df['Aug_Label']]
+    st.write(f"Number of comments with different labels: {len(changes)}")
+    if not changes.empty:
+        st.write("Sample changes (first 5):")
+        st.dataframe(changes[['Feedback','Std_Label','Aug_Label']].head())
+
+    # Scatter plot comparing scores across methods
+    df['Filipino_Score'] = df['Cleaned'].apply(lambda text: 1 if filipino_keyword_sentiment(text) == 'Positive' else (-1 if filipino_keyword_sentiment(text) == 'Negative' else 0))
+    fig_sc, ax_sc = plt.subplots(figsize=(8,6))
+    scatter_colors = ['green' if s == a else 'orange' for s, a in zip(df['Std_Label'], df['Aug_Label'])]
+    ax_sc.scatter(df['VADER_Standard'], df['VADER_Augmented'], c=scatter_colors, alpha=0.7, label='VADER comparisons')
+    ax_sc.plot([-1,1], [-1,1], ls='--', color='gray', label='Agreement line')
+    ax_sc.set_xlabel('VADER Standard Score')
+    ax_sc.set_ylabel('VADER Augmented Score')
+    ax_sc.set_title('Comparison of Sentiment Polarity Scores Across Methods')
+    ax_sc.legend()
+
+    st.pyplot(fig_sc)
+
+    st.markdown("**Additional insight:** green points indicate label agreement between Standard and Augmented VADER; orange points indicate label disagreement.")
 
     # Word Cloud
     st.divider()
@@ -179,6 +242,20 @@ if uploaded_file:
             ax_wc.imshow(wc, interpolation='bilinear')
             ax_wc.axis('off')
             st.pyplot(fig_wc)
+
+    if topics:
+        st.divider()
+        st.header("Word Clouds by Identified Topic")
+        for tid, kws in topics.items():
+            topic_text = " ".join([word for word_list in df["Cleaned"].astype(str).tolist() for word in word_list.split() if word in kws])
+            if not topic_text.strip():
+                continue
+            wc_topic = WordCloud(width=700, height=350, background_color='white', stopwords=STOP_WORDS).generate(topic_text)
+            fig_topic, ax_topic = plt.subplots(figsize=(10, 5))
+            ax_topic.imshow(wc_topic, interpolation='bilinear')
+            ax_topic.axis('off')
+            ax_topic.set_title(f"Topic {tid}: {', '.join(kws)}")
+            st.pyplot(fig_topic)
 
     # Gemini AI Recommendations
     st.divider()
