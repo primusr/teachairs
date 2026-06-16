@@ -166,6 +166,7 @@ if uploaded_file:
     st.header("Overall System Sentiment Scores & Distribution")
     avg_std_score = df["VADER_Standard"].mean()
     avg_aug_score = df["VADER_Augmented"].mean()
+    avg_score = df["Score"].mean() if "Score" in df else avg_aug_score
     st.markdown(f"""
     **Average Standard VADER Score:** {avg_std_score:.3f}  
     **Average Augmented VADER Score:** {avg_aug_score:.3f}  
