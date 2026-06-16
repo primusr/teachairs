@@ -250,6 +250,7 @@ if uploaded_file:
     # Filipino keyword score and label for coloring
     df['Filipino_Score'] = df['Cleaned'].apply(lambda text: 1 if filipino_keyword_sentiment(text) == 'Positive' else (-1 if filipino_keyword_sentiment(text) == 'Negative' else 0))
     df['Filipino_Label'] = df['Cleaned'].apply(filipino_keyword_sentiment)
+    color_map = {1: 'green', 0: 'orange', -1: 'red'}
 
     fig_sc, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6), sharey=True)
 
@@ -266,7 +267,6 @@ if uploaded_file:
     ax1.legend(handles=[agree_patch, disagree_patch])
 
     # Right: Translated Standard vs Augmented, colored by Filipino keyword sentiment
-    color_map = {1: 'green', 0: 'orange', -1: 'red'}
     filipino_colors = df['Filipino_Score'].map(color_map)
     ax2.scatter(df['VADER_Standard_Translated'], df['VADER_Augmented'], c=filipino_colors, alpha=0.7)
     ax2.plot([-1, 1], [-1, 1], ls='--', color='gray')
