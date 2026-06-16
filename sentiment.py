@@ -554,20 +554,45 @@ if uploaded_file:
         random_state=42
     )
 
-    for i in range(5):
-        st.markdown(f"### Topic {i+1}")
-        words_probs = lda_model.show_topic(i, topn=10)
-        words = ", ".join([w for w, _ in words_probs])
-        st.write(words)
+        for i in range(5):
 
-        wc = WordCloud(background_color="white")
-        wc.generate_from_frequencies(dict(words_probs))
+            words_probs = lda_model.show_topic(i, topn=10)
+            words = ", ".join([w for w, _ in words_probs])
 
-        fig3, ax3 = plt.subplots()
-        ax3.imshow(wc)
-        ax3.axis("off")
-        st.pyplot(fig3)
+            # Generate AI Topic Title
+            if gemini_model:
+                prompt = f"""
+                Create a concise academic topic title (3-5 words only)
+                based on these keywords:
 
+                {words}
+
+                Return ONLY the title.
+                """
+                try:
+                    ai_title = gemini_model.generate_content(prompt).text.strip()
+                except:
+                    ai_title = f"Topic {i+1}"
+            else:
+                ai_title = f"Topic {i+1}"
+
+            # Display AI Title
+            st.markdown(f"### 🏷️ {ai_title}")
+
+            st.caption(f"Keywords: {words}")
+
+            wc = WordCloud(
+                background_color="white",
+                width=800,
+                height=400
+            )
+
+            wc.generate_from_frequencies(dict(words_probs))
+
+            fig3, ax3 = plt.subplots(figsize=(8,4))
+            ax3.imshow(wc, interpolation="bilinear")
+            ax3.axis("off")
+            st.pyplot(fig3)
 
 
     # ------------------------------
