@@ -233,7 +233,36 @@ if uploaded_file:
         st.write("Sample changes (first 5):")
         st.dataframe(changes[['Feedback','Std_Label','Aug_Label']].head())
 
-    
+    # Comparison scatter plot for sentiment polarity scores across methods
+    df['Comment_Index'] = list(range(len(df)))
+    category_colors = {'Positive': 'green', 'Neutral': 'orange', 'Negative': 'red'}
+    std_colors = df['VADER_Standard'].apply(label_from_score).map(category_colors)
+    aug_colors = df['VADER_Augmented'].apply(label_from_score).map(category_colors)
+
+    fig_cmp, (ax_std, ax_aug) = plt.subplots(1, 2, figsize=(14, 5), sharey=True)
+    ax_std.scatter(df['Comment_Index'], df['VADER_Standard'], c=std_colors, alpha=0.7)
+    ax_std.axhline(0.0, color='gray', linestyle='--', linewidth=1)
+    ax_std.set_xlabel('Feedback Comment Index')
+    ax_std.set_ylabel('Sentiment Polarity Score')
+    ax_std.set_title('Standard VADER')
+    ax_std.set_ylim(-1.05, 1.05)
+
+    ax_aug.scatter(df['Comment_Index'], df['VADER_Augmented'], c=aug_colors, alpha=0.7)
+    ax_aug.axhline(0.0, color='gray', linestyle='--', linewidth=1)
+    ax_aug.set_xlabel('Feedback Comment Index')
+    ax_aug.set_title('Augmented VADER')
+    ax_aug.set_ylim(-1.05, 1.05)
+
+    import matplotlib.patches as mpatches
+    legend_handles = [
+        mpatches.Patch(color='green', label='Positive'),
+        mpatches.Patch(color='orange', label='Neutral'),
+        mpatches.Patch(color='red', label='Negative')
+    ]
+    ax_aug.legend(handles=legend_handles, title='Category', loc='upper right')
+    st.pyplot(fig_cmp)
+
+    st.markdown("**Additional insight:** Left panel shows the Standard VADER score clustering; right panel shows how Augmented VADER shifts sentiment toward the neutral band.")
 
     # Gemini AI Recommendations
     st.divider()
