@@ -590,8 +590,20 @@ if uploaded_file:
         wc.generate_from_frequencies(dict(words_probs))
 
         fig3, ax3 = plt.subplots(figsize=(8,4))
+
         ax3.imshow(wc, interpolation="bilinear")
         ax3.axis("off")
+
+        # Add title inside figure
+        ax3.set_title(
+            ai_title,
+            fontsize=16,
+            fontweight="bold",
+            pad=20
+        )
+
+        plt.tight_layout()
+
         st.pyplot(fig3)
 
 
