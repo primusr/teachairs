@@ -37,7 +37,7 @@ load_nltk()
 # ------------------------------
 st.set_page_config(
     page_title="TeachAIRs",
-    page_icon="🧊",
+    page_icon="💽",
     layout="centered",
     initial_sidebar_state="expanded",
     menu_items={
