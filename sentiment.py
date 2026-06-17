@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
+import os
 
 from gensim import corpora
 from gensim.models import LdaModel
@@ -31,6 +32,86 @@ from utils import APIRateLimiter
 
 # Load NLTK resources
 load_nltk()
+
+DEFAULT_FEEDBACK_COLUMN_NAMES = ["feedback", "comment", "comments", "Feedback", "Comment", "Strengths"]
+OUTPUT_SENTIMENT_COMPARISON_CSV = "sentiment_analysis_results_comparison.csv"
+
+
+def load_csv_with_encodings(csv_file_path, encodings=None):
+    encodings = encodings or ['utf-8', 'latin1', 'iso-8859-1', 'cp1252', 'unicode_escape']
+    last_error = None
+    for enc in encodings:
+        try:
+            df = pd.read_csv(csv_file_path, header=0, encoding=enc)
+            st.write(f"✅ Successfully read CSV with encoding: {enc}")
+            return df
+        except UnicodeDecodeError as e:
+            last_error = e
+            st.write(f"⚠️ Failed to decode with {enc}, trying next...")
+        except Exception as e:
+            last_error = e
+            st.write(f"⚠️ Error reading with encoding {enc}: {e}")
+    raise ValueError("Could not read CSV. See previous messages.") from last_error
+
+
+def select_feedback_column(df, preferred_text_column_names):
+    for col_name in preferred_text_column_names:
+        if col_name in df.columns:
+            return col_name
+    potential_text_cols = [col for col in df.columns if df[col].dtype == 'object']
+    if potential_text_cols:
+        return max(potential_text_cols, key=lambda col: df[col].astype(str).str.len().mean())
+    return None
+
+
+def process_local_feedback_csv(csv_file_path):
+    if not csv_file_path:
+        st.warning("Enter a valid local CSV file path.")
+        return
+    if not os.path.exists(csv_file_path):
+        st.error(f"Error: The file '{csv_file_path}' was not found.")
+        return
+    try:
+        df_raw = load_csv_with_encodings(csv_file_path)
+    except Exception as e:
+        st.error(f"Could not load CSV: {e}")
+        return
+
+    feedback_col = select_feedback_column(df_raw, DEFAULT_FEEDBACK_COLUMN_NAMES)
+    if not feedback_col:
+        st.error("Could not determine a feedback text column in the CSV.")
+        return
+
+    df = df_raw[[feedback_col]].rename(columns={feedback_col: "Feedback"})
+    df.dropna(inplace=True)
+    if df.empty:
+        st.warning("No valid feedback rows after dropping null values.")
+        return
+
+    df["Cleaned"] = df["Feedback"].apply(preprocess)
+    df = df[df["Cleaned"].str.strip() != ""].copy()
+    if df.empty:
+        st.warning("DataFrame is empty after cleaning. Cannot proceed.")
+        return
+
+    df["VADER_Standard"] = df["Feedback"].apply(get_standard_vader)
+    df["VADER_Augmented"] = df["Cleaned"].apply(get_augmented_vader)
+    df["Filipino_Keyword_Sentiment"] = df["Cleaned"].apply(filipino_keyword_sentiment)
+    df["Label"] = df["VADER_Augmented"].apply(label_from_score)
+
+    st.subheader("Processed DataFrame Sample")
+    st.dataframe(df.head(5))
+    st.dataframe(df.tail(5))
+
+    df.to_csv(OUTPUT_SENTIMENT_COMPARISON_CSV, index=False)
+    st.success(f"Full sentiment analysis results saved to '{OUTPUT_SENTIMENT_COMPARISON_CSV}'.")
+    csv_bytes = df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        "Download sentiment analysis results",
+        csv_bytes,
+        file_name=OUTPUT_SENTIMENT_COMPARISON_CSV,
+        mime="text/csv"
+    )
 
 # ------------------------------
 # Streamlit Config
@@ -95,6 +176,14 @@ if filipino_lexicon_file:
 # ------------------------------
 # Upload Feedback Dataset
 # ------------------------------
+st.divider()
+st.header("Process a Local CSV File")
+local_csv_path = st.text_input("Enter a local CSV file path", value="")
+if st.button("Process local CSV"):
+    process_local_feedback_csv(local_csv_path)
+
+# ------------------------------
+# Upload Feedback Dataset
 uploaded_file = st.file_uploader("📤 Upload Feedback CSV File", type=["csv"])
 
 if uploaded_file:
