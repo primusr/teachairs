@@ -259,6 +259,49 @@ if uploaded_file:
         if not tokenized:
             st.warning("No tokenized text available for LDA.")
         else:
+            st.subheader("Evaluate Optimal Number of Topics")
+            topic_start = st.number_input("Start number of topics", min_value=2, max_value=12, value=3, step=1)
+            topic_end = st.number_input("End number of topics", min_value=topic_start, max_value=12, value=5, step=1)
+            topic_step = st.number_input("Step size", min_value=1, max_value=5, value=1, step=1)
+            if st.button("Evaluate LDA coherence scores"):
+                coherence_values_cv = []
+                coherence_values_umass = []
+                coherence_values_cnpmi = []
+                topic_counts = list(range(topic_start, topic_end + 1, topic_step))
+                st.info(f"Evaluating LDA for {topic_start} to {topic_end} topics (step {topic_step})...")
+                for num_topics_iter in topic_counts:
+                    try:
+                        model_iter, dictionary_iter, corpus_iter = train_lda(tokenized, num_topics=num_topics_iter)
+                        if model_iter is None or dictionary_iter is None or corpus_iter is None:
+                            raise ValueError("LDA model could not be trained for this topic count.")
+                        coherencemodel_cv = CoherenceModel(model=model_iter, texts=tokenized, dictionary=dictionary_iter, coherence='c_v')
+                        cv_score = coherencemodel_cv.get_coherence()
+                        coherencemodel_umass = CoherenceModel(model=model_iter, dictionary=dictionary_iter, corpus=corpus_iter, coherence='u_mass')
+                        umass_score = coherencemodel_umass.get_coherence()
+                        coherencemodel_cnpmi = CoherenceModel(model=model_iter, texts=tokenized, dictionary=dictionary_iter, coherence='c_npmi')
+                        cnpmi_score = coherencemodel_cnpmi.get_coherence()
+                        coherence_values_cv.append(cv_score)
+                        coherence_values_umass.append(umass_score)
+                        coherence_values_cnpmi.append(cnpmi_score)
+                        st.write(f"  Coherence for {num_topics_iter} topics: C_v={cv_score:.4f}, UMass={umass_score:.4f}, C_NPMI={cnpmi_score:.4f}")
+                    except Exception as e_lda_optim:
+                        st.warning(f"Error evaluating {num_topics_iter} topics: {e_lda_optim}. Skipping.")
+                        coherence_values_cv.append(np.nan)
+                        coherence_values_umass.append(np.nan)
+                        coherence_values_cnpmi.append(np.nan)
+                if any(not np.isnan(val) for val in coherence_values_cv):
+                    coherence_df = pd.DataFrame({
+                        "C_v": coherence_values_cv,
+                        "UMass": coherence_values_umass,
+                        "C_NPMI": coherence_values_cnpmi
+                    }, index=topic_counts)
+                    coherence_df.index.name = "Num Topics"
+                    st.subheader("LDA Coherence by Topic Count")
+                    st.line_chart(coherence_df)
+                    st.dataframe(coherence_df.style.format("{:.4f}"))
+                else:
+                    st.warning("No valid coherence scores were generated.")
+
             num_topics = st.number_input("Number of topics", min_value=2, max_value=12, value=4)
             lda_model, dictionary, corpus = train_lda(tokenized, num_topics=int(num_topics))
             if lda_model is None:
