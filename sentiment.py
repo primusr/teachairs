@@ -233,13 +233,9 @@ if uploaded_file:
 
     df = cleaned_df.rename(columns={'Feedback_Text': 'Feedback'}).copy()
     df['Cleaned'] = df['Cleaned_Text_Main']
-    df['Score'] = df['VADER_Score_Aug']
-    df['Label'] = df['Score'].apply(label_from_score)
-
-    st.divider()
-    st.header("Feedback Dataset Overview")
-    st.dataframe(df.head())
-
+    df['VADER_Standard'] = df['VADER_Score_Eng']
+    df['VADER_Augmented'] = df['VADER_Score_Aug']
+    df['Score'] = df['VADER_Augmented']
     comparison_csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(
         "Download sentiment analysis results",
