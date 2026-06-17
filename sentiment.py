@@ -235,7 +235,9 @@ if uploaded_file:
     df['Cleaned'] = df['Cleaned_Text_Main']
     df['VADER_Standard'] = df['VADER_Score_Eng']
     df['VADER_Augmented'] = df['VADER_Score_Aug']
-    df['Score'] = df['VADER_Augmented']
+    df['Score'] = df.get('VADER_Augmented', df.get('VADER_Standard', 0.0))
+    if 'Label' not in df.columns:
+        df['Label'] = df['Score'].apply(label_from_score)
     comparison_csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(
         "Download sentiment analysis results",
