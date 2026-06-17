@@ -37,12 +37,13 @@ DEFAULT_FEEDBACK_COLUMN_NAMES = ["feedback", "comment", "comments", "Feedback", 
 OUTPUT_SENTIMENT_COMPARISON_CSV = "sentiment_analysis_results_comparison.csv"
 
 
-def load_csv_with_encodings(csv_file_path, encodings=None):
+def load_csv_with_encodings(uploaded_file, encodings=None):
     encodings = encodings or ['utf-8', 'latin1', 'iso-8859-1', 'cp1252', 'unicode_escape']
     last_error = None
     for enc in encodings:
         try:
-            df = pd.read_csv(csv_file_path, header=0, encoding=enc)
+            uploaded_file.seek(0)
+            df = pd.read_csv(uploaded_file, header=0, encoding=enc)
             st.write(f"✅ Successfully read CSV with encoding: {enc}")
             return df
         except UnicodeDecodeError as e:
@@ -54,64 +55,84 @@ def load_csv_with_encodings(csv_file_path, encodings=None):
     raise ValueError("Could not read CSV. See previous messages.") from last_error
 
 
-def select_feedback_column(df, preferred_text_column_names):
+def preprocess_text(text, for_lda=False):
+    return preprocess(text)
+
+
+def clean_dataframe(df, preferred_text_column_names):
+    original_text_column = None
     for col_name in preferred_text_column_names:
         if col_name in df.columns:
-            return col_name
-    potential_text_cols = [col for col in df.columns if df[col].dtype == 'object']
-    if potential_text_cols:
-        return max(potential_text_cols, key=lambda col: df[col].astype(str).str.len().mean())
-    return None
+            original_text_column = col_name
+            break
+    if not original_text_column:
+        if df.shape[1] > 0 and (df.columns[0] == 0 or isinstance(df.columns[0], int)):
+            original_text_column = df.columns[0]
+        elif any(df[col].dtype == 'object' for col in df.columns):
+            potential_cols = [col for col in df.columns if df[col].dtype == 'object']
+            original_text_column = max(potential_cols, key=lambda col: df[col].astype(str).str.len().mean(), default=None)
+    if not original_text_column and df.shape[1] > 0:
+        original_text_column = df.columns[0]
+    if not original_text_column:
+        raise ValueError("DataFrame empty or no suitable text column.")
+
+    df['Original_Text'] = df[original_text_column].copy()
+    df = df[df[original_text_column].notnull() & (df[original_text_column].astype(str) != '0')]
+    df.rename(columns={str(original_text_column): 'Feedback_Text'}, inplace=True)
+    return df[['Original_Text', 'Feedback_Text']]
 
 
-def process_local_feedback_csv(csv_file_path):
-    if not csv_file_path:
-        st.warning("Enter a valid local CSV file path.")
-        return
-    if not os.path.exists(csv_file_path):
-        st.error(f"Error: The file '{csv_file_path}' was not found.")
-        return
-    try:
-        df_raw = load_csv_with_encodings(csv_file_path)
-    except Exception as e:
-        st.error(f"Could not load CSV: {e}")
-        return
+def get_vader_sentiment_english(text_for_vader_eng):
+    if not isinstance(text_for_vader_eng, str):
+        text_for_vader_eng = ""
+    compound_score = get_standard_vader(text_for_vader_eng)
+    if compound_score >= 0.05:
+        sentiment_label = "Positive (VADER Eng)"
+    elif compound_score <= -0.05:
+        sentiment_label = "Negative (VADER Eng)"
+    else:
+        sentiment_label = "Neutral (VADER Eng)"
+    return compound_score, sentiment_label
 
-    feedback_col = select_feedback_column(df_raw, DEFAULT_FEEDBACK_COLUMN_NAMES)
-    if not feedback_col:
-        st.error("Could not determine a feedback text column in the CSV.")
-        return
 
-    df = df_raw[[feedback_col]].rename(columns={feedback_col: "Feedback"})
-    df.dropna(inplace=True)
-    if df.empty:
-        st.warning("No valid feedback rows after dropping null values.")
-        return
+def get_vader_sentiment_augmented(cleaned_text_for_vader_aug):
+    if not isinstance(cleaned_text_for_vader_aug, str):
+        cleaned_text_for_vader_aug = ""
+    compound_score = get_augmented_vader(cleaned_text_for_vader_aug)
+    if compound_score >= 0.05:
+        sentiment_label = "Positive (VADER Aug)"
+    elif compound_score <= -0.05:
+        sentiment_label = "Negative (VADER Aug)"
+    else:
+        sentiment_label = "Neutral (VADER Aug)"
+    return compound_score, sentiment_label
 
-    df["Cleaned"] = df["Feedback"].apply(preprocess)
-    df = df[df["Cleaned"].str.strip() != ""].copy()
-    if df.empty:
-        st.warning("DataFrame is empty after cleaning. Cannot proceed.")
-        return
+filipino_positive_keywords = ['magaling', 'mahusay', 'matalino', 'mabait', 'matulungin', 'okay', 'malinaw', 'masaya', 'galing', 'husay', 'saya', 'maayos', 'excellent', 'creative', 'practical', 'professional', 'humble', 'understanding', 'motivating', 'caring', 'cool', 'responsible', 'proficient', 'warm-hearted', 'systematically', 'efficient', 'up to date', 'kind', 'fair', 'considerate', 'beautiful', 'interesting', 'funny', 'awesome', 'best', 'open', 'competent', 'helpful', 'nice', 'approachable']
+filipino_negative_keywords = ['hindi', 'di', 'pangit', 'masama', 'mahirap', 'hindi marunong', 'malabo', 'nakakabagot', 'hindi malinaw', 'magulo', 'ayaw', 'fast paced', 'ineffective', 'too much', 'noisy', 'threatening', 'favoritism', 'boring']
 
-    df["VADER_Standard"] = df["Feedback"].apply(get_standard_vader)
-    df["VADER_Augmented"] = df["Cleaned"].apply(get_augmented_vader)
-    df["Filipino_Keyword_Sentiment"] = df["Cleaned"].apply(filipino_keyword_sentiment)
-    df["Label"] = df["VADER_Augmented"].apply(label_from_score)
 
-    st.subheader("Processed DataFrame Sample")
-    st.dataframe(df.head(5))
-    st.dataframe(df.tail(5))
-
-    df.to_csv(OUTPUT_SENTIMENT_COMPARISON_CSV, index=False)
-    st.success(f"Full sentiment analysis results saved to '{OUTPUT_SENTIMENT_COMPARISON_CSV}'.")
-    csv_bytes = df.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        "Download sentiment analysis results",
-        csv_bytes,
-        file_name=OUTPUT_SENTIMENT_COMPARISON_CSV,
-        mime="text/csv"
-    )
+def get_filipino_keyword_sentiment(cleaned_text):
+    if not isinstance(cleaned_text, str):
+        cleaned_text = ""
+    score = 0
+    positive_matches = []
+    negative_matches = []
+    tokens = cleaned_text.lower().split()
+    for word in filipino_positive_keywords:
+        if word in tokens:
+            score += 1
+            positive_matches.append(word)
+    for word in filipino_negative_keywords:
+        if word in tokens:
+            score -= 1
+            negative_matches.append(word)
+    if score > 0:
+        sentiment_label = "Positive (Filipino Keywords)"
+    elif score < 0:
+        sentiment_label = "Negative (Filipino Keywords)"
+    else:
+        sentiment_label = "Neutral (Filipino Keywords)"
+    return score, sentiment_label, ", ".join(sorted(set(positive_matches))), ", ".join(sorted(set(negative_matches)))
 
 # ------------------------------
 # Streamlit Config
@@ -176,38 +197,56 @@ if filipino_lexicon_file:
 # ------------------------------
 # Upload Feedback Dataset
 # ------------------------------
-st.divider()
-st.header("Process a Local CSV File")
-local_csv_path = st.text_input("Enter a local CSV file path", value="")
-if st.button("Process local CSV"):
-    process_local_feedback_csv(local_csv_path)
-
 # ------------------------------
 # Upload Feedback Dataset
 uploaded_file = st.file_uploader("📤 Upload Feedback CSV File", type=["csv"])
 
 if uploaded_file:
-    df = pd.read_csv(uploaded_file)
+    try:
+        df_raw = load_csv_with_encodings(uploaded_file)
+    except Exception as e:
+        st.error(f"Could not read CSV: {e}")
+        st.stop()
 
-    # Auto-detect feedback column
-    possible_cols = ["feedback", "comment", "comments", "Feedback"]
-    feedback_col = next(
-        (c for c in possible_cols if c in df.columns),
-        df.columns[0]
-    )
+    try:
+        cleaned_df = clean_dataframe(df_raw, DEFAULT_FEEDBACK_COLUMN_NAMES)
+    except Exception as e:
+        st.error(f"Could not identify a feedback text column: {e}")
+        st.stop()
 
-    df = df[[feedback_col]].rename(columns={feedback_col: "Feedback"})
-    df.dropna(inplace=True)
+    if cleaned_df.empty:
+        st.warning("The uploaded file contains no valid feedback rows after initial cleaning.")
+        st.stop()
+
+    cleaned_df['Cleaned_Text_Main'] = cleaned_df['Feedback_Text'].apply(lambda x: preprocess_text(x, for_lda=True))
+    cleaned_df = cleaned_df[cleaned_df['Cleaned_Text_Main'].astype(str).str.strip() != ''].copy()
+    cleaned_df.dropna(subset=['Cleaned_Text_Main'], inplace=True)
+
+    if cleaned_df.empty:
+        st.warning("DataFrame is empty after cleaning. Cannot proceed.")
+        st.stop()
+
+    cleaned_df[['VADER_Score_Eng', 'VADER_Sentiment_Eng']] = cleaned_df['Feedback_Text'].apply(lambda x: pd.Series(get_vader_sentiment_english(x)))
+    cleaned_df[['VADER_Score_Aug', 'VADER_Sentiment_Aug']] = cleaned_df['Cleaned_Text_Main'].apply(lambda x: pd.Series(get_vader_sentiment_augmented(x)))
+    cleaned_df[['Filipino_Keyword_Score', 'Filipino_Keyword_Sentiment',
+                'Filipino_Positive_Keywords_Found', 'Filipino_Negative_Keywords_Found']] = cleaned_df['Cleaned_Text_Main'].apply(lambda x: pd.Series(get_filipino_keyword_sentiment(x)))
+
+    df = cleaned_df.rename(columns={'Feedback_Text': 'Feedback'}).copy()
+    df['Cleaned'] = df['Cleaned_Text_Main']
+    df['Score'] = df['VADER_Score_Aug']
+    df['Label'] = df['Score'].apply(label_from_score)
 
     st.divider()
     st.header("Feedback Dataset Overview")
     st.dataframe(df.head())
-  
-    df["Cleaned"] = df["Feedback"].apply(preprocess)
-    df["VADER_Standard"] = df["Feedback"].apply(get_standard_vader)
-    df["VADER_Augmented"] = df["Feedback"].apply(get_augmented_vader)
-    df["Score"] = df["VADER_Augmented"]
-    df["Label"] = df["Score"].apply(label_from_score)
+
+    comparison_csv = df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        "Download sentiment analysis results",
+        comparison_csv,
+        file_name=OUTPUT_SENTIMENT_COMPARISON_CSV,
+        mime="text/csv"
+    )
 
     # Optional: Topic modeling
     st.divider()
