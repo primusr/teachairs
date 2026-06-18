@@ -592,6 +592,7 @@ if uploaded_file:
         fig3, ax3 = plt.subplots(figsize=(8,4))
         ax3.imshow(wc, interpolation="bilinear")
         ax3.axis("off")
+        ax3.set_title(f"Topic {i+1}: {ai_title}", fontsize=14, pad=12)
         st.pyplot(fig3)
 
 
