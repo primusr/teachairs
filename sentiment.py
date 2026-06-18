@@ -539,6 +539,15 @@ if uploaded_file:
     topic_summary_df = pd.DataFrame(topic_rows)
 
     st.dataframe(topic_summary_df, width='stretch',)
+
+    sentiment_csv = df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        "Download Sentiment Analysis Results",
+        sentiment_csv,
+        file_name="sentiment_analysis_results.csv",
+        mime="text/csv"
+    )
+
     st.divider()
     st.header("Topic Modeling (LDA)")
 
@@ -668,7 +677,15 @@ if uploaded_file:
         """
 
     response = gemini_model.generate_content(structured_prompt)
-    st.markdown(response.text)
+    gemini_recommendation_text = response.text.strip()
+    st.markdown(gemini_recommendation_text)
+
+    st.download_button(
+        "Download Gemini Recommendations",
+        gemini_recommendation_text,
+        file_name="gemini_recommendations.txt",
+        mime="text/plain"
+    )
 
     # # Use markdown to preserve formatting
     # st.markdown(response.text)
