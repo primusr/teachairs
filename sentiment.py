@@ -70,6 +70,16 @@ h1, h2, h3, h4, h5, h6 {
     background-color: #161A23;
 }
 
+/* Auto-wrap table cell contents for better visibility */
+[data-testid="stDataFrame"] td,
+[data-testid="stDataFrame"] th,
+.stDataFrame td,
+.stDataFrame th {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    max-width: 300px;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
