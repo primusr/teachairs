@@ -612,7 +612,7 @@ if uploaded_file:
                 fig, ax = plt.subplots(figsize=(6,4))
                 ax.imshow(wc, interpolation="bilinear")
                 ax.axis("off")
-                ax.set_title(f"Topic {topic_idx+1}: {ai_title}", fontsize=12, pad=8)
+                ax.set_title(f"Topic {topic_idx+1}: {ai_title}", fontsize=10, pad=8)
                 st.pyplot(fig)
 
     # ------------------------------
@@ -626,19 +626,44 @@ if uploaded_file:
             "Recommendations for the 3 topic(s) with the most negative average Augmented VADER sentiment."
         )
 
+        def _sentiment_context(avg_score):
+            if avg_score > 0.05:
+                return f"A VADER score of {avg_score:.2f} suggests a slightly positive sentiment, indicating that the topic is being received fairly well but may still benefit from refinement."
+            if avg_score < -0.05:
+                return f"A VADER score of {avg_score:.2f} suggests a negative sentiment, indicating that the topic is creating concern or confusion for learners."
+            return f"A VADER score of {avg_score:.2f} suggests a neutral sentiment, indicating that the topic is neither strongly praised nor criticized and may need clearer emphasis."
+
+        def _build_topic_recommendations(row):
+            topic_label = row['AI Label']
+            keywords = row['Top Keywords']
+            avg_score = row['Avg VADER Aug Score']
+            sentiment_context = _sentiment_context(avg_score)
+            rec_1 = f"**1. Improve clarity around {keywords.split(', ')[0]} and related concepts:**"
+            rec_2 = f"**2. Reinforce student mastery through targeted examples and checks:**"
+            rec_3 = f"**3. Collect and act on short-cycle feedback from learners:**"
+            return f"""
+Recommendations for Topic {row['Topic ID']} ({topic_label}):
+Here are 2-3 actionable teaching recommendations based on the topic \"{topic_label}\".
+**Understanding the Context:** {sentiment_context}
+**Actionable Teaching Recommendations:**
+{rec_1}
+   * **Action:** Use the top keywords such as \"{keywords}\" to design brief, focused instruction and real examples.
+   * **Rationale:** Anchoring the lesson in familiar terms helps students connect feedback language to the core idea.
+   * **Measurement:** Track student questions and comprehension checks for the highlighted concept.
+{rec_2}
+   * **Action:** Break the topic into smaller lesson chunks and include a quick guided practice or explain-back moment.
+   * **Rationale:** Students often respond better when they can see how each part of the topic builds toward mastery.
+   * **Measurement:** Observe student confidence in follow-up tasks and the accuracy of responses.
+{rec_3}
+   * **Action:** Ask learners to share what they found clear or unclear after the lesson and adjust the next class accordingly.
+   * **Rationale:** Rapid feedback clarifies whether the teaching approach is aligning with student needs for this topic.
+   * **Measurement:** Compare learner feedback and engagement before and after implementing the changes.
+"""
+
         for row in selected_topics:
             st.subheader(f"Topic {row['Topic ID']}: {row['AI Label']}")
-            st.markdown(f"**Top Keywords:** {row['Top Keywords']}")
-            st.markdown(f"**Avg VADER Aug Score:** {row['Avg VADER Aug Score']:.2f}")
-            st.markdown(f"**VADER Aug Distribution:** {row['VADER Aug Dist (%)']}")
-
-            st.markdown(
-                """
-                - Review student feedback with a focus on the highlighted topic keywords and identify common misunderstandings.
-                - Strengthen explanations, examples, and pacing for this topic to improve clarity and learner confidence.
-                - Provide targeted follow-up activities or check-for-understanding prompts related to these topic keywords.
-                """
-            )
+            st.markdown(_build_topic_recommendations(row))
+            st.markdown("---")
 
 
     # ------------------------------
@@ -647,7 +672,7 @@ if uploaded_file:
     if gemini_model:
         st.divider()
         st.header("Generating Overall AI Recommendations (based on CSV Analysis)")
-        st.subheader("Overall AI Recommendations:")  
+        st.subheader("Overall AI Recommendations:")
 
         # Ensure correlation exists
         try:
@@ -665,56 +690,64 @@ if uploaded_file:
         Correlation Between Models: {corr_value}
         """
 
-        # Structured prompt
+        selected_topics = sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:3] if topic_rows else []
+
+        def _format_selected_topics(topics):
+            if not topics:
+                return "No selected topic data is available."
+            lines = []
+            for row in topics:
+                lines.append(
+                    f"Topic {row['Topic ID']} - {row['AI Label']}: {row['Top Keywords']} | Avg VADER Aug Score: {row['Avg VADER Aug Score']:.2f} | VADER Aug Dist: {row['VADER Aug Dist (%)']}"
+                )
+            return "\n".join(lines)
+
+        selected_topics_text = _format_selected_topics(selected_topics)
+
         structured_prompt = f"""
-        You are an academic assistant analyzing student feedback data.
-        Generate a structured set of teaching recommendations.
-        STRICT RULES:
-        - Provide EXACTLY 4 sections
-        - Each section MUST include:
-        Title
-        Rationale
-        Actionable Steps (bullet list)
-        - Do NOT skip any section
-        - Do NOT add extra sections
+You are an academic assistant analyzing student feedback data.
+Generate teaching recommendations for the selected topics using the requested structured format.
 
-        FORMAT:
-       
-        1. Leverage Positive Feedback: Focus on Reinforcing Current Strengths
-        Rationale:
-        (Explain based on positive sentiment)
+STRICT FORMAT FOR EACH SELECTED TOPIC:
+- Provide a clear topic title line.
+- Provide one summary sentence describing the context from sentiment and keywords.
+- Provide exactly 2-3 actionable teaching recommendations.
+- Each recommendation block MUST include:
+  * Action
+  * Rationale
+  * Measurement
 
-           Actionable Steps:
-           - (4–5 steps)
+OUTPUT FORMAT FOR EACH TOPIC:
+Recommendations for Topic <N> (<Topic Label>):
+Here are 2-3 actionable teaching recommendations based on the topic "<Topic Label>".
+**Understanding the Context:** <context sentence>
+**Actionable Teaching Recommendations:**
+1. <recommendation text>
+   * **Action:** ...
+   * **Rationale:** ...
+   * **Measurement:** ...
+2. <recommendation text>
+   * **Action:** ...
+   * **Rationale:** ...
+   * **Measurement:** ...
 
-        2. Address Perceived Ineffective Teaching Speed (Pace)
-        Rationale:
-        (Explain based on negative sentiment)
-        
-           Actionable Steps:
-           - (4–5 steps)
+DATA SUMMARY:
+{summary}
 
-        3. Explore Filipino Keyword Sentiment and Tone
-        Rationale:
-        (Explain based on Filipino sentiment results)
-        
-           Actionable Steps:
-           - (4–5 steps)
+SELECTED TOPICS:
+{selected_topics_text}
+"""
 
-        4. Align Teaching Strategies with Key Topics: Voice of Teaching, Considerate Teaching, Student Engagement
-        Rationale:
-        (Explain based on topic insights and engagement)
+        response = gemini_model.generate_content(structured_prompt)
+        gemini_recommendation_text = response.text.strip()
+        st.markdown(gemini_recommendation_text)
 
-           Actionable Steps:
-           - (4–5 steps)
-        
-        DATA:
-        {summary}
-        """
-
-    response = gemini_model.generate_content(structured_prompt)
-    gemini_recommendation_text = response.text.strip()
-    st.markdown(gemini_recommendation_text)
+        st.download_button(
+            "Download Gemini Recommendations",
+            gemini_recommendation_text,
+            file_name="gemini_recommendations.txt",
+            mime="text/plain"
+        )
 
     st.download_button(
         "Download Gemini Recommendations",
