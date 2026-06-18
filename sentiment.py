@@ -575,46 +575,45 @@ if uploaded_file:
         random_state=42
     )
 
-    for i in range(5):
+    # Render wordclouds in two columns (two topics per row)
+    num_topics_display = 5
+    for i in range(0, num_topics_display, 2):
+        cols = st.columns(2)
+        for j, col in enumerate(cols):
+            topic_idx = i + j
+            if topic_idx >= num_topics_display:
+                break
 
-        words_probs = lda_model.show_topic(i, topn=10)
-        words = ", ".join([w for w, _ in words_probs])
+            words_probs = lda_model.show_topic(topic_idx, topn=10)
+            words = ", ".join([w for w, _ in words_probs])
 
-        # Generate AI Topic Title
-        if gemini_model:
-            prompt = f"""
-            Create a concise academic topic title (3-5 words only)
-            based on these keywords:
+            # Generate AI Topic Title
+            if gemini_model:
+                prompt = f"""
+                Create a concise academic topic title (3-5 words only)
+                based on these keywords:
 
-            {words}
+                {words}
 
-            Return ONLY the title.
-            """
-            try:
-                ai_title = gemini_model.generate_content(prompt).text.strip()
-            except:
-                ai_title = f"Topic {i+1}"
-        else:
-            ai_title = f"Topic {i+1}"
+                Return ONLY the title.
+                """
+                try:
+                    ai_title = gemini_model.generate_content(prompt).text.strip()
+                except:
+                    ai_title = f"Topic {topic_idx+1}"
+            else:
+                ai_title = f"Topic {topic_idx+1}"
 
-        # Display AI Title
-        # st.markdown(f"### 🏷️ {ai_title}")
-
-        st.caption(f"Keywords: {words}")
-
-        wc = WordCloud(
-            background_color="white",
-            width=800,
-            height=400
-        )
-
-        wc.generate_from_frequencies(dict(words_probs))
-
-        fig3, ax3 = plt.subplots(figsize=(8,4))
-        ax3.imshow(wc, interpolation="bilinear")
-        ax3.axis("off")
-        ax3.set_title(f"Topic {i+1}: {ai_title}", fontsize=14, pad=12)
-        st.pyplot(fig3)
+            with col:
+                st.markdown(f"### 🏷️ {ai_title}")
+                st.caption(f"Keywords: {words}")
+                wc = WordCloud(background_color="white", width=400, height=300)
+                wc.generate_from_frequencies(dict(words_probs))
+                fig, ax = plt.subplots(figsize=(6,4))
+                ax.imshow(wc, interpolation="bilinear")
+                ax.axis("off")
+                ax.set_title(f"Topic {topic_idx+1}: {ai_title}", fontsize=12, pad=8)
+                st.pyplot(fig)
 
     # ------------------------------
     # AI Recommendations for Selected Topics
