@@ -119,20 +119,29 @@ if uploaded_file:
     df.dropna(inplace=True)
 
     # ------------------------------
-    # Sample VADER Output (Head & Tail)
+    # Sample VADER Output (Head & Tail) - formatted
     # ------------------------------
     st.subheader("Sample VADER Sentiment Output (Head & Tail)")
-    # compute VADER for head and tail only to keep output concise
-    head_df = df["Feedback"].head(3).to_frame()
-    head_df["VADER_Standard"] = head_df["Feedback"].apply(get_standard_vader)
-    head_df["VADER_Augmented"] = head_df["Feedback"].apply(get_augmented_vader)
 
-    tail_df = df["Feedback"].tail(3).to_frame()
-    tail_df["VADER_Standard"] = tail_df["Feedback"].apply(get_standard_vader)
-    tail_df["VADER_Augmented"] = tail_df["Feedback"].apply(get_augmented_vader)
+    def _format_sentiment_block(series, n=5):
+        """Return a formatted string showing Original_Text, Cleaned_Text, Sentiment_Score and labels."""
+        s = series.head(n) if len(series) >= n else series.head(len(series))
+        df_block = s.to_frame(name="Original_Text")
+        df_block["Cleaned_Text"] = df_block["Original_Text"].apply(preprocess)
+        df_block["Sentiment_Score"] = df_block["Original_Text"].apply(get_augmented_vader)
+        # Preserve original indices in the string representation
+        table_str = df_block.to_string()
+        labels_str = "\n\nSentiment\n" + "\n".join(
+            f"{idx} {label_from_score(score)}" for idx, score in zip(df_block.index, df_block["Sentiment_Score"])    
+        )
+        return table_str + labels_str
 
-    sample_df = pd.concat([head_df, tail_df])
-    st.dataframe(sample_df)
+    head_block = _format_sentiment_block(df["Feedback"], n=5)
+    tail_block = _format_sentiment_block(df["Feedback"].tail(5), n=5)
+
+    st.code("Head of the sentiment analysis results:\n" + head_block)
+    st.markdown("---")
+    st.code("Tail of the sentiment analysis results:\n" + tail_block)
 
     st.divider()
     st.header("Feedback Dataset Overview")
