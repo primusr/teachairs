@@ -247,46 +247,45 @@ if uploaded_file:
     st.divider()
     st.header("Sentiment Polarity Distribution Across Methods")
     
-    # 1️⃣ Standard VADER Scatter
-    st.markdown("## Standard VADER (English Only)")
+    col1, col2 = st.columns(2)
 
-    colors_std = df["VADER_Standard"].apply(sentiment_color)
-
-    fig_std, ax_std = plt.subplots()
-
-    ax_std.scatter(
-        range(len(df)),
-        df["VADER_Standard"],
-        c=colors_std,
-        alpha=0.7
-    )
-
-    ax_std.axhline(0, linestyle="--")
-    ax_std.set_xlabel("Feedback Index")
-    ax_std.set_ylabel("Polarity Score")
-    ax_std.set_title("Standard VADER Polarity Scores")
-    st.pyplot(fig_std)
+    with col1:
+        st.markdown("### Standard VADER (English Only)")
+        colors_std = df["VADER_Standard"].apply(sentiment_color)
+        fig_std, ax_std = plt.subplots()
+        ax_std.scatter(
+            range(len(df)),
+            df["VADER_Standard"],
+            c=colors_std,
+            alpha=0.7
+        )
+        ax_std.axhline(0, linestyle="--")
+        ax_std.set_xlabel("Feedback Index")
+        ax_std.set_ylabel("Polarity Score")
+        ax_std.set_title("Standard VADER Polarity Scores")
+        st.pyplot(fig_std)
 
     # ------------------------------
     # 2️⃣ Augmented VADER Scatter
     # ------------------------------
-    st.markdown("## Augmented VADER (With Filipino Lexicon)")
-    colors_aug = df["VADER_Augmented"].apply(sentiment_color)
-    fig_aug, ax_aug = plt.subplots()
+    with col2:
+        st.markdown("### Augmented VADER (With Filipino Lexicon)")
+        colors_aug = df["VADER_Augmented"].apply(sentiment_color)
+        fig_aug, ax_aug = plt.subplots()
 
-    ax_aug.scatter(
-        range(len(df)),
-        df["VADER_Augmented"],
-        c=colors_aug,
-        alpha=0.7
-    )
+        ax_aug.scatter(
+            range(len(df)),
+            df["VADER_Augmented"],
+            c=colors_aug,
+            alpha=0.7
+        )
 
-    ax_aug.axhline(0, linestyle="--")
-    ax_aug.set_xlabel("Feedback Index")
-    ax_aug.set_ylabel("Polarity Score")
-    ax_aug.set_title("Augmented VADER Polarity Scores")
+        ax_aug.axhline(0, linestyle="--")
+        ax_aug.set_xlabel("Feedback Index")
+        ax_aug.set_ylabel("Polarity Score")
+        ax_aug.set_title("Augmented VADER Polarity Scores")
 
-    st.pyplot(fig_aug)
+        st.pyplot(fig_aug)
 
 
     # ------------------------------
