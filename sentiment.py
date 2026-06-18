@@ -498,7 +498,13 @@ if uploaded_file:
         avg_std = topic_df["VADER_Standard"].mean()
         std_dist = topic_df["Label_Std"].value_counts(normalize=True) * 100
         std_dist = std_dist.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
-        std_dist_str = f"P:{std_dist['Positive']:.1f}% | N:{std_dist['Neutral']:.1f}% | Neg:{std_dist['Negative']:.1f}%"
+        std_dist_str = (
+            "{"
+            f"'Positive (VADER Eng)': {std_dist['Positive']:.1f}, "
+            f"'Neutral (VADER Eng)': {std_dist['Neutral']:.1f}, "
+            f"'Negative (VADER Eng)': {std_dist['Negative']:.1f}"
+            "}"
+        )
 
         # --------------------------
         # Augmented VADER
@@ -506,7 +512,13 @@ if uploaded_file:
         avg_aug = topic_df["VADER_Augmented"].mean()
         aug_dist = topic_df["Label_Aug"].value_counts(normalize=True) * 100
         aug_dist = aug_dist.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
-        aug_dist_str = f"P:{aug_dist['Positive']:.1f}% | N:{aug_dist['Neutral']:.1f}% | Neg:{aug_dist['Negative']:.1f}%"
+        aug_dist_str = (
+            "{"
+            f"'Positive (VADER Aug)': {aug_dist['Positive']:.1f}, "
+            f"'Neutral (VADER Aug)': {aug_dist['Neutral']:.1f}, "
+            f"'Negative (VADER Aug)': {aug_dist['Negative']:.1f}"
+            "}"
+        )
 
         # --------------------------
         # Filipino Keyword
@@ -514,18 +526,24 @@ if uploaded_file:
         avg_fil = topic_df["Filipino_Score"].mean()
         fil_dist = topic_df["Label_Filipino"].value_counts(normalize=True) * 100
         fil_dist = fil_dist.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
-        fil_dist_str = f"P:{fil_dist['Positive']:.1f}% | N:{fil_dist['Neutral']:.1f}% | Neg:{fil_dist['Negative']:.1f}%"
+        fil_dist_str = (
+            "{"
+            f"'Neutral (Filipino Keywords)': {fil_dist['Neutral']:.1f}, "
+            f"'Positive (Filipino Keywords)': {fil_dist['Positive']:.1f}, "
+            f"'Negative (Filipino Keywords)': {fil_dist['Negative']:.1f}"
+            "}"
+        )
 
         topic_rows.append({
-            #"Topic ID": topic_id,
+            "Topic ID": topic_id,
             "AI Label": ai_label,
             "Top Keywords": top_keywords,
             "Num Comments": num_comments,
-            "Avg VADER Eng Score": round(avg_std, 4),
+            "Avg VADER Eng Score": round(avg_std, 2),
             "VADER Eng Dist (%)": std_dist_str,
-            "Avg VADER Aug Score": round(avg_aug, 4),
+            "Avg VADER Aug Score": round(avg_aug, 2),
             "VADER Aug Dist (%)": aug_dist_str,
-            "Avg Fil. Keyword Score": round(avg_fil, 4),
+            "Avg Fil. Keyword Score": round(avg_fil, 2),
             "Fil. Keyword Dist (%)": fil_dist_str
         })
 
