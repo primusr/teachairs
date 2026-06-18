@@ -1,3 +1,8 @@
+# ==============================
+# TeachAIRs: Sentiment & Topic Analysis
+# With VADER Method Comparison
+# ==============================
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,9 +31,12 @@ from utils import (
     filipino_keyword_sentiment,
     SENTIMENT_SCORE_MAP
 )
+<<<<<<< HEAD
 from utils import train_lda, get_topic_keywords, load_filipino_vader_lexicon
 from utils import STOP_WORDS
 from utils import APIRateLimiter
+=======
+>>>>>>> parent of e6dc6b9 (Auto Update)
 
 # Load NLTK resources
 load_nltk()
@@ -475,6 +483,7 @@ if uploaded_file:
                     "Output as plain text."
                 )
 
+<<<<<<< HEAD
                 try:
                     rate_limiter.wait_if_needed()
                     resp = gemini_model.generate_content(prompt)
@@ -489,3 +498,168 @@ if uploaded_file:
                     )
                 except Exception as e:
                     st.error(f"AI request failed: {e}")
+=======
+    lda_model = LdaModel(
+        corpus=corpus,
+        id2word=dictionary,
+        num_topics=5,
+        passes=10,
+        random_state=42
+    )
+
+    for i in range(5):
+
+        words_probs = lda_model.show_topic(i, topn=10)
+        words = ", ".join([w for w, _ in words_probs])
+
+        # Generate AI Topic Title
+        if gemini_model:
+            prompt = f"""
+            Create a concise academic topic title (3-5 words only)
+            based on these keywords:
+
+            {words}
+
+            Return ONLY the title.
+            """
+            try:
+                ai_title = gemini_model.generate_content(prompt).text.strip()
+            except:
+                ai_title = f"Topic {i+1}"
+        else:
+            ai_title = f"Topic {i+1}"
+
+        # Display AI Title
+        st.markdown(f"### 🏷️ {ai_title}")
+
+        st.caption(f"Keywords: {words}")
+
+        wc = WordCloud(
+            background_color="white",
+            width=800,
+            height=400
+        )
+
+        wc.generate_from_frequencies(dict(words_probs))
+
+        fig3, ax3 = plt.subplots(figsize=(8,4))
+
+        ax3.imshow(wc, interpolation="bilinear")
+        ax3.axis("off")
+
+        # Add title inside figure
+        ax3.set_title(
+            ai_title,
+            fontsize=16,
+            fontweight="bold",
+            pad=20
+        )
+
+        plt.tight_layout()
+
+        st.pyplot(fig3)
+
+
+    # ------------------------------
+    # AI Recommendations (Optional)
+    # ------------------------------
+    if gemini_model:
+        st.divider()
+        st.header("Generating Overall AI Recommendations (based on CSV Analysis)")
+        st.subheader("Overall AI Recommendations:")  
+
+        # Ensure correlation exists
+        try:
+            corr_value = f"{correlation:.2f}"
+        except:
+            corr_value = "Not computed"
+
+        # Include ALL important computed metrics
+        summary = f"""
+        Average Sentiment Score: {avg_score:.2f}
+        Sentiment Distribution: {counts.to_dict()}
+        Standard VADER Average: {std_avg:.2f}
+        Augmented VADER Average: {aug_avg:.2f}
+        Filipino Dominant Sentiment: {fil_dominant}
+        Correlation Between Models: {corr_value}
+        """
+
+        # Structured prompt
+        structured_prompt = f"""
+        You are an academic assistant analyzing student feedback data.
+        Generate a structured set of teaching recommendations.
+        STRICT RULES:
+        - Provide EXACTLY 4 sections
+        - Each section MUST include:
+        Title
+        Rationale
+        Actionable Steps (bullet list)
+        - Do NOT skip any section
+        - Do NOT add extra sections
+
+        FORMAT:
+       
+        1. Leverage Positive Feedback: Focus on Reinforcing Current Strengths
+        Rationale:
+        (Explain based on positive sentiment)
+
+           Actionable Steps:
+           - (4–5 steps)
+
+        2. Address Perceived Ineffective Teaching Speed (Pace)
+        Rationale:
+        (Explain based on negative sentiment)
+        
+           Actionable Steps:
+           - (4–5 steps)
+
+        3. Explore Filipino Keyword Sentiment and Tone
+        Rationale:
+        (Explain based on Filipino sentiment results)
+        
+           Actionable Steps:
+           - (4–5 steps)
+
+        4. Align Teaching Strategies with Key Topics: Voice of Teaching, Considerate Teaching, Student Engagement
+        Rationale:
+        (Explain based on topic insights and engagement)
+
+           Actionable Steps:
+           - (4–5 steps)
+        
+        DATA:
+        {summary}
+        """
+
+    response = gemini_model.generate_content(structured_prompt)
+    st.markdown(response.text)
+
+    # # Use markdown to preserve formatting
+    # st.markdown(response.text)
+    # if gemini_model:
+    #     st.divider()
+    #     st.header("Generating Overall AI Recommendations (based on CSV Analysis)")
+    #     st.subheader("Overall AI Recommendations:")  
+
+    #     # Ensure correlation exists
+    #     try:
+    #         corr_value = f"{correlation:.2f}"
+    #     except:
+    #         corr_value = "Not computed"
+
+    #     summary = f"""
+    #     Average Sentiment Score: {avg_score:.2f}
+    #     Distribution: {counts.to_dict()}
+    #     Correlation Between Models: {corr_value}
+    #     """
+
+    #     response = gemini_model.generate_content(
+    #         summary + "\nGive 3 actionable teaching recommendations."
+    #     )
+
+    #     st.write(response.text.strip())
+
+else:
+    st.info("Please upload a CSV file to begin.")
+    st.divider()
+>>>>>>> parent of e6dc6b9 (Auto Update)
