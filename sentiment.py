@@ -69,14 +69,35 @@ h1, h2, h3, h4, h5, h6 {
     background-color: #161A23;
 }
 
-/* Auto-wrap table cell contents for better visibility */
+/* Responsive tables and code blocks */
+[data-testid="stDataFrame"],
+.stDataFrame {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
 [data-testid="stDataFrame"] td,
 [data-testid="stDataFrame"] th,
 .stDataFrame td,
 .stDataFrame th {
     white-space: normal !important;
-    word-wrap: break-word !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
     max-width: 300px;
+}
+
+[data-testid="stDataFrame"] div[role="grid"],
+.stDataFrame div[role="grid"] {
+    overflow-x: auto !important;
+    width: 100% !important;
+}
+
+code,
+pre {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    max-width: 100% !important;
 }
 
 </style>
@@ -155,7 +176,7 @@ if uploaded_file:
 
     st.divider()
     st.header("Feedback Dataset Overview")
-    st.dataframe(df.head())
+    st.dataframe(df.head(), use_container_width=True)
   
     df["Cleaned"] = df["Feedback"].apply(preprocess)
     df["VADER_Standard"] = df["Feedback"].apply(get_standard_vader)
@@ -567,7 +588,7 @@ Distribution (Filipino Keywords):
 
     topic_summary_df = pd.DataFrame(topic_rows)
 
-    st.dataframe(topic_summary_df, width='stretch',)
+    st.dataframe(topic_summary_df, use_container_width=True)
 
     sentiment_csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(
