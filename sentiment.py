@@ -748,13 +748,6 @@ SELECTED TOPICS:
             mime="text/plain"
         )
 
-    st.download_button(
-        "Download Gemini Recommendations",
-        gemini_recommendation_text,
-        file_name="gemini_recommendations.txt",
-        mime="text/plain"
-    )
-
     # # Use markdown to preserve formatting
     # st.markdown(response.text)
     # if gemini_model:
