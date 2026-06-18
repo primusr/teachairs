@@ -207,39 +207,38 @@ if uploaded_file:
     fil_dominant = fil_counts.idxmax()
 
     # Display formatted summaries
-    st.markdown("## Standard VADER (English/Translated)")
-    st.markdown(f"""
-    Methodology: Avg of Std VADER scores (on Feedback_Text). Score: {std_avg:.4f}
-    Interpretation: Overall sentiment (Eng VADER) is generally {'positive' if std_avg > 0.05 else 'negative' if std_avg < -0.05 else 'neutral'}.
-    Dominant Category: {std_dominant} (VADER Eng) ({std_counts[std_dominant]}/{total_comments} comments)
-    """)
-    st.markdown("**Distribution (Std VADER):**")
-    for label in ["Positive", "Neutral", "Negative"]:
-        count = std_counts[label]
-        percent = (count / total_comments) * 100 if total_comments else 0
-        st.markdown(f"- {label} (VADER Eng): {count} comments ({percent:.2f}%)")
+    std_sentiment = f"Positive" if std_avg > 0.05 else "Negative" if std_avg < -0.05 else "Neutral"
+    aug_sentiment = f"Positive" if aug_avg > 0.05 else "Negative" if aug_avg < -0.05 else "Neutral"
 
-    st.markdown("---")
-    st.markdown("## Augmented VADER (with Filipino Lexicon)")
-    st.markdown(f"""
-    Methodology: Avg of Aug VADER scores (on Cleaned_Text_Main). Score: {aug_avg:.4f}
-    Interpretation: Overall sentiment (Aug VADER) is generally {'positive' if aug_avg > 0.05 else 'negative' if aug_avg < -0.05 else 'neutral'}.
-    Dominant Category: {aug_dominant} (VADER Aug) ({aug_counts[aug_dominant]}/{total_comments} comments)
-    """)
-    st.markdown("**Distribution (Aug VADER):**")
-    for label in ["Positive", "Neutral", "Negative"]:
-        count = aug_counts[label]
-        percent = (count / total_comments) * 100 if total_comments else 0
-        st.markdown(f"- {label} (VADER Aug): {count} comments ({percent:.2f}%)")
+    std_text = f"""Standard VADER (English/Translated)
+Methodology: Avg of Std VADER scores (on Feedback_Text). Score: {std_avg:.4f}
+Interpretation: Overall sentiment (Eng VADER) is generally {std_sentiment}.
+Dominant Category: {std_dominant} (VADER Eng) ({std_counts[std_dominant]}/{total_comments} comments)
+Distribution (Std VADER):
+ - Positive (VADER Eng): {std_counts['Positive']} comments ({(std_counts['Positive'] / total_comments * 100):.2f}%)
+ - Neutral (VADER Eng): {std_counts['Neutral']} comments ({(std_counts['Neutral'] / total_comments * 100):.2f}%)
+ - Negative (VADER Eng): {std_counts['Negative']} comments ({(std_counts['Negative'] / total_comments * 100):.2f}%)
+"""
 
-    st.markdown("---")
-    st.markdown("## Filipino Keyword Sentiment (Direct Count)")
-    st.markdown(f"Dominant Category: {fil_dominant} (Filipino Keywords) ({fil_counts[fil_dominant]}/{total_comments} comments)")
-    st.markdown("**Distribution (Filipino Keywords):**")
-    for label in ["Positive", "Neutral", "Negative"]:
-        count = fil_counts[label]
-        percent = (count / total_comments) * 100 if total_comments else 0
-        st.markdown(f"- {label} (Filipino Keywords): {count} comments ({percent:.2f}%)")
+    aug_text = f"""Augmented VADER (with Filipino Lexicon)
+Methodology: Avg of Aug VADER scores (on Cleaned_Text_Main). Score: {aug_avg:.4f}
+Interpretation: Overall sentiment (Aug VADER) is generally {aug_sentiment}.
+Dominant Category: {aug_dominant} (VADER Aug) ({aug_counts[aug_dominant]}/{total_comments} comments)
+Distribution (Aug VADER):
+ - Positive (VADER Aug): {aug_counts['Positive']} comments ({(aug_counts['Positive'] / total_comments * 100):.2f}%)
+ - Neutral (VADER Aug): {aug_counts['Neutral']} comments ({(aug_counts['Neutral'] / total_comments * 100):.2f}%)
+ - Negative (VADER Aug): {aug_counts['Negative']} comments ({(aug_counts['Negative'] / total_comments * 100):.2f}%)
+"""
+
+    fil_text = f"""-- Filipino Keyword Sentiment (Direct Count) --
+Dominant Category: {fil_dominant} (Filipino Keywords) ({fil_counts[fil_dominant]}/{total_comments} comments)
+Distribution (Filipino Keywords):
+ - Neutral (Filipino Keywords): {fil_counts['Neutral']} comments ({(fil_counts['Neutral'] / total_comments * 100):.2f}%)
+ - Positive (Filipino Keywords): {fil_counts['Positive']} comments ({(fil_counts['Positive'] / total_comments * 100):.2f}%)
+ - Negative (Filipino Keywords): {fil_counts['Negative']} comments ({(fil_counts['Negative'] / total_comments * 100):.2f}%)
+"""
+
+    st.code(std_text + "\n" + "-"*40 + "\n" + aug_text + "\n" + "-"*40 + "\n" + fil_text)
 
     # ------------------------------
     # Sentiment Polarity Distribution Across Methods (plots)
