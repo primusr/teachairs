@@ -181,6 +181,68 @@ if uploaded_file:
     # ------------------------------
     # Separate Scatter Plots (Color-Coded)
     # ------------------------------
+    # ------------------------------
+    # Overall System Sentiment Scores & Distributions
+    # ------------------------------
+    st.divider()
+    st.header("Overall System Sentiment Scores & Distributions")
+    total_comments = len(df)
+
+    # Standard VADER
+    df["Label_Std"] = df["VADER_Standard"].apply(classify_sentiment)
+    std_avg = df["VADER_Standard"].mean()
+    std_counts = df["Label_Std"].value_counts().reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+    std_dominant = std_counts.idxmax()
+
+    # Augmented VADER
+    df["Label_Aug"] = df["VADER_Augmented"].apply(classify_sentiment)
+    aug_avg = df["VADER_Augmented"].mean()
+    aug_counts = df["Label_Aug"].value_counts().reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+    aug_dominant = aug_counts.idxmax()
+
+    # Filipino Keywords
+    df["Label_Filipino"] = df["Feedback"].apply(filipino_keyword_sentiment)
+    fil_counts = df["Label_Filipino"].value_counts().reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+    fil_dominant = fil_counts.idxmax()
+
+    # Display formatted summaries
+    st.markdown("## Standard VADER (English/Translated)")
+    st.markdown(f"""
+    Methodology: Avg of Std VADER scores (on Feedback_Text). Score: {std_avg:.4f}
+    Interpretation: Overall sentiment (Eng VADER) is generally {'positive' if std_avg > 0.05 else 'negative' if std_avg < -0.05 else 'neutral'}.
+    Dominant Category: {std_dominant} (VADER Eng) ({std_counts[std_dominant]}/{total_comments} comments)
+    """)
+    st.markdown("**Distribution (Std VADER):**")
+    for label in ["Positive", "Neutral", "Negative"]:
+        count = std_counts[label]
+        percent = (count / total_comments) * 100 if total_comments else 0
+        st.markdown(f"- {label} (VADER Eng): {count} comments ({percent:.2f}%)")
+
+    st.markdown("---")
+    st.markdown("## Augmented VADER (with Filipino Lexicon)")
+    st.markdown(f"""
+    Methodology: Avg of Aug VADER scores (on Cleaned_Text_Main). Score: {aug_avg:.4f}
+    Interpretation: Overall sentiment (Aug VADER) is generally {'positive' if aug_avg > 0.05 else 'negative' if aug_avg < -0.05 else 'neutral'}.
+    Dominant Category: {aug_dominant} (VADER Aug) ({aug_counts[aug_dominant]}/{total_comments} comments)
+    """)
+    st.markdown("**Distribution (Aug VADER):**")
+    for label in ["Positive", "Neutral", "Negative"]:
+        count = aug_counts[label]
+        percent = (count / total_comments) * 100 if total_comments else 0
+        st.markdown(f"- {label} (VADER Aug): {count} comments ({percent:.2f}%)")
+
+    st.markdown("---")
+    st.markdown("## Filipino Keyword Sentiment (Direct Count)")
+    st.markdown(f"Dominant Category: {fil_dominant} (Filipino Keywords) ({fil_counts[fil_dominant]}/{total_comments} comments)")
+    st.markdown("**Distribution (Filipino Keywords):**")
+    for label in ["Positive", "Neutral", "Negative"]:
+        count = fil_counts[label]
+        percent = (count / total_comments) * 100 if total_comments else 0
+        st.markdown(f"- {label} (Filipino Keywords): {count} comments ({percent:.2f}%)")
+
+    # ------------------------------
+    # Sentiment Polarity Distribution Across Methods (plots)
+    # ------------------------------
     st.divider()
     st.header("Sentiment Polarity Distribution Across Methods")
     
@@ -225,100 +287,6 @@ if uploaded_file:
 
     st.pyplot(fig_aug)
 
-    # ------------------------------
-    # Overall System Sentiment Scores & Distributions
-    # ------------------------------
-    st.divider()
-    st.header("Overall System Sentiment Scores & Distributions")
-    total_comments = len(df)
-
-    # ==============================
-    # Helper: Label from score
-    # ==============================
-    # Using classify_sentiment from utils
-
-    # ==============================
-    # 1️⃣ Standard VADER
-    # ==============================
-    df["Label_Std"] = df["VADER_Standard"].apply(classify_sentiment)
-
-    std_avg = df["VADER_Standard"].mean()
-    std_counts = df["Label_Std"].value_counts()
-    std_counts = std_counts.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
-    std_dominant = std_counts.idxmax()
-
-    # ==============================
-    # 2️⃣ Augmented VADER
-    # ==============================
-    df["Label_Aug"] = df["VADER_Augmented"].apply(classify_sentiment)
-
-    aug_avg = df["VADER_Augmented"].mean()
-    aug_counts = df["Label_Aug"].value_counts()
-    aug_counts = aug_counts.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
-    aug_dominant = aug_counts.idxmax()
-
-    # ==============================
-    # 3️⃣ Filipino Keyword Direct Count
-    # ==============================
-    # Using filipino_keyword_sentiment from utilss
-    df["Label_Filipino"] = df["Feedback"].apply(filipino_keyword_sentiment)
-
-    fil_counts = df["Label_Filipino"].value_counts()
-    fil_counts = fil_counts.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
-    fil_dominant = fil_counts.idxmax()
-
-    # ------------------------------
-    # DISPLAY RESULTS
-    # ------------------------------
-
-    st.markdown("## Standard VADER (English / Translated)")
-    st.markdown(f"""
-    **Methodology:** Average of Standard VADER scores (on Feedback_Text)  
-    **Score:** {std_avg:.4f}  
-
-    **Interpretation:** Overall sentiment (Eng VADER) is generally 
-    {'positive' if std_avg > 0.05 else 'negative' if std_avg < -0.05 else 'neutral'}.
-
-    **Dominant Category:** {std_dominant} (VADER Eng) ({std_counts[std_dominant]}/{total_comments} comments)
-    """)
-
-    st.markdown("**Distribution (Std VADER):**")
-    for label in ["Positive", "Neutral", "Negative"]:
-        count = std_counts[label]
-        percent = (count / total_comments) * 100
-        st.markdown(f"- {label} (VADER Eng): {count} comments ({percent:.2f}%)")
-
-    # ------------------------------
-
-    st.markdown("## Augmented VADER (With Filipino Lexicon)")
-
-    st.markdown(f"""
-    **Methodology:** Average of Augmented VADER scores (on Cleaned_Text_Main)  
-    **Score:** {aug_avg:.4f}  
-    **Interpretation:** Overall sentiment (Aug VADER) is generally 
-    {'positive' if aug_avg > 0.05 else 'negative' if aug_avg < -0.05 else 'neutral'}.
-    **Dominant Category:** {aug_dominant} (VADER Aug) ({aug_counts[aug_dominant]}/{total_comments} comments)
-    """)
-
-    st.markdown("**Distribution (Aug VADER):**")
-    for label in ["Positive", "Neutral", "Negative"]:
-        count = aug_counts[label]
-        percent = (count / total_comments) * 100
-        st.markdown(f"- {label} (VADER Aug): {count} comments ({percent:.2f}%)")
-
-    # ------------------------------
-
-    st.markdown("## Filipino Keyword Sentiment (Direct Count)")
-
-    st.markdown(f"""
-    **Dominant Category:** {fil_dominant} (Filipino Keywords) ({fil_counts[fil_dominant]}/{total_comments} comments)
-    """)
-
-    st.markdown("**Distribution (Filipino Keywords):**")
-    for label in ["Positive", "Neutral", "Negative"]:
-        count = fil_counts[label]
-        percent = (count / total_comments) * 100
-        st.markdown(f"- {label} (Filipino Keywords): {count} comments ({percent:.2f}%)")
 
     # ------------------------------
     # Statistical Comparison
