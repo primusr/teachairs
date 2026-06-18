@@ -238,7 +238,17 @@ Distribution (Filipino Keywords):
  - Negative (Filipino Keywords): {fil_counts['Negative']} comments ({(fil_counts['Negative'] / total_comments * 100):.2f}%)
 """
 
-    st.code(std_text + "\n" + "-"*40 + "\n" + aug_text + "\n" + "-"*40 + "\n" + fil_text)
+    st.code(
+        std_text
+        + "\n"
+        + "-" * 30
+        + "\n"
+        + aug_text
+        + "\n"
+        + "-" * 30
+        + "\n"
+        + fil_text
+    )
 
     # ------------------------------
     # Sentiment Polarity Distribution Across Methods (plots)
