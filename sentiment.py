@@ -552,31 +552,6 @@ if uploaded_file:
 
     st.dataframe(topic_summary_df, width='stretch',)
 
-    # ------------------------------
-    # AI Recommendations for Selected Topics
-    # ------------------------------
-    if topic_summary_df.shape[0] > 0:
-        selected_topics = sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:3]
-        st.divider()
-        st.header("AI Recommendations for Selected Topics")
-        st.markdown(
-            "Recommendations for the 3 topic(s) with the most negative average Augmented VADER sentiment."
-        )
-
-        for row in selected_topics:
-            st.subheader(f"Topic {row['Topic ID']}: {row['AI Label']}")
-            st.markdown(f"**Top Keywords:** {row['Top Keywords']}")
-            st.markdown(f"**Avg VADER Aug Score:** {row['Avg VADER Aug Score']:.2f}")
-            st.markdown(f"**VADER Aug Distribution:** {row['VADER Aug Dist (%)']}")
-
-            st.markdown(
-                """
-                - Review student feedback with a focus on the highlighted topic keywords and identify common misunderstandings.
-                - Strengthen explanations, examples, and pacing for this topic to improve clarity and learner confidence.
-                - Provide targeted follow-up activities or check-for-understanding prompts related to these topic keywords.
-                """
-            )
-
     sentiment_csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(
         "Download Sentiment Analysis Results",
@@ -640,6 +615,31 @@ if uploaded_file:
         ax3.axis("off")
         ax3.set_title(f"Topic {i+1}: {ai_title}", fontsize=14, pad=12)
         st.pyplot(fig3)
+
+    # ------------------------------
+    # AI Recommendations for Selected Topics
+    # ------------------------------
+    if topic_summary_df.shape[0] > 0:
+        selected_topics = sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:3]
+        st.divider()
+        st.header("AI Recommendations for Selected Topics")
+        st.markdown(
+            "Recommendations for the 3 topic(s) with the most negative average Augmented VADER sentiment."
+        )
+
+        for row in selected_topics:
+            st.subheader(f"Topic {row['Topic ID']}: {row['AI Label']}")
+            st.markdown(f"**Top Keywords:** {row['Top Keywords']}")
+            st.markdown(f"**Avg VADER Aug Score:** {row['Avg VADER Aug Score']:.2f}")
+            st.markdown(f"**VADER Aug Distribution:** {row['VADER Aug Dist (%)']}")
+
+            st.markdown(
+                """
+                - Review student feedback with a focus on the highlighted topic keywords and identify common misunderstandings.
+                - Strengthen explanations, examples, and pacing for this topic to improve clarity and learner confidence.
+                - Provide targeted follow-up activities or check-for-understanding prompts related to these topic keywords.
+                """
+            )
 
 
     # ------------------------------
