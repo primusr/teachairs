@@ -118,6 +118,22 @@ if uploaded_file:
     df = df[[feedback_col]].rename(columns={feedback_col: "Feedback"})
     df.dropna(inplace=True)
 
+    # ------------------------------
+    # Sample VADER Output (Head & Tail)
+    # ------------------------------
+    st.subheader("Sample VADER Sentiment Output (Head & Tail)")
+    # compute VADER for head and tail only to keep output concise
+    head_df = df["Feedback"].head(3).to_frame()
+    head_df["VADER_Standard"] = head_df["Feedback"].apply(get_standard_vader)
+    head_df["VADER_Augmented"] = head_df["Feedback"].apply(get_augmented_vader)
+
+    tail_df = df["Feedback"].tail(3).to_frame()
+    tail_df["VADER_Standard"] = tail_df["Feedback"].apply(get_standard_vader)
+    tail_df["VADER_Augmented"] = tail_df["Feedback"].apply(get_augmented_vader)
+
+    sample_df = pd.concat([head_df, tail_df])
+    st.dataframe(sample_df)
+
     st.divider()
     st.header("Feedback Dataset Overview")
     st.dataframe(df.head())
