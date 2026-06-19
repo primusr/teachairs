@@ -269,19 +269,18 @@ Distribution (Aug VADER):
 #  - Negative (Filipino Keywords): {fil_counts['Negative']} comments ({(fil_counts['Negative'] / total_comments * 100):.2f}%)
 # """
 
-    # st.code(
-    #     std_text
-    #     + "\n"2
-    #     + "-" * 30
-    #     + "\n"
-    #     + aug_text
-    #     + "\n"
-    #     + "-" * 30
-    #     + "\n"
-    #     + fil_text
-    # )
-
-    # ------------------------------
+    st.code(
+        std_text
+        + "\n"2
+        + "-" * 30
+        + "\n"
+        + aug_text
+        + "\n"
+        + "-" * 30
+        + "\n"
+        
+    )
+   # ------------------------------
     # Sentiment Polarity Distribution Across Methods (plots)
     # ------------------------------
     st.divider()
