@@ -606,11 +606,11 @@ Distribution (Filipino Keywords):
                 "Fil. Keyword Dist (%)",
             ]
         ]
-        st.subheader("Overall Sentiment Per Topic")
+        st.markdown("Overall Sentiment Per Topic")
         st.markdown(
-        df.to_html(index=False),
-        unsafe_allow_html=True)
-        
+            topic_summary_df.to_html(index=False, escape=False),
+            unsafe_allow_html=True,
+        )
     else:
         st.info("No topic sentiment summary available.")
 
