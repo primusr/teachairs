@@ -585,7 +585,16 @@ Distribution (Filipino Keywords):
 
     topic_summary_df = pd.DataFrame(topic_rows)
 
-    st.dataframe(topic_summary_df, use_container_width=True, hide_index=True)
+    num_rows = len(topic_summary_df)
+    avg_content_length = topic_summary_df.astype(str).applymap(len).mean().mean()
+    estimated_height = int(max(300, min(900, 120 + num_rows * 32 + avg_content_length * 1.2)))
+
+    styled_topic_df = topic_summary_df.style.set_properties(**{
+        "white-space": "pre-wrap",
+        "word-wrap": "break-word"
+    })
+
+    st.dataframe(styled_topic_df, width=1000, height=estimated_height, hide_index=True)
 
     sentiment_csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(
