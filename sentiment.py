@@ -215,10 +215,10 @@ if uploaded_file:
     # ------------------------------
     # ------------------------------
     # Overall System Sentiment Scores & Distributions
-    # ------------------------------
-    st.divider()
-    st.header("Overall System Sentiment Scores & Distributions")
-    total_comments = len(df)
+    # # ------------------------------
+    # st.divider()
+    # st.header("Overall System Sentiment Scores & Distributions")
+    # total_comments = len(df)
 
     # Standard VADER
     df["Label_Std"] = df["VADER_Standard"].apply(classify_sentiment)
