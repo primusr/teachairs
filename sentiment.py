@@ -261,13 +261,13 @@ Distribution (Aug VADER):
  - Negative (VADER Aug): {aug_counts['Negative']} comments ({(aug_counts['Negative'] / total_comments * 100):.2f}%)
 """
 
-    fil_text = f"""-- Filipino Keyword Sentiment (Direct Count) --
-Dominant Category: {fil_dominant} (Filipino Keywords) ({fil_counts[fil_dominant]}/{total_comments} comments)
-Distribution (Filipino Keywords):
- - Neutral (Filipino Keywords): {fil_counts['Neutral']} comments ({(fil_counts['Neutral'] / total_comments * 100):.2f}%)
- - Positive (Filipino Keywords): {fil_counts['Positive']} comments ({(fil_counts['Positive'] / total_comments * 100):.2f}%)
- - Negative (Filipino Keywords): {fil_counts['Negative']} comments ({(fil_counts['Negative'] / total_comments * 100):.2f}%)
-"""
+#     fil_text = f"""-- Filipino Keyword Sentiment (Direct Count) --
+# Dominant Category: {fil_dominant} (Filipino Keywords) ({fil_counts[fil_dominant]}/{total_comments} comments)
+# Distribution (Filipino Keywords):
+#  - Neutral (Filipino Keywords): {fil_counts['Neutral']} comments ({(fil_counts['Neutral'] / total_comments * 100):.2f}%)
+#  - Positive (Filipino Keywords): {fil_counts['Positive']} comments ({(fil_counts['Positive'] / total_comments * 100):.2f}%)
+#  - Negative (Filipino Keywords): {fil_counts['Negative']} comments ({(fil_counts['Negative'] / total_comments * 100):.2f}%)
+# """
 
     st.code(
         std_text
