@@ -585,7 +585,7 @@ Distribution (Filipino Keywords):
 
     topic_summary_df = pd.DataFrame(topic_rows)
 
-    st.dataframe(topic_summary_df, use_container_width=True)
+    st.dataframe(topic_summary_df, use_container_width=False)
 
     sentiment_csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(
