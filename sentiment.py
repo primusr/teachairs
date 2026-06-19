@@ -271,14 +271,13 @@ Distribution (Filipino Keywords):
 
     st.code(
         std_text
-        + "\n"2
+        + "\n"
         + "-" * 30
         + "\n"
         + aug_text
         + "\n"
-        + "-" * 30
-        + "\n")
-   # ------------------------------
+        + "-" * 30)
+    # ------------------------------
     # Sentiment Polarity Distribution Across Methods (plots)
     # ------------------------------
     st.divider()
