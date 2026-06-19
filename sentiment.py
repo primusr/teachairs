@@ -51,58 +51,58 @@ st.set_page_config(
   
 )
 
-st.markdown("""
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+# st.markdown("""
+# <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-<style>
-html, body, [class*="css"]  {
-    font-family: 'Poppins', sans-serif;
-}
+# <style>
+# html, body, [class*="css"]  {
+#     font-family: 'Poppins', sans-serif;
+# }
 
-h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', sans-serif;
-}
+# h1, h2, h3, h4, h5, h6 {
+#     font-family: 'Poppins', sans-serif;
+# }
 
-.stApp {
-    background-color: #0E1117;
-}
-[data-testid="stSidebar"] {
-    background-color: #161A23;
-}
+# .stApp {
+#     background-color: #0E1117;
+# }
+# [data-testid="stSidebar"] {
+#     background-color: #161A23;
+# }
 
-/* Responsive tables and code blocks */
-[data-testid="stDataFrame"],
-.stDataFrame {
-    width: 100% !important;
-    max-width: 100% !important;
-}
+# /* Responsive tables and code blocks */
+# [data-testid="stDataFrame"],
+# .stDataFrame {
+#     width: 100% !important;
+#     max-width: 100% !important;
+# }
 
-[data-testid="stDataFrame"] td,
-[data-testid="stDataFrame"] th,
-.stDataFrame td,
-.stDataFrame th {
-    white-space: normal !important;
-    overflow-wrap: anywhere !important;
-    word-break: break-word !important;
-    max-width: 300px;
-}
+# [data-testid="stDataFrame"] td,
+# [data-testid="stDataFrame"] th,
+# .stDataFrame td,
+# .stDataFrame th {
+#     white-space: normal !important;
+#     overflow-wrap: anywhere !important;
+#     word-break: break-word !important;
+#     max-width: 300px;
+# }
 
-[data-testid="stDataFrame"] div[role="grid"],
-.stDataFrame div[role="grid"] {
-    overflow-x: auto !important;
-    width: 100% !important;
-}
+# [data-testid="stDataFrame"] div[role="grid"],
+# .stDataFrame div[role="grid"] {
+#     overflow-x: auto !important;
+#     width: 100% !important;
+# }
 
-code,
-pre {
-    white-space: pre-wrap !important;
-    word-break: break-word !important;
-    overflow-wrap: anywhere !important;
-    max-width: 100% !important;
-}
+# code,
+# pre {
+#     white-space: pre-wrap !important;
+#     word-break: break-word !important;
+#     overflow-wrap: anywhere !important;
+#     max-width: 100% !important;
+# }
 
-</style>
-""", unsafe_allow_html=True)
+# </style>
+# """, unsafe_allow_html=True)
 
 st.title("TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 
