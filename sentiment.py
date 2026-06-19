@@ -277,9 +277,7 @@ Distribution (Aug VADER):
         + aug_text
         + "\n"
         + "-" * 30
-        + "\n"
-        
-    )
+        + "\n")
    # ------------------------------
     # Sentiment Polarity Distribution Across Methods (plots)
     # ------------------------------
