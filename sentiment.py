@@ -612,7 +612,7 @@ Distribution (Filipino Keywords):
     )
 
     # Render wordclouds in two columns (two topics per row)
-    num_topics_display = 5
+    num_topics_display = min(5, lda_model.num_topics)
     for i in range(0, num_topics_display, 2):
         cols = st.columns(2)
         for j, col in enumerate(cols):
