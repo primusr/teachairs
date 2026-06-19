@@ -607,13 +607,14 @@ Distribution (Filipino Keywords):
             ]
         ]
         st.subheader("Overall Sentiment Per Topic")
-        st.dataframe(topic_summary_df, use_container_width=True)
+        st.markdown(
+        df.to_html(index=False),
+        unsafe_allow_html=True)
+        
     else:
         st.info("No topic sentiment summary available.")
 
-    st.markdown(
-        df.to_html(index=False),
-        unsafe_allow_html=True)
+   
     
     sentiment_csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(
