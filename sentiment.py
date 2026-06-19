@@ -563,11 +563,9 @@ Distribution (Filipino Keywords):
         fil_dist = topic_df["Label_Filipino"].value_counts(normalize=True) * 100
         fil_dist = fil_dist.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
         fil_dist_str = (
-            "{"
-            f"'Neutral (Filipino Keywords)': {fil_dist['Neutral']:.1f}, "
-            f"'Positive (Filipino Keywords)': {fil_dist['Positive']:.1f}, "
-            f"'Negative (Filipino Keywords)': {fil_dist['Negative']:.1f}"
-            "}"
+            f"Neutral (Filipino Keywords): {fil_dist['Neutral']:.1f}, "
+            f"Positive (Filipino Keywords): {fil_dist['Positive']:.1f}, "
+            f"Negative (Filipino Keywords): {fil_dist['Negative']:.1f}"
         )
 
         topic_rows.append({
@@ -576,20 +574,46 @@ Distribution (Filipino Keywords):
             "Top Keywords": top_keywords,
             "Num Comments": num_comments,
             "Avg VADER Eng Score": round(avg_std, 2),
-            "VADER Eng Dist (%)": std_dist_str,
+            "VADER Eng Dist (%)": (
+                f"Positive (VADER Eng): {std_dist['Positive']:.1f}, "
+                f"Neutral (VADER Eng): {std_dist['Neutral']:.1f}, "
+                f"Negative (VADER Eng): {std_dist['Negative']:.1f}"
+            ),
             "Avg VADER Aug Score": round(avg_aug, 2),
-            "VADER Aug Dist (%)": aug_dist_str,
+            "VADER Aug Dist (%)": (
+                f"Positive (VADER Aug): {aug_dist['Positive']:.1f}, "
+                f"Neutral (VADER Aug): {aug_dist['Neutral']:.1f}, "
+                f"Negative (VADER Aug): {aug_dist['Negative']:.1f}"
+            ),
             "Avg Fil. Keyword Score": round(avg_fil, 2),
             "Fil. Keyword Dist (%)": fil_dist_str
         })
 
     topic_summary_df = pd.DataFrame(topic_rows)
 
-    # st.dataframe(topic_summary_df, width=1000, height=300, hide_index=True)
+    if not topic_summary_df.empty:
+        topic_summary_df = topic_summary_df[
+            [
+                "Topic ID",
+                "AI Label",
+                "Top Keywords",
+                "Num Comments",
+                "Avg VADER Eng Score",
+                "VADER Eng Dist (%)",
+                "Avg VADER Aug Score",
+                "VADER Aug Dist (%)",
+                "Avg Fil. Keyword Score",
+                "Fil. Keyword Dist (%)",
+            ]
+        ]
+        st.subheader("Overall Sentiment Per Topic")
+        st.dataframe(topic_summary_df, use_container_width=True)
+    else:
+        st.info("No topic sentiment summary available.")
 
     st.markdown(
-    df.to_html(index=False),
-    unsafe_allow_html=True)
+        df.to_html(index=False),
+        unsafe_allow_html=True)
     
     sentiment_csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(
