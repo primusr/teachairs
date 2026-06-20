@@ -645,8 +645,8 @@ Distribution (Filipino Keywords):
                         f"Topic {topic_idx}"
                     )
                     with col:
-                        st.markdown(f"Topic {topic_idx}: {ai_title}")
-                        st.markdown(f"Keywords: {words}")
+                        st.markdown(f"""Topic {topic_idx}: {ai_title} \n Keywords: {words}""")
+                        
 
                         wc = WordCloud(background_color="white", width=400, height=300)
                         wc.generate_from_frequencies(dict(words_probs))
