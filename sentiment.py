@@ -660,17 +660,17 @@ Distribution (Filipino Keywords):
                             fontweight='bold',
                             color='black',
                             va='top',
-                            bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=3)
+                            bbox=dict(facecolor='white', alpha=0.88, edgecolor='black', linewidth=0.5, pad=4)
                         )
                         ax.text(
                             0.02,
-                            0.88,
+                            0.90,
                             keywords_text,
                             transform=ax.transAxes,
                             fontsize=8,
                             color='black',
                             va='top',
-                            bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=3)
+                            bbox=dict(facecolor='white', alpha=0.88, edgecolor='black', linewidth=0.5, pad=4)
                         )
                         st.pyplot(fig)
 
