@@ -640,6 +640,7 @@ Distribution (Filipino Keywords):
     )
 
     # Render wordclouds in two columns (two topics per row)
+    wordcloud_titles = {}
     num_topics_display = min(5, lda_model.num_topics)
     for i in range(0, num_topics_display, 2):
         cols = st.columns(2)
@@ -667,6 +668,8 @@ Distribution (Filipino Keywords):
                     ai_title = f"Topic {topic_idx+1}"
             else:
                 ai_title = f"Topic {topic_idx+1}"
+
+            wordcloud_titles[topic_idx] = ai_title
 
             with col:
                 st.markdown(f"### 🏷️ {ai_title}")
