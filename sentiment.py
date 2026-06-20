@@ -652,8 +652,11 @@ Distribution (Filipino Keywords):
                         fig, ax = plt.subplots(figsize=(6, 4))
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
-                        ax.set_title(f"Topic {topic_idx}: {ai_title}")
-                        ax.sub_label(f"Top Keywords: {words}", fontsize=8)
+
+                        fig.update_layout(
+                            title_text="<b>Iris Dataset Analysis</b><br><sup>Sepal Length vs Width Subtitle</sup>",
+                        )
+                      
                         st.pyplot(fig)
 
     else:
