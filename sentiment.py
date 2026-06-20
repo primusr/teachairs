@@ -645,14 +645,13 @@ Distribution (Filipino Keywords):
                         f"Topic {topic_idx}"
                     )
                     with col:
-                        st.subheader(f"Topic {topic_idx}: {ai_title}")
+                       # st.subheader(f"Topic {topic_idx}: {ai_title}")
                         wc = WordCloud(background_color="white", width=400, height=300)
                         wc.generate_from_frequencies(dict(words_probs))
                         fig, ax = plt.subplots(figsize=(6, 4))
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
-                        ax.set_label(f"Top Keywords: {words}", fontsize=10)
-                        ax.set_title(f"Top Keywords: {words}", fontsize=10)
+                        ax.set_title(f"Topic {topic_idx}: {ai_title} \n Top Keywords: {words}", fontsize=10)
                         st.pyplot(fig)
 
     else:
