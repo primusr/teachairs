@@ -660,24 +660,25 @@ Distribution (Filipino Keywords):
             words_probs = lda_model.show_topic(topic_idx, topn=10)
             words = ", ".join([w for w, _ in words_probs])
 
-            # Generate AI Topic Title (prefer previously computed AI Label when available)
-            if gemini_model:
-                prompt = f"""
-                Create a concise academic topic title (3-5 words only)
-                based on these keywords:
+            # # Generate AI Topic Title (prefer previously computed AI Label when available)
+            # if gemini_model:
+            #     prompt = f"""
+            #     Create a concise academic topic title (3-5 words only)
+            #     based on these keywords:
 
-                {words}
+            #     {words}
 
-                Return ONLY the title.
-                """
-                try:
-                    ai_title = gemini_model.generate_content(prompt).text.strip()
-                except:
-                    ai_title = f"Topic {topic_idx+1}"
-            else:
-                # Try to reuse the AI Label from topic_rows if present
-                ai_title = next((r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx), f"Topic {topic_idx+1}")
-
+            #     Return ONLY the title.
+            #     """
+            #     try:
+            #         ai_title = gemini_model.generate_content(prompt).text.strip()
+            #     except:
+            #         ai_title = f"Topic {topic_idx+1}"
+            # else:
+            #     # Try to reuse the AI Label from topic_rows if present
+            #     ai_title = next((r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx), f"Topic {topic_idx+1}")
+            ai_title = topic_label = next((r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx), f"Topic {topic_idx+1}")
+            
             wordcloud_titles[topic_idx] = ai_title
 
             with col:
