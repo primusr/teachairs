@@ -639,20 +639,28 @@ Distribution (Filipino Keywords):
         random_state=42
     )
 
-    # Render wordclouds in two columns (two topics per row)
+    # Render wordclouds for the top-N most negative topics (two per row)
+    # Select the top 4 by default (most negative Avg VADER Aug Score)
+    selected_topic_ids = [
+        r["Topic ID"] for r in sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:4]
+    ] if topic_rows else list(range(min(lda_model.num_topics, 4)))
+
+    if not selected_topic_ids:
+        selected_topic_ids = list(range(min(lda_model.num_topics, 4)))
+
     wordcloud_titles = {}
-    num_topics_display = min(5, lda_model.num_topics)
-    for i in range(0, num_topics_display, 2):
+    for i in range(0, len(selected_topic_ids), 2):
         cols = st.columns(2)
         for j, col in enumerate(cols):
-            topic_idx = i + j
-            if topic_idx >= num_topics_display:
+            idx = i + j
+            if idx >= len(selected_topic_ids):
                 break
 
+            topic_idx = selected_topic_ids[idx]
             words_probs = lda_model.show_topic(topic_idx, topn=10)
             words = ", ".join([w for w, _ in words_probs])
 
-            # Generate AI Topic Title
+            # Generate AI Topic Title (prefer previously computed AI Label when available)
             if gemini_model:
                 prompt = f"""
                 Create a concise academic topic title (3-5 words only)
@@ -667,7 +675,8 @@ Distribution (Filipino Keywords):
                 except:
                     ai_title = f"Topic {topic_idx+1}"
             else:
-                ai_title = f"Topic {topic_idx+1}"
+                # Try to reuse the AI Label from topic_rows if present
+                ai_title = next((r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx), f"Topic {topic_idx+1}")
 
             wordcloud_titles[topic_idx] = ai_title
 
@@ -686,11 +695,11 @@ Distribution (Filipino Keywords):
     # AI Recommendations for Selected Topics
     # ------------------------------
     if topic_summary_df.shape[0] > 0:
-        selected_topics = sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:3]
+        selected_topics = sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:4]
         st.divider()
         st.header("AI Recommendations for Selected Topics")
         st.markdown(
-            "Recommendations for the 3 topic(s) with the most negative average Augmented VADER sentiment."
+            "Recommendations for the 4 topic(s) with the most negative average Augmented VADER sentiment."
         )
 
         def _sentiment_context(avg_score):
@@ -757,7 +766,7 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         Correlation Between Models: {corr_value}
         """
 
-        selected_topics = sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:3] if topic_rows else []
+        selected_topics = sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:4] if topic_rows else []
 
         def _format_selected_topics(topics):
             if not topics:
