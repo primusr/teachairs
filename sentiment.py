@@ -650,21 +650,6 @@ Distribution (Filipino Keywords):
                         fig, ax = plt.subplots(figsize=(6, 4))
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
-                        metadata_text = f"Topic {topic_idx}: {ai_title}\nKeywords: {words}"
-                        wrapped_text = "\n".join(textwrap.wrap(metadata_text, width=45))
-                        ax.text(
-                            0.02,
-                            0.98,
-                            wrapped_text,
-                            transform=ax.transAxes,
-                            fontsize=9,
-                            fontweight='bold',
-                            color='black',
-                            va='top',
-                            ha='left',
-                            linespacing=1.2,
-                            bbox=dict(facecolor='white', alpha=0.88, edgecolor='black', linewidth=0.75, pad=6)
-                        )
                         st.pyplot(fig)
 
     else:
