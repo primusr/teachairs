@@ -649,7 +649,7 @@ Distribution (Filipino Keywords):
                         wc = WordCloud(background_color="white", width=400, height=300)
                 
                         wc.generate_from_frequencies(dict(words_probs))
-                        fig, title = f"Topic {topic_idx} - {ai_title}"
+                        
                         fig, ax = plt.subplots(figsize=(6, 4))
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
