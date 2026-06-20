@@ -651,6 +651,7 @@ Distribution (Filipino Keywords):
                         fig, ax = plt.subplots(figsize=(6, 4))
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
+                        ax.set_label(f"Top Keywords: {words}", fontsize=10)
                         ax.set_title(f"Top Keywords: {words}", fontsize=10)
                         st.pyplot(fig)
 
