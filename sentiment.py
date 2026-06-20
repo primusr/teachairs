@@ -644,7 +644,7 @@ Distribution (Filipino Keywords):
                         f"Topic {topic_idx}"
                     )
                     with col:
-                        st.markdown(f"### 🏷️ {ai_title} (Topic {topic_idx})")
+                        
                         st.caption(f"Top Keywords: {words}")
                         wc = WordCloud(background_color="white", width=400, height=300)
                 
@@ -653,6 +653,7 @@ Distribution (Filipino Keywords):
                         fig, ax = plt.subplots(figsize=(6, 4))
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
+                        st.title(f"Topic {topic_idx}: {ai_title}")
                         st.pyplot(fig)
 
     else:
