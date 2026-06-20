@@ -634,7 +634,7 @@ Distribution (Filipino Keywords):
     lda_model = LdaModel(
         corpus=corpus,
         id2word=dictionary,
-        num_topics=4,
+        num_topics=final_k,
         passes=10,
         random_state=42
     )
