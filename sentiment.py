@@ -612,7 +612,7 @@ Distribution (Filipino Keywords):
             unsafe_allow_html=True,
         )
 
-        sentiment_csv = topic_summary_df.to_csv(index=False).encode('utf-8')
+        sentiment_csv = df.to_csv(index=False).encode('utf-8')
         st.download_button(
             "Download Sentiment Analysis Results",
             sentiment_csv,
@@ -626,9 +626,9 @@ Distribution (Filipino Keywords):
         topic_ids_to_plot = [row["Topic ID"] for row in topic_rows][:4]
         if topic_ids_to_plot:
             st.divider()
-            st.header("Topic Word Clouds")
+            st.header("Word Cloud for Identified Topics")
             st.markdown(
-                "Word clouds generated from the top keywords of the first 4 topics identified by the LDA model."
+                "Word clouds for the topics identified by TeachAIRs LDA model. These visualizations complement the quantitative analysis by providing an intuitive understanding of the core concepts and terms that define each theme."
             )
             for i in range(0, len(topic_ids_to_plot), 2):
                 cols = st.columns(2)
@@ -644,9 +644,9 @@ Distribution (Filipino Keywords):
                         f"Topic {topic_idx}"
                     )
                     with col:
-                        st.markdown(f"### 🏷️ {ai_title} (Topic {topic_idx})")
+                       
                         st.caption(f"Top Keywords: {words}")
-                        wc = WordCloud(background_color="white", width=400, height=300)
+                        wc = WordCloud(title=ai_title, background_color="white", width=400, height=300)
                         wc.generate_from_frequencies(dict(words_probs))
                         fig, ax = plt.subplots(figsize=(6, 4))
                         ax.imshow(wc, interpolation="bilinear")
