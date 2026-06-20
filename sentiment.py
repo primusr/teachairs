@@ -612,6 +612,14 @@ Distribution (Filipino Keywords):
             unsafe_allow_html=True,
         )
 
+        sentiment_csv = topic_summary_df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            "Download Sentiment Analysis Results",
+            sentiment_csv,
+            file_name="sentiment_analysis_results.csv",
+            mime="text/csv"
+        )
+
         # ------------------------------
         # Topic Word Clouds (First 4 LDA Topics)
         # ------------------------------
@@ -650,13 +658,7 @@ Distribution (Filipino Keywords):
 
    
     
-    sentiment_csv = df.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        "Download Sentiment Analysis Results",
-        sentiment_csv,
-        file_name="sentiment_analysis_results.csv",
-        mime="text/csv"
-    )
+   
 
     
     
