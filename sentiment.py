@@ -524,7 +524,7 @@ Distribution (Filipino Keywords):
         if gemini_model:
             prompt = f"Provide a concise 3-word academic topic label for: {top_keywords}"
             response = gemini_model.generate_content(prompt)
-            ai_label = response.text.strip()
+            ai_label = response.text.strip().replace("**", "")
         else:
             ai_label = f"Topic {topic_id}"
 
@@ -644,13 +644,34 @@ Distribution (Filipino Keywords):
                         f"Topic {topic_idx}"
                     )
                     with col:
-                        
-                        st.caption(f"Top Keywords: {words}", font_size="small")
                         wc = WordCloud(background_color="white", width=400, height=300)
                         wc.generate_from_frequencies(dict(words_probs))
                         fig, ax = plt.subplots(figsize=(6, 4))
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
+                        title_text = f"Topic {topic_idx}: {ai_title}"
+                        keywords_text = f"Keywords: {words}"
+                        ax.text(
+                            0.02,
+                            0.96,
+                            title_text,
+                            transform=ax.transAxes,
+                            fontsize=10,
+                            fontweight='bold',
+                            color='black',
+                            va='top',
+                            bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=3)
+                        )
+                        ax.text(
+                            0.02,
+                            0.88,
+                            keywords_text,
+                            transform=ax.transAxes,
+                            fontsize=8,
+                            color='black',
+                            va='top',
+                            bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=3)
+                        )
                         st.pyplot(fig)
 
     else:
