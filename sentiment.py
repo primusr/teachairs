@@ -611,6 +611,40 @@ Distribution (Filipino Keywords):
             topic_summary_df.to_html(index=False, escape=False),
             unsafe_allow_html=True,
         )
+
+        # ------------------------------
+        # Topic Word Clouds (First 4 LDA Topics)
+        # ------------------------------
+        topic_ids_to_plot = [row["Topic ID"] for row in topic_rows][:4]
+        if topic_ids_to_plot:
+            st.divider()
+            st.header("Topic Word Clouds")
+            st.markdown(
+                "Word clouds generated from the top keywords of the first 4 topics identified by the LDA model."
+            )
+            for i in range(0, len(topic_ids_to_plot), 2):
+                cols = st.columns(2)
+                for j, col in enumerate(cols):
+                    idx = i + j
+                    if idx >= len(topic_ids_to_plot):
+                        break
+                    topic_idx = topic_ids_to_plot[idx]
+                    words_probs = lda_model_final.show_topic(topic_idx, topn=15)
+                    words = ", ".join([w for w, _ in words_probs])
+                    ai_title = next(
+                        (r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx),
+                        f"Topic {topic_idx}"
+                    )
+                    with col:
+                        st.markdown(f"### 🏷️ {ai_title} (Topic {topic_idx})")
+                        st.caption(f"Top Keywords: {words}")
+                        wc = WordCloud(background_color="white", width=400, height=300)
+                        wc.generate_from_frequencies(dict(words_probs))
+                        fig, ax = plt.subplots(figsize=(6, 4))
+                        ax.imshow(wc, interpolation="bilinear")
+                        ax.axis("off")
+                        st.pyplot(fig)
+
     else:
         st.info("No topic sentiment summary available.")
 
@@ -624,73 +658,8 @@ Distribution (Filipino Keywords):
         mime="text/csv"
     )
 
-    st.divider()
-    st.header("Topic Modeling (LDA)")
-
-    texts = [t.split() for t in df["Cleaned"] if t.strip()]
-    dictionary = corpora.Dictionary(texts)
-    corpus = [dictionary.doc2bow(text) for text in texts]
-
-    lda_model = LdaModel(
-        corpus=corpus,
-        id2word=dictionary,
-        num_topics=final_k,
-        passes=10,
-        random_state=42
-    )
-
-    # Render wordclouds for the top-N most negative topics (two per row)
-    # Select the top 4 by default (most negative Avg VADER Aug Score)
-    selected_topic_ids = [
-        r["Topic ID"] for r in sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:4]
-    ] if topic_rows else list(range(min(lda_model.num_topics, 4)))
-
-    if not selected_topic_ids:
-        selected_topic_ids = list(range(min(lda_model.num_topics, 4)))
-
-    wordcloud_titles = {}
-    for i in range(0, len(selected_topic_ids), 2):
-        cols = st.columns(2)
-        for j, col in enumerate(cols):
-            idx = i + j
-            if idx >= len(selected_topic_ids):
-                break
-
-            topic_idx = selected_topic_ids[idx]
-            words_probs = lda_model.show_topic(topic_idx, topn=10)
-            words = ", ".join([w for w, _ in words_probs])
-
-            # # Generate AI Topic Title (prefer previously computed AI Label when available)
-            # if gemini_model:
-            #     prompt = f"""
-            #     Create a concise academic topic title (3-5 words only)
-            #     based on these keywords:
-
-            #     {words}
-
-            #     Return ONLY the title.
-            #     """
-            #     try:
-            #         ai_title = gemini_model.generate_content(prompt).text.strip()
-            #     except:
-            #         ai_title = f"Topic {topic_idx+1}"
-            # else:
-            #     # Try to reuse the AI Label from topic_rows if present
-            #     ai_title = next((r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx), f"Topic {topic_idx+1}")
-            ai_title = topic_label = next((r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx), f"Topic {topic_idx+1}")
-            
-            wordcloud_titles[topic_idx] = ai_title
-
-            with col:
-                st.markdown(f"### 🏷️ {ai_title}")
-                st.caption(f"Keywords: {words}")
-                wc = WordCloud(background_color="white", width=400, height=300)
-                wc.generate_from_frequencies(dict(words_probs))
-                fig, ax = plt.subplots(figsize=(6,4))
-                ax.imshow(wc, interpolation="bilinear")
-                ax.axis("off")
-                ax.set_title(f"Topic {topic_idx+1}: {ai_title}", fontsize=10, pad=8)
-                st.pyplot(fig)
+    
+    
 
     # ------------------------------
     # AI Recommendations for Selected Topics
