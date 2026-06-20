@@ -645,6 +645,7 @@ Distribution (Filipino Keywords):
                         f"Topic {topic_idx}"
                     )
                     with col:
+                        st.subheader(f"Topic {topic_idx}: {ai_title}")
                         wc = WordCloud(background_color="white", width=400, height=300)
                         wc.generate_from_frequencies(dict(words_probs))
                         fig, ax = plt.subplots(figsize=(6, 4))
