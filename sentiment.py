@@ -645,7 +645,7 @@ Distribution (Filipino Keywords):
                         f"Topic {topic_idx}"
                     )
                     with col:
-                        st.markdown(f"""Topic {topic_idx}: {ai_title} \n Keywords: {words}""")
+                        st.markdown(f"""Topic {topic_idx}: {ai_title} <br> Keywords: {words}""",unsafe_allow_html=True,width=auto,text_align="center")
                         
 
                         wc = WordCloud(background_color="white", width=400, height=300)
