@@ -644,10 +644,12 @@ Distribution (Filipino Keywords):
                         f"Topic {topic_idx}"
                     )
                     with col:
-                        fg=f"Topic {topic_idx} {ai_title}"
+                        st.markdown(f"### 🏷️ {ai_title} (Topic {topic_idx})")
                         st.caption(f"Top Keywords: {words}")
-                        wc = WordCloud(title= fg, background_color="white", width=400, height=300)
+                        wc = WordCloud(background_color="white", width=400, height=300)
+                
                         wc.generate_from_frequencies(dict(words_probs))
+                        fig, title = f"Topic {topic_idx} - {ai_title}"
                         fig, ax = plt.subplots(figsize=(6, 4))
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
