@@ -653,7 +653,7 @@ Distribution (Filipino Keywords):
                         fig, ax = plt.subplots(figsize=(6, 4))
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
-                        st.title(f"Topic {topic_idx}: {ai_title}")
+                        ax.set_title(f"Topic {topic_idx}: {ai_title}")
                         st.pyplot(fig)
 
     else:
