@@ -524,7 +524,7 @@ Distribution (Filipino Keywords):
         if gemini_model:
             prompt = f"Provide a concise 3-word academic topic label for: {top_keywords}"
             response = gemini_model.generate_content(prompt)
-            ai_label = response.text.strip()
+            ai_label = response.text.strip().replace("**", "")
         else:
             ai_label = f"Topic {topic_id}"
 
