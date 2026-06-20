@@ -524,7 +524,7 @@ Distribution (Filipino Keywords):
         if gemini_model:
             prompt = f"Provide a concise 3-word academic topic label for: {top_keywords}"
             response = gemini_model.generate_content(prompt)
-            ai_label = response.text.strip().replace("**", "")
+            ai_label = response.text.strip()
         else:
             ai_label = f"Topic {topic_id}"
 
@@ -645,18 +645,12 @@ Distribution (Filipino Keywords):
                     )
                     with col:
                         
+                        st.caption(f"Top Keywords: {words}", font_size="small")
                         wc = WordCloud(background_color="white", width=400, height=300)
-                
                         wc.generate_from_frequencies(dict(words_probs))
-                        
                         fig, ax = plt.subplots(figsize=(6, 4))
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
-
-                        fig.update_layout(
-                            title_text="<b>Iris Dataset Analysis</b><br><sup>Sepal Length vs Width Subtitle</sup>",
-                        )
-                      
                         st.pyplot(fig)
 
     else:
