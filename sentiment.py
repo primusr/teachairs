@@ -645,7 +645,6 @@ Distribution (Filipino Keywords):
                     )
                     with col:
                         
-                        st.caption(f"Top Keywords: {words}")
                         wc = WordCloud(background_color="white", width=400, height=300)
                 
                         wc.generate_from_frequencies(dict(words_probs))
@@ -654,6 +653,7 @@ Distribution (Filipino Keywords):
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
                         ax.set_title(f"Topic {topic_idx}: {ai_title}")
+                        ax.sub_label(f"Top Keywords: {words}", fontsize=8)
                         st.pyplot(fig)
 
     else:
