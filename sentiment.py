@@ -590,6 +590,23 @@ Distribution (Filipino Keywords):
         )
 
         sentiment_csv = df.to_csv(index=False).encode('utf-8')
+
+        st.markdown("""
+            <style>
+            .stDownloadButton button {
+                background-color: #0099ff !important;
+                color: white !important;
+                border-radius: 8px !important;
+                border: none !important;
+            }
+            /* Optional: Change color when hovering */
+            .stDownloadButton button:hover {
+                background-color: #007cca !important;
+                color: white !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+
         st.download_button(
             "Download Sentiment Analysis Results",
             sentiment_csv,
@@ -779,6 +796,21 @@ SELECTED TOPICS:
         gemini_recommendation_text = response.text.strip()
         st.markdown(gemini_recommendation_text)
 
+        st.markdown("""
+            <style>
+            .stDownloadButton button {
+                background-color: #0099ff !important;
+                color: white !important;
+                border-radius: 8px !important;
+                border: none !important;
+            }
+            /* Optional: Change color when hovering */
+            .stDownloadButton button:hover {
+                background-color: #007cca !important;
+                color: white !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
         st.download_button(
             "Download Gemini Recommendations",
             gemini_recommendation_text,
