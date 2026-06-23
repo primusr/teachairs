@@ -105,7 +105,7 @@ st.set_page_config(
 # </style>
 # """, unsafe_allow_html=True)
 
-st.title("TeachAIRs: Student Feedback Analyzer with AI Recommendations")
+st.title("📊TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 
 # ------------------------------
 # Gemini API (Optional)

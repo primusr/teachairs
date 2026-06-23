@@ -41,6 +41,22 @@ button {
     font-family: 'Poppins', sans-serif;
 }
 
+/* Download buttons specifically */
+button[data-testid="stDownloadButton"],
+[data-testid="stDownloadButton"] > button,
+.stDownloadButton button {
+    background-color: #1D4ED8 !important;
+    border-color: #1D4ED8 !important;
+    color: #FFFFFF !important;
+}
+
+button[data-testid="stDownloadButton"]:hover,
+[data-testid="stDownloadButton"] > button:hover,
+.stDownloadButton button:hover {
+    background-color: #2563EB !important;
+    border-color: #2563EB !important;
+}
+
 .stApp {
     background-color: #0E1117;
 }
