@@ -2,6 +2,7 @@
 # TeachAIRs: Sentiment & Topic Analysis
 # With VADER Method Comparison
 # ==============================
+import playwright from playwright.sync_api import sync_playwright
 
 import pandas as pd
 import numpy as np
@@ -651,339 +652,28 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         gemini_recommendation_text = response.text.strip()
         st.markdown(gemini_recommendation_text)
 
-    # ================================
-    # Generate Comprehensive Report for Download (PDF)
-    # ================================
     
-    def _build_comprehensive_pdf_report(filename):
-        """Build a comprehensive PDF report with all analysis sections"""
-        buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter), topMargin=0.5*inch, bottomMargin=0.5*inch)
-        story = []
-        styles = getSampleStyleSheet()
-        
-        # Custom styles
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=24,
-            textColor=HexColor('#003366'),
-            spaceAfter=12,
-            alignment=1
-        )
-        
-        heading_style = ParagraphStyle(
-            'CustomHeading',
-            parent=styles['Heading2'],
-            fontSize=14,
-            textColor=HexColor('#003366'),
-            spaceAfter=8,
-            spaceBefore=8
-        )
-        
-        normal_style = ParagraphStyle(
-            'CustomNormal',
-            parent=styles['Normal'],
-            fontSize=10,
-            spaceAfter=6
-        )
-        
-        # Title
-        story.append(Paragraph("📊 TeachAIRs: Student Feedback Analysis Report", title_style))
-        story.append(Spacer(1, 0.2*inch))
-        
-        # File Information
-        file_info_style = ParagraphStyle(
-            'FileInfo',
-            parent=styles['Normal'],
-            fontSize=11,
-            textColor=HexColor('#666666'),
-            spaceAfter=12
-        )
-        story.append(Paragraph(f"<b>File Analyzed:</b> {filename}", file_info_style))
-        story.append(Paragraph(f"<b>Application:</b> TeachAIRs - Sentiment & Topic Analysis", file_info_style))
-        story.append(Spacer(1, 0.15*inch))
-        
-        # 1. SENTIMENT DISTRIBUTION
-        story.append(Paragraph("1. SENTIMENT DISTRIBUTION", heading_style))
-        story.append(Paragraph(f"Average Sentiment Score: <b>{avg_score:.3f}</b>", normal_style))
-        overall_sentiment = 'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'
-        story.append(Paragraph(f"Overall Sentiment: <b>{overall_sentiment}</b>", normal_style))
-        story.append(Spacer(1, 0.1*inch))
-        
-        # Distribution table
-        dist_data = [['Sentiment', 'Count', 'Percentage']]
-        for sentiment in ["Positive", "Neutral", "Negative"]:
-            count = counts.get(sentiment, 0)
-            pct = (count / len(df) * 100) if len(df) > 0 else 0
-            dist_data.append([sentiment, str(count), f"{pct:.1f}%"])
-        
-        dist_table = Table(dist_data)
-        dist_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#003366')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 11),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), beige),
-            ('GRID', (0, 0), (-1, -1), 1, black),
-        ]))
-        story.append(dist_table)
-        story.append(Spacer(1, 0.15*inch))
-        try:
-            fig1_buffer.seek(0)
-            story.append(Image(fig1_buffer, width=6.5*inch, height=3.5*inch))
-            story.append(Spacer(1, 0.2*inch))
-        except Exception:
-            pass
-        
-        # 2. SENTIMENT POLARITY DISTRIBUTION ACROSS METHODS
-        story.append(Paragraph("2. SENTIMENT POLARITY DISTRIBUTION ACROSS METHODS", heading_style))
-        
-        methods_data = [['Method', 'Avg Score', 'Sentiment', 'Positive', 'Neutral', 'Negative']]
-        
-        # Standard VADER
-        std_sentiment_label = 'Positive' if std_avg > 0.05 else 'Negative' if std_avg < -0.05 else 'Neutral'
-        methods_data.append([
-            'Standard VADER',
-            f"{std_avg:.3f}",
-            std_sentiment_label,
-            f"{std_counts.get('Positive', 0)}",
-            f"{std_counts.get('Neutral', 0)}",
-            f"{std_counts.get('Negative', 0)}"
-        ])
-        
-        # Augmented VADER
-        aug_sentiment_label = 'Positive' if aug_avg > 0.05 else 'Negative' if aug_avg < -0.05 else 'Neutral'
-        methods_data.append([
-            'Augmented VADER',
-            f"{aug_avg:.3f}",
-            aug_sentiment_label,
-            f"{aug_counts.get('Positive', 0)}",
-            f"{aug_counts.get('Neutral', 0)}",
-            f"{aug_counts.get('Negative', 0)}"
-        ])
-        
-        methods_table = Table(methods_data)
-        methods_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#003366')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), lightblue),
-            ('GRID', (0, 0), (-1, -1), 1, black),
-        ]))
-        story.append(methods_table)
-        story.append(Spacer(1, 0.1*inch))
-        try:
-            fig_std_buffer.seek(0)
-            story.append(Image(fig_std_buffer, width=6.5*inch, height=3.5*inch))
-            story.append(Spacer(1, 0.1*inch))
-        except Exception:
-            pass
-        
-        try:
-            fig_aug_buffer.seek(0)
-            story.append(Image(fig_aug_buffer, width=6.5*inch, height=3.5*inch))
-            story.append(Spacer(1, 0.1*inch))
-        except Exception:
-            pass
-        
-        story.append(Paragraph(f"Pearson Correlation: <b>{correlation:.3f}</b>", normal_style))
-        story.append(Paragraph(f"Polarity Sign Flip Rate: <b>{flip_rate:.2f}%</b>", normal_style))
-        story.append(Spacer(1, 0.2*inch))
-        
-        # 3. OVERALL SENTIMENT PER TOPIC
-        story.append(Paragraph("3. OVERALL SENTIMENT PER TOPIC", heading_style))
-        if not topic_summary_df.empty:
-            topic_cell_style = ParagraphStyle(
-                'TopicCell',
-                parent=styles['Normal'],
-                fontSize=8,
-                leading=10,
-                alignment=0,
-                spaceAfter=2
-            )
-            topic_summary_rows = [[
-                'Topic ID', 'AI Label', 'Keywords', 'Num Comments',
-                'Avg VADER Eng', 'VADER Eng +', 'Avg VADER Aug', 'VADER Aug +', 'Avg Fil. Score'
-            ]]
-            for idx, row in topic_summary_df.iterrows():
-                topic_summary_rows.append([
-                    Paragraph(str(row['Topic ID']), topic_cell_style),
-                    Paragraph(str(row['AI Label']), topic_cell_style),
-                    Paragraph(str(row['Top Keywords']), topic_cell_style),
-                    Paragraph(str(row['Num Comments']), topic_cell_style),
-                    Paragraph(str(row['Avg VADER Eng Score']), topic_cell_style),
-                    Paragraph(str(row['VADER Eng Dist (%)']), topic_cell_style),
-                    Paragraph(str(row['Avg VADER Aug Score']), topic_cell_style),
-                    Paragraph(str(row['VADER Aug Dist (%)']), topic_cell_style),
-                    Paragraph(str(row['Avg Fil. Keyword Score']), topic_cell_style)
-                ])
-            topic_table = Table(topic_summary_rows, colWidths=[0.55*inch, 1.1*inch, 2.8*inch, 0.55*inch, 0.65*inch, 1.1*inch, 0.6*inch, 1.1*inch, 0.6*inch])
-            topic_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#003366')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 8),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-                ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-                ('BACKGROUND', (0, 1), (-1, -1), beige),
-                ('GRID', (0, 0), (-1, -1), 0.5, black),
-            ]))
-            story.append(topic_table)
-            story.append(Spacer(1, 0.2*inch))
-        else:
-            story.append(Paragraph("No topic sentiment data available.", normal_style))
-            story.append(Spacer(1, 0.2*inch))
-
-        if topic_wordcloud_buffers:
-            story.append(Paragraph("4. TOPIC WORD CLOUDS", heading_style))
-            story.append(Paragraph("Visual summaries of topic keywords from the LDA model.", normal_style))
-            story.append(Spacer(1, 0.1*inch))
-            for topic_idx, ai_title, wc_buffer in topic_wordcloud_buffers:
-                try:
-                    wc_buffer.seek(0)
-                    story.append(Paragraph(f"Topic {topic_idx}: {ai_title}", normal_style))
-                    story.append(Image(wc_buffer, width=6.5*inch, height=3.5*inch))
-                    story.append(Spacer(1, 0.2*inch))
-                except Exception:
-                    continue
-            story.append(PageBreak())
-            section_offset = 1
-        else:
-            section_offset = 0
-        
-        # 4. AI RECOMMENDATIONS FOR SELECTED TOPICS
-        story.append(Paragraph("4. AI RECOMMENDATIONS FOR SELECTED TOPICS", heading_style))
-        story.append(Paragraph("Recommendations for the 4 topic(s) with the most negative average Augmented VADER sentiment.", normal_style))
-        story.append(Spacer(1, 0.1*inch))
-        try:
-            for row in selected_topics:
-                rec_text = _build_topic_recommendations(row)
-                # Clean markdown formatting
-                rec_text = rec_text.replace("**", "").replace("   * ", "• ")
-                story.append(Paragraph(rec_text, normal_style))
-                story.append(Spacer(1, 0.1*inch))
-        except:
-            story.append(Paragraph("Topic recommendations could not be generated.", normal_style))
-        
-        story.append(PageBreak())
-        
-        # 5. OVERALL AI RECOMMENDATIONS
-        story.append(Paragraph("5. OVERALL AI RECOMMENDATIONS", heading_style))
-        if gemini_model:
-            try:
-                rec_text = gemini_recommendation_text.replace("**", "")
-                story.append(Paragraph(rec_text, normal_style))
-            except:
-                story.append(Paragraph("Overall AI recommendations could not be generated.", normal_style))
-        else:
-            story.append(Paragraph("Gemini model not available for generating recommendations.", normal_style))
-        
-        story.append(Spacer(1, 0.3*inch))
-        story.append(Paragraph("End of Report", normal_style))
-        
-        doc.build(story)
-        buffer.seek(0)
-        return buffer
-
-    def _build_sentiment_distribution_csv():
-        dist_df = pd.DataFrame({
-            'Sentiment': ['Positive', 'Neutral', 'Negative'],
-            'Count': [counts.get(s, 0) for s in ['Positive', 'Neutral', 'Negative']],
-            'Percentage': [
-                f"{(counts.get(s, 0) / len(df) * 100):.1f}%" if len(df) > 0 else '0.0%'
-                for s in ['Positive', 'Neutral', 'Negative']
-            ]
-        })
-        return dist_df.to_csv(index=False).encode('utf-8')
-
-    def _build_polarity_distribution_csv():
-        rows = [
-            {
-                'Method': 'Standard VADER',
-                'Avg Score': f"{std_avg:.3f}",
-                'Sentiment': 'Positive' if std_avg > 0.05 else 'Negative' if std_avg < -0.05 else 'Neutral',
-                'Positive': std_counts.get('Positive', 0),
-                'Neutral': std_counts.get('Neutral', 0),
-                'Negative': std_counts.get('Negative', 0)
-            },
-            {
-                'Method': 'Augmented VADER',
-                'Avg Score': f"{aug_avg:.3f}",
-                'Sentiment': 'Positive' if aug_avg > 0.05 else 'Negative' if aug_avg < -0.05 else 'Neutral',
-                'Positive': aug_counts.get('Positive', 0),
-                'Neutral': aug_counts.get('Neutral', 0),
-                'Negative': aug_counts.get('Negative', 0)
-            },
-            {
-                'Method': 'Filipino Keyword Sentiment',
-                'Avg Score': '',
-                'Sentiment': fil_dominant,
-                'Positive': fil_counts.get('Positive', 0),
-                'Neutral': fil_counts.get('Neutral', 0),
-                'Negative': fil_counts.get('Negative', 0)
-            }
-        ]
-        return pd.DataFrame(rows).to_csv(index=False).encode('utf-8')
-
-    def _build_topic_recommendations_csv():
-        rec_rows = []
-        for row in selected_topics:
-            recommendation = _build_topic_recommendations(row)
-            recommendation = recommendation.replace('**', '').replace('   * ', '• ').strip()
-            rec_rows.append({
-                'Topic ID': row['Topic ID'],
-                'AI Label': row['AI Label'],
-                'Top Keywords': row['Top Keywords'],
-                'Avg VADER Aug Score': row['Avg VADER Aug Score'],
-                'Recommendations': recommendation
-            })
-        return pd.DataFrame(rec_rows).to_csv(index=False).encode('utf-8')
-
-    def _build_report_package(filename):
-        pdf_buffer = _build_comprehensive_pdf_report(filename)
-        pdf_bytes = pdf_buffer.getvalue()
-
-        zip_buffer = BytesIO()
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr('TeachAIRs_Analysis_Report.pdf', pdf_bytes)
-            zf.writestr('Sentiment_Distribution.csv', _build_sentiment_distribution_csv())
-            zf.writestr('Sentiment_Polarity_Distribution.csv', _build_polarity_distribution_csv())
-            zf.writestr('Overall_Sentiment_Per_Topic.csv', topic_summary_df.to_csv(index=False).encode('utf-8'))
-            zf.writestr('Selected_Topic_Recommendations.csv', _build_topic_recommendations_csv())
-        zip_buffer.seek(0)
-        return zip_buffer
-
-    # Generate and display download buttons
-    pdf_buffer = _build_comprehensive_pdf_report(uploaded_file.name)
-    report_package = _build_report_package(uploaded_file.name)
-    
-    st.divider()
-    st.header("📥 Download Full Report")
-    st.download_button(
-        label="📄 Download Complete Analysis Report (PDF)",
-        data=pdf_buffer,
-        file_name="TeachAIRs_Analysis_Report.pdf",
-        mime="application/pdf"
-    )
-    st.download_button(
-        label="📦 Download PDF + CSV Package",
-        data=report_package,
-        file_name="TeachAIRs_Report_Package.zip",
-        mime="application/zip"
-    )
     
     st.divider()
 
+    url = "https://gs-demo.streamlit.app/"
+    output_pdf = "website.pdf"
 
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+
+        page.goto(url, wait_until="networkidle")
+
+        page.pdf(
+            path=output_pdf,
+            format="A4",
+            print_background=True
+        )
+
+        browser.close()
+
+    print(f"Saved to {output_pdf}")
 
 
 else:
