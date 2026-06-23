@@ -52,59 +52,6 @@ st.set_page_config(
   
 )
 
-# st.markdown("""
-# <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-# <style>
-# html, body, [class*="css"]  {
-#     font-family: 'Poppins', sans-serif;
-# }
-
-# h1, h2, h3, h4, h5, h6 {
-#     font-family: 'Poppins', sans-serif;
-# }
-
-# .stApp {
-#     background-color: #0E1117;
-# }
-# [data-testid="stSidebar"] {
-#     background-color: #161A23;
-# }
-
-# /* Responsive tables and code blocks */
-# [data-testid="stDataFrame"],
-# .stDataFrame {
-#     width: 100% !important;
-#     max-width: 100% !important;
-# }
-
-# [data-testid="stDataFrame"] td,
-# [data-testid="stDataFrame"] th,
-# .stDataFrame td,
-# .stDataFrame th {
-#     white-space: normal !important;
-#     overflow-wrap: anywhere !important;
-#     word-break: break-word !important;
-#     max-width: 300px;
-# }
-
-# [data-testid="stDataFrame"] div[role="grid"],
-# .stDataFrame div[role="grid"] {
-#     overflow-x: auto !important;
-#     width: 100% !important;
-# }
-
-# code,
-# pre {
-#     white-space: pre-wrap !important;
-#     word-break: break-word !important;
-#     overflow-wrap: anywhere !important;
-#     max-width: 100% !important;
-# }
-
-# </style>
-# """, unsafe_allow_html=True)
-
 st.title("📊TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 
 # ------------------------------
@@ -161,7 +108,33 @@ if uploaded_file:
     df["VADER_Augmented"] = df["Feedback"].apply(get_augmented_vader)
     df["Score"] = df["VADER_Augmented"]
     df["Label"] = df["Score"].apply(label_from_score)
+
+    # Provide download of processed results as CSV
+    st.markdown("""
+            <style>
+            .stDownloadButton button {
+                background-color: #0099ff !important;
+                color: white !important;
+                border-radius: 8px !important;
+                border: none !important;
+            }
+            /* Optional: Change color when hovering */
+            .stDownloadButton button:hover {
+                background-color: #007cca !important;
+                color: white !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+    
+    csv = df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label="📥 Download Processed CSV",
+        data=csv,
+        file_name="feedback_sentiment_processed.csv",
+        mime="text/csv"
+    )
   
+    
     st.divider()
     st.header("Sentiment Distribution (Augmented Model)")
     counts = df["Label"].value_counts()
