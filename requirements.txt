@@ -12,4 +12,3 @@ numpy
 scikit-learn
 reportlab
 playwright
-runpy
