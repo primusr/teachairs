@@ -618,7 +618,7 @@ Distribution (Filipino Keywords):
             "Download Sentiment Analysis Results",
             sentiment_csv,
             file_name="sentiment_analysis_results.csv",
-            mime="text/csv"
+            mime="text/csv",icon="✅"
         )
 
         # ------------------------------
@@ -716,6 +716,16 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
             st.markdown(_build_topic_recommendations(row))
             st.markdown("---")
 
+        all_topic_recs = "\n\n".join(
+            _build_topic_recommendations(row).strip() for row in selected_topics
+        )
+        st.download_button(
+            label="Download Topic Recommendations",
+            data=all_topic_recs,
+            file_name="topic_recommendations.txt",
+            mime="text/plain",icon="✅"
+        )
+
 
     # ------------------------------
     # AI Recommendations (Optional)
@@ -797,7 +807,7 @@ SELECTED TOPICS:
             "Download Gemini Recommendations",
             gemini_recommendation_text,
             file_name="gemini_recommendations.txt",
-            mime="text/plain"
+            mime="text/plain",icon="✅"
         )
 
     # # Use markdown to preserve formatting
