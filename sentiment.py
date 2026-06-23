@@ -107,22 +107,7 @@ if uploaded_file:
     df = df[[feedback_col]].rename(columns={feedback_col: "Feedback"})
     df.dropna(inplace=True)
 
-    # 2. INTERACTIVE PRINT BUTTON
-    # Placed near the top layout for instant accessibility. Calls the parent window print dialog.
-    st.write("### 🖨️ Webpage Print Action")
-    components.html("""
-        <button onclick="window.parent.print()" style="
-            background-color: #FF4B4B;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
-        ">🖨️ Print Entire Dashboard Webpage</button>
-    """, height=60)
+    
 
     st.divider()
     st.header("Feedback Dataset Overview")
@@ -628,6 +613,24 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         # (Note: Requires WeasyPrint or alternative rendering engine imported if run)
         # pdf_bytes = HTML(string=html_content).write_pdf()
         # st.download_button("📄 Download Complete Report PDF", data=pdf_bytes, file_name="TeachAIRs_Report.pdf", mime="application/pdf")
+
+        # 2. INTERACTIVE PRINT BUTTON
+    # Placed near the top layout for instant accessibility. Calls the parent window print dialog.
+        st.write("### 🖨️ Webpage Print Action")
+        components.html("""
+            <button onclick="window.parent.print()" style="
+                background-color: #FF4B4B;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 16px;
+                box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
+            ">🖨️ Print Entire Dashboard Webpage</button>
+        """, height=60)
+
 else:
     st.info("Please upload a CSV file to begin.")
     st.divider()
