@@ -42,11 +42,9 @@ load_nltk()
 st.set_page_config(
     page_title="TeachAIRs",
     page_icon="📊",
-    layout="centered",
+    layout="wide",
     menu_items={
-        "About": "Developed by Neo under the supervision of the Oracle. Watch this short video for a tutorial on how to use the app:  https://www.youtube.com/shorts/OvRlMiYURhM",
-        "Get Help": "https://www.linkedin.com/in/unclebreaker/",
-        "Report a bug": "https://www.linkedin.com/in/unclebreaker/"
+        "About": "Developed by Neo under the supervision of the Oracle. Watch this short video for a tutorial on how to use the app:  https://www.youtube.com/shorts/OvRlMiYURhM"
     }    
   
 )
