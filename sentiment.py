@@ -19,7 +19,7 @@ import base64
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle, Image
 from reportlab.lib.colors import HexColor, whitesmoke, beige, lightblue, black
 
 # Import utility functions
@@ -108,6 +108,10 @@ if uploaded_file:
     ax1.set_ylabel("Count")
     ax1.set_xlabel("Sentiment")
     ax1.set_title("Sentiment Distribution")
+    fig1.tight_layout()
+    fig1_buffer = BytesIO()
+    fig1.savefig(fig1_buffer, format='png', bbox_inches='tight')
+    fig1_buffer.seek(0)
     st.pyplot(fig1)
     avg_score = df["Score"].mean()
     st.markdown(f"""
@@ -197,6 +201,10 @@ Distribution (Filipino Keywords):
         ax_std.set_xlabel("Feedback Index")
         ax_std.set_ylabel("Polarity Score")
         ax_std.set_title("Standard VADER Polarity Scores")
+        fig_std.tight_layout()
+        fig_std_buffer = BytesIO()
+        fig_std.savefig(fig_std_buffer, format='png', bbox_inches='tight')
+        fig_std_buffer.seek(0)
         st.pyplot(fig_std)
 
     
@@ -218,6 +226,10 @@ Distribution (Filipino Keywords):
         ax_aug.set_xlabel("Feedback Index")
         ax_aug.set_ylabel("Polarity Score")
         ax_aug.set_title("Augmented VADER Polarity Scores")
+        fig_aug.tight_layout()
+        fig_aug_buffer = BytesIO()
+        fig_aug.savefig(fig_aug_buffer, format='png', bbox_inches='tight')
+        fig_aug_buffer.seek(0)
 
         st.pyplot(fig_aug)
 
@@ -715,7 +727,13 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
             ('GRID', (0, 0), (-1, -1), 1, black),
         ]))
         story.append(dist_table)
-        story.append(Spacer(1, 0.2*inch))
+        story.append(Spacer(1, 0.15*inch))
+        try:
+            fig1_buffer.seek(0)
+            story.append(Image(fig1_buffer, width=6.5*inch, height=3.5*inch))
+            story.append(Spacer(1, 0.2*inch))
+        except Exception:
+            pass
         
         # 2. SENTIMENT POLARITY DISTRIBUTION ACROSS METHODS
         story.append(Paragraph("2. SENTIMENT POLARITY DISTRIBUTION ACROSS METHODS", heading_style))
@@ -757,6 +775,19 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         ]))
         story.append(methods_table)
         story.append(Spacer(1, 0.1*inch))
+        try:
+            fig_std_buffer.seek(0)
+            story.append(Image(fig_std_buffer, width=6.5*inch, height=3.5*inch))
+            story.append(Spacer(1, 0.1*inch))
+        except Exception:
+            pass
+        
+        try:
+            fig_aug_buffer.seek(0)
+            story.append(Image(fig_aug_buffer, width=6.5*inch, height=3.5*inch))
+            story.append(Spacer(1, 0.1*inch))
+        except Exception:
+            pass
         
         story.append(Paragraph(f"Pearson Correlation: <b>{correlation:.3f}</b>", normal_style))
         story.append(Paragraph(f"Polarity Sign Flip Rate: <b>{flip_rate:.2f}%</b>", normal_style))
@@ -765,15 +796,38 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         # 3. OVERALL SENTIMENT PER TOPIC
         story.append(Paragraph("3. OVERALL SENTIMENT PER TOPIC", heading_style))
         if not topic_summary_df.empty:
+            topic_summary_rows = [[
+                'Topic ID', 'AI Label', 'Keywords', 'Num Comments',
+                'Avg VADER Eng', 'VADER Eng +', 'Avg VADER Aug', 'VADER Aug +', 'Avg Fil. Score'
+            ]]
             for idx, row in topic_summary_df.iterrows():
-                story.append(Paragraph(f"<b>Topic {row['Topic ID']}: {row['AI Label']}</b>", normal_style))
-                story.append(Paragraph(f"Keywords: {row['Top Keywords']}", normal_style))
-                story.append(Paragraph(f"Number of Comments: {row['Num Comments']}", normal_style))
-                story.append(Paragraph(f"Avg VADER Aug Score: <b>{row['Avg VADER Aug Score']}</b>", normal_style))
-                story.append(Spacer(1, 0.08*inch))
+                topic_summary_rows.append([
+                    str(row['Topic ID']),
+                    row['AI Label'],
+                    row['Top Keywords'],
+                    str(row['Num Comments']),
+                    str(row['Avg VADER Eng Score']),
+                    row['VADER Eng Dist (%)'],
+                    str(row['Avg VADER Aug Score']),
+                    row['VADER Aug Dist (%)'],
+                    str(row['Avg Fil. Keyword Score'])
+                ])
+            topic_table = Table(topic_summary_rows, colWidths=[0.7*inch, 1.2*inch, 1.8*inch, 0.8*inch, 0.8*inch, 1.3*inch, 0.8*inch, 1.3*inch, 0.8*inch])
+            topic_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#003366')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                ('BACKGROUND', (0, 1), (-1, -1), beige),
+                ('GRID', (0, 0), (-1, -1), 0.5, black),
+            ]))
+            story.append(topic_table)
+            story.append(Spacer(1, 0.2*inch))
         else:
             story.append(Paragraph("No topic sentiment data available.", normal_style))
-        story.append(Spacer(1, 0.2*inch))
+            story.append(Spacer(1, 0.2*inch))
         
         # 4. AI RECOMMENDATIONS FOR SELECTED TOPICS
         story.append(Paragraph("4. AI RECOMMENDATIONS FOR SELECTED TOPICS", heading_style))
