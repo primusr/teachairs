@@ -31,36 +31,24 @@ from utils import (
     filipino_keyword_sentiment,
     SENTIMENT_SCORE_MAP
 )
-
 # Load NLTK resources
 load_nltk()
 
-# ------------------------------
 # Streamlit Config
-# ------------------------------
 
 st.set_page_config(
     page_title="TeachAIRs",
     page_icon="📊",
     layout="wide",
     menu_items={
-        "About": "Developed by Neo under the supervision of the Oracle. Watch this short video for a tutorial on how to use the app:  https://www.youtube.com/shorts/OvRlMiYURhM"
-    }    
-  
+        "About": "Developed by Neo under the supervision of the Oracle. Watch this short video for a tutorial on how to use the app:  https://www.youtube.com/shorts/OvRlMiYURhM"}    
 )
 
 st.title("📊TeachAIRs: Student Feedback Analyzer with AI Recommendations")
-
-# ------------------------------
-# Gemini API (Optional)
-# ------------------------------
 api_key = st.secrets["api_key"]
-#st.text_input("🔑 Enter Gemini API Key (Optional)", type="password") 
 gemini_model = configure_gemini(api_key)
 
-# ------------------------------
 # Filipino Lexicon Upload
-# ------------------------------
 filipino_lexicon_file = st.file_uploader(
     "📤 Upload Filipino VADER Lexicon CSV (word, score)",
     type=["csv"]
@@ -73,25 +61,16 @@ if filipino_lexicon_file:
     else:
         st.error(message)
 
-
-
-# ------------------------------
 # Upload Feedback Dataset
-# ------------------------------
-
 uploaded_file = st.file_uploader("📤 Upload Feedback CSV File", type=["csv"])
-
 if uploaded_file:
-
     df = pd.read_csv(uploaded_file)
-
     # Auto-detect feedback column
     possible_cols = ["feedback", "comment", "comments", "Feedback"]
     feedback_col = next(
         (c for c in possible_cols if c in df.columns),
         df.columns[0]
     )
-
     df = df[[feedback_col]].rename(columns={feedback_col: "Feedback"})
     df.dropna(inplace=True)
 
@@ -99,40 +78,11 @@ if uploaded_file:
     st.header("Feedback Dataset Overview")
     # Show all feedback rows
     st.dataframe(df, use_container_width=True)
-  
     df["Cleaned"] = df["Feedback"].apply(preprocess)
     df["VADER_Standard"] = df["Feedback"].apply(get_standard_vader)
     df["VADER_Augmented"] = df["Feedback"].apply(get_augmented_vader)
     df["Score"] = df["VADER_Augmented"]
     df["Label"] = df["Score"].apply(label_from_score)
-
-    # Provide download of processed results as CSV
-    st.markdown("""
-            <style>
-            .stDownloadButton button {
-                background-color: #0099ff !important;
-                color: white !important;
-                border-radius: 8px !important;
-                border: none !important;
-                font-weight: bold !important;
-            }
-            /* Optional: Change color when hovering */
-            .stDownloadButton button:hover {
-                background-color: #007cca !important;
-                color: white !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
-    
-    csv = df.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        label="📥 Download Processed CSV",
-        data=csv,
-        file_name="feedback_sentiment_processed.csv",
-        mime="text/csv"
-    )
-  
-    
     st.divider()
     st.header("Sentiment Distribution (Augmented Model)")
     counts = df["Label"].value_counts()
@@ -157,14 +107,6 @@ if uploaded_file:
     **Average Sentiment Score:** {avg_score:.3f}  
     **Overall Sentiment:** {'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'}
     """)
-
-    # ------------------------------
-    # Separate Scatter Plots (Color-Coded)
-    # ------------------------------
-    # ------------------------------
-    # Overall System Sentiment Scores & Distributions
-    # # ------------------------------
-    # st.divider()
     # st.header("Overall System Sentiment Scores & Distributions")
     total_comments = len(df)
 
@@ -225,9 +167,9 @@ Distribution (Filipino Keywords):
         + aug_text
         + "\n"
         + "-" * 30)
-    # ------------------------------
+    
     # Sentiment Polarity Distribution Across Methods (plots)
-    # ------------------------------
+    
     st.divider()
     st.header("Sentiment Polarity Distribution Across Methods")
     
@@ -250,9 +192,9 @@ Distribution (Filipino Keywords):
         ax_std.set_title("Standard VADER Polarity Scores")
         st.pyplot(fig_std)
 
-    # ------------------------------
+    
     # 2️⃣ Augmented VADER Scatter
-    # ------------------------------
+    
     with col2:
         st.text("Augmented VADER (With Filipino Lexicon)")
         colors_aug = df["VADER_Augmented"].apply(sentiment_color)
@@ -273,9 +215,9 @@ Distribution (Filipino Keywords):
         st.pyplot(fig_aug)
 
 
-    # ------------------------------
+    
     # Statistical Comparison
-    # ------------------------------
+    
     correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
     mean_difference = (df["VADER_Augmented"] - df["VADER_Standard"]).mean()
 
@@ -306,9 +248,9 @@ Distribution (Filipino Keywords):
     # # **Polarity Sign Flip Rate:** {flip_rate:.2f}%  
     # # """)
 
-    # # ------------------------------
+    # 
     # # Topic Coherence Evaluation
-    # # ------------------------------
+    # 
     # st.subheader("📈 Topic Coherence Evaluation for Optimal k Selection")
 
     from gensim.models import CoherenceModel
@@ -368,9 +310,9 @@ Distribution (Filipino Keywords):
         optimal_k = k_values[optimal_index]
         optimal_cv = cv_scores[optimal_index]
 
-    # ------------------------------
+    
     # Overall Sentiment per Topic (Tabular)
-    # ------------------------------
+    
     st.divider()
     st.header("Overall Sentiment per Topic")
 
@@ -507,33 +449,11 @@ Distribution (Filipino Keywords):
 
         sentiment_csv = df.to_csv(index=False).encode('utf-8')
 
-        st.markdown("""
-            <style>
-            .stDownloadButton button {
-                background-color: #0099ff !important;
-                color: white !important;
-                border-radius: 8px !important;
-                border: none !important;
-                font-weight: bold !important;
-            }
-            /* Optional: Change color when hovering */
-            .stDownloadButton button:hover {
-                background-color: #007cca !important;
-                color: white !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
+       
 
-        st.download_button(
-            "Download Sentiment Analysis Results",
-            sentiment_csv,
-            file_name="sentiment_analysis_results.csv",
-            mime="text/csv",icon="✅"
-        )
-
-        # ------------------------------
+        
         # Topic Word Clouds (First 4 LDA Topics)
-        # ------------------------------
+        
         topic_ids_to_plot = [row["Topic ID"] for row in topic_rows][:4]
         if topic_ids_to_plot:
             st.divider()
@@ -576,9 +496,9 @@ Distribution (Filipino Keywords):
     
     
 
-    # ------------------------------
+    
     # AI Recommendations for Selected Topics
-    # ------------------------------
+    
     if topic_summary_df.shape[0] > 0:
         selected_topics = sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:4]
         st.divider()
@@ -629,21 +549,16 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         all_topic_recs = "\n\n".join(
             _build_topic_recommendations(row).strip() for row in selected_topics
         )
-        st.download_button(
-            label="Download Topic Recommendations",
-            data=all_topic_recs,
-            file_name="topic_recommendations.txt",
-            mime="text/plain",icon="✅"
-        )
+        
 
 
-    # ------------------------------
+    
     # AI Recommendations (Optional)
-    # ------------------------------
+    
     st.divider()
     if gemini_model:
        
-        st.header("Generating Overall AI Recommendations (based on CSV Analysis)")
+        st.header("Overall AI Recommendations (based on CSV Analysis)")
         
 
         # Ensure correlation exists
@@ -677,68 +592,179 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         selected_topics_text = _format_selected_topics(selected_topics)
 
         structured_prompt = f"""
-You are an academic assistant analyzing student feedback data.
-Generate teaching recommendations for the selected topics using the requested structured format.
+            You are an academic assistant analyzing student feedback data.
+            Generate teaching recommendations for the selected topics using the requested structured format.
 
-STRICT FORMAT FOR EACH SELECTED TOPIC:
-- Provide a clear topic title line.
-- Provide one summary sentence describing the context from sentiment and keywords.
-- Provide exactly 2-3 actionable teaching recommendations.
-- Each recommendation block MUST include:
-  * Action
-  * Rationale
-  * Measurement
+            STRICT FORMAT FOR EACH SELECTED TOPIC:
+            - Provide a clear topic title line.
+            - Provide one summary sentence describing the context from sentiment and keywords.
+            - Provide exactly 2-3 actionable teaching recommendations.
+            - Each recommendation block MUST include:
+            * Action
+            * Rationale
+            * Measurement
 
-OUTPUT FORMAT FOR EACH TOPIC:
-Recommendations for Topic <N> (<Topic Label>):
-Here are 2-3 actionable teaching recommendations based on the topic "<Topic Label>".
-**Understanding the Context:** <context sentence>
-**Actionable Teaching Recommendations:**
-1. <recommendation text>
-   * **Action:** ...
-   * **Rationale:** ...
-   * **Measurement:** ...
-2. <recommendation text>
-   * **Action:** ...
-   * **Rationale:** ...
-   * **Measurement:** ...
+            OUTPUT FORMAT FOR EACH TOPIC:
+            Recommendations for Topic <N> (<Topic Label>):
+            Here are 2-3 actionable teaching recommendations based on the topic "<Topic Label>".
+            **Understanding the Context:** <context sentence>
+            **Actionable Teaching Recommendations:**
+            1. <recommendation text>
+            * **Action:** ...
+            * **Rationale:** ...
+            * **Measurement:** ...
+            2. <recommendation text>
+            * **Action:** ...
+            * **Rationale:** ...
+            * **Measurement:** ...
 
-DATA SUMMARY:
-{summary}
+            DATA SUMMARY:
+            {summary}
 
-SELECTED TOPICS:
-{selected_topics_text}
-"""
+            SELECTED TOPICS:
+            {selected_topics_text}
+            """
 
         response = gemini_model.generate_content(structured_prompt)
         gemini_recommendation_text = response.text.strip()
         st.markdown(gemini_recommendation_text)
 
-        st.markdown("""
-            <style>
-            .stDownloadButton button {
-                background-color: #0099ff !important;
-                color: white !important;
-                border-radius: 8px !important;
-                border: none !important;
-                font-weight: bold !important;    
-            }
-            /* Optional: Change color when hovering */
-            .stDownloadButton button:hover {
-                background-color: #007cca !important;
-                color: white !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
-        st.download_button(
-            "Download Gemini Recommendations",
-            gemini_recommendation_text,
-            file_name="gemini_recommendations.txt",
-            mime="text/plain",icon="✅"
-        )
-
+    # ================================
+    # Generate Comprehensive Report for Download
+    # ================================
+    
+    def _build_comprehensive_report():
+        """Build a comprehensive report with all analysis sections"""
+        report = []
+        report.append("=" * 80)
+        report.append("TEACHAIRS: STUDENT FEEDBACK ANALYSIS REPORT")
+        report.append("=" * 80)
+        report.append("")
+        
+        # 1. SENTIMENT DISTRIBUTION
+        report.append("1. SENTIMENT DISTRIBUTION")
+        report.append("-" * 80)
+        report.append(f"Average Sentiment Score: {avg_score:.3f}")
+        report.append(f"Overall Sentiment: {'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'}")
+        report.append("")
+        report.append("Distribution Breakdown:")
+        for sentiment in ["Positive", "Neutral", "Negative"]:
+            count = counts.get(sentiment, 0)
+            pct = (count / len(df) * 100) if len(df) > 0 else 0
+            report.append(f"  - {sentiment}: {count} comments ({pct:.1f}%)")
+        report.append("")
+        report.append("")
+        
+        # 2. SENTIMENT POLARITY DISTRIBUTION ACROSS METHODS
+        report.append("2. SENTIMENT POLARITY DISTRIBUTION ACROSS METHODS")
+        report.append("-" * 80)
+        report.append("")
+        report.append("Standard VADER (English Only):")
+        report.append(f"  Average Score: {std_avg:.4f}")
+        report.append(f"  Sentiment: {'Positive' if std_avg > 0.05 else 'Negative' if std_avg < -0.05 else 'Neutral'}")
+        report.append(f"  Distribution:")
+        for sentiment in ["Positive", "Neutral", "Negative"]:
+            count = std_counts.get(sentiment, 0)
+            pct = (count / total_comments * 100) if total_comments > 0 else 0
+            report.append(f"    - {sentiment}: {count} comments ({pct:.1f}%)")
+        report.append("")
+        
+        report.append("Augmented VADER (With Filipino Lexicon):")
+        report.append(f"  Average Score: {aug_avg:.4f}")
+        report.append(f"  Sentiment: {'Positive' if aug_avg > 0.05 else 'Negative' if aug_avg < -0.05 else 'Neutral'}")
+        report.append(f"  Distribution:")
+        for sentiment in ["Positive", "Neutral", "Negative"]:
+            count = aug_counts.get(sentiment, 0)
+            pct = (count / total_comments * 100) if total_comments > 0 else 0
+            report.append(f"    - {sentiment}: {count} comments ({pct:.1f}%)")
+        report.append("")
+        
+        report.append("Filipino Keyword Sentiment (Direct Count):")
+        report.append(f"  Dominant Sentiment: {fil_dominant}")
+        report.append(f"  Distribution:")
+        for sentiment in ["Positive", "Neutral", "Negative"]:
+            count = fil_counts.get(sentiment, 0)
+            pct = (count / total_comments * 100) if total_comments > 0 else 0
+            report.append(f"    - {sentiment}: {count} comments ({pct:.1f}%)")
+        report.append("")
+        
+        report.append("Statistical Comparison:")
+        report.append(f"  Pearson Correlation: {correlation:.3f}")
+        report.append(f"  Mean Score Difference (Augmented - Standard): {mean_difference:.3f}")
+        report.append(f"  Polarity Sign Flip Rate: {flip_rate:.2f}%")
+        report.append("")
+        report.append("")
+        
+        # 3. OVERALL SENTIMENT PER TOPIC
+        report.append("3. OVERALL SENTIMENT PER TOPIC")
+        report.append("-" * 80)
+        if not topic_summary_df.empty:
+            for idx, row in topic_summary_df.iterrows():
+                report.append("")
+                report.append(f"Topic {row['Topic ID']}: {row['AI Label']}")
+                report.append(f"  Keywords: {row['Top Keywords']}")
+                report.append(f"  Number of Comments: {row['Num Comments']}")
+                report.append(f"  Avg VADER Eng Score: {row['Avg VADER Eng Score']}")
+                report.append(f"  VADER Eng Distribution: {row['VADER Eng Dist (%)']}")
+                report.append(f"  Avg VADER Aug Score: {row['Avg VADER Aug Score']}")
+                report.append(f"  VADER Aug Distribution: {row['VADER Aug Dist (%)']}")
+                report.append(f"  Avg Filipino Keyword Score: {row['Avg Fil. Keyword Score']}")
+                report.append(f"  Filipino Keyword Distribution: {row['Fil. Keyword Dist (%)']}")
+        else:
+            report.append("No topic sentiment data available.")
+        report.append("")
+        report.append("")
+        
+        # 4. AI RECOMMENDATIONS FOR SELECTED TOPICS
+        report.append("4. AI RECOMMENDATIONS FOR SELECTED TOPICS")
+        report.append("-" * 80)
+        report.append("Recommendations for the 4 topic(s) with the most negative average Augmented VADER sentiment.")
+        report.append("")
+        try:
+            for row in selected_topics:
+                report.append(_build_topic_recommendations(row))
+                report.append("")
+        except:
+            report.append("Topic recommendations could not be generated.")
+        report.append("")
+        report.append("")
+        
+        # 5. OVERALL AI RECOMMENDATIONS
+        report.append("5. OVERALL AI RECOMMENDATIONS")
+        report.append("-" * 80)
+        if gemini_model:
+            try:
+                report.append(gemini_recommendation_text)
+            except:
+                report.append("Overall AI recommendations could not be generated.")
+        else:
+            report.append("Gemini model not available for generating recommendations.")
+        report.append("")
+        report.append("")
+        
+        report.append("=" * 80)
+        report.append("END OF REPORT")
+        report.append("=" * 80)
+        
+        return "\n".join(report)
+    
+    # Generate and display download button
+    comprehensive_report = _build_comprehensive_report()
+    report_bytes = comprehensive_report.encode('utf-8')
     
     st.divider()
+    st.header("📥 Download Full Report")
+    st.download_button(
+        label="📄 Download Complete Analysis Report",
+        data=report_bytes,
+        file_name="TeachAIRs_Analysis_Report.txt",
+        mime="text/plain"
+    )
+    
+    st.divider()
+
+
+
 
 else:
     st.info("Please upload a CSV file to begin.")
