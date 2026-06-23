@@ -11,5 +11,3 @@ google-generativeai
 numpy 
 scikit-learn
 reportlab
-playwright
-weasyprint
