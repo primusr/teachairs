@@ -707,7 +707,7 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         for row in selected_topics:
             st.subheader(f"Topic {row['Topic ID']}: {row['AI Label']}")
             st.markdown(_build_topic_recommendations(row))
-            st.markdown("---")
+            # st.markdown("---")
 
         all_topic_recs = "\n\n".join(
             _build_topic_recommendations(row).strip() for row in selected_topics
