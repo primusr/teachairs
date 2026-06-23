@@ -2,6 +2,7 @@
 # TeachAIRs: Sentiment & Topic Analysis
 # With VADER Method Comparison
 # ==============================
+import runpy
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
