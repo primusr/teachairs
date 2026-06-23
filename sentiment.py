@@ -8,12 +8,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
 import textwrap
+from io import BytesIO
 
 from gensim import corpora
 from gensim.models import LdaModel
 from gensim.models import CoherenceModel
 from wordcloud import WordCloud
 import base64
+
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle
+from reportlab.lib import colors
 
 # Import utility functions
 from utils import (
@@ -630,135 +637,188 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         st.markdown(gemini_recommendation_text)
 
     # ================================
-    # Generate Comprehensive Report for Download
+    # Generate Comprehensive Report for Download (PDF)
     # ================================
     
-    def _build_comprehensive_report():
-        """Build a comprehensive report with all analysis sections"""
-        report = []
-        report.append("=" * 80)
-        report.append("TEACHAIRS: STUDENT FEEDBACK ANALYSIS REPORT")
-        report.append("=" * 80)
-        report.append("")
+    def _build_comprehensive_pdf_report(filename):
+        """Build a comprehensive PDF report with all analysis sections"""
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+        story = []
+        styles = getSampleStyleSheet()
+        
+        # Custom styles
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#003366'),
+            spaceAfter=12,
+            alignment=1
+        )
+        
+        heading_style = ParagraphStyle(
+            'CustomHeading',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#003366'),
+            spaceAfter=8,
+            spaceBefore=8
+        )
+        
+        normal_style = ParagraphStyle(
+            'CustomNormal',
+            parent=styles['Normal'],
+            fontSize=10,
+            spaceAfter=6
+        )
+        
+        # Title
+        story.append(Paragraph("📊 TeachAIRs: Student Feedback Analysis Report", title_style))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # File Information
+        file_info_style = ParagraphStyle(
+            'FileInfo',
+            parent=styles['Normal'],
+            fontSize=11,
+            textColor=colors.HexColor('#666666'),
+            spaceAfter=12
+        )
+        story.append(Paragraph(f"<b>File Analyzed:</b> {filename}", file_info_style))
+        story.append(Paragraph(f"<b>Application:</b> TeachAIRs - Sentiment & Topic Analysis", file_info_style))
+        story.append(Spacer(1, 0.15*inch))
         
         # 1. SENTIMENT DISTRIBUTION
-        report.append("1. SENTIMENT DISTRIBUTION")
-        report.append("-" * 80)
-        report.append(f"Average Sentiment Score: {avg_score:.3f}")
-        report.append(f"Overall Sentiment: {'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'}")
-        report.append("")
-        report.append("Distribution Breakdown:")
+        story.append(Paragraph("1. SENTIMENT DISTRIBUTION", heading_style))
+        story.append(Paragraph(f"Average Sentiment Score: <b>{avg_score:.3f}</b>", normal_style))
+        overall_sentiment = 'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'
+        story.append(Paragraph(f"Overall Sentiment: <b>{overall_sentiment}</b>", normal_style))
+        story.append(Spacer(1, 0.1*inch))
+        
+        # Distribution table
+        dist_data = [['Sentiment', 'Count', 'Percentage']]
         for sentiment in ["Positive", "Neutral", "Negative"]:
             count = counts.get(sentiment, 0)
             pct = (count / len(df) * 100) if len(df) > 0 else 0
-            report.append(f"  - {sentiment}: {count} comments ({pct:.1f}%)")
-        report.append("")
-        report.append("")
+            dist_data.append([sentiment, str(count), f"{pct:.1f}%"])
+        
+        dist_table = Table(dist_data)
+        dist_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003366')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        story.append(dist_table)
+        story.append(Spacer(1, 0.2*inch))
         
         # 2. SENTIMENT POLARITY DISTRIBUTION ACROSS METHODS
-        report.append("2. SENTIMENT POLARITY DISTRIBUTION ACROSS METHODS")
-        report.append("-" * 80)
-        report.append("")
-        report.append("Standard VADER (English Only):")
-        report.append(f"  Average Score: {std_avg:.4f}")
-        report.append(f"  Sentiment: {'Positive' if std_avg > 0.05 else 'Negative' if std_avg < -0.05 else 'Neutral'}")
-        report.append(f"  Distribution:")
-        for sentiment in ["Positive", "Neutral", "Negative"]:
-            count = std_counts.get(sentiment, 0)
-            pct = (count / total_comments * 100) if total_comments > 0 else 0
-            report.append(f"    - {sentiment}: {count} comments ({pct:.1f}%)")
-        report.append("")
+        story.append(Paragraph("2. SENTIMENT POLARITY DISTRIBUTION ACROSS METHODS", heading_style))
         
-        report.append("Augmented VADER (With Filipino Lexicon):")
-        report.append(f"  Average Score: {aug_avg:.4f}")
-        report.append(f"  Sentiment: {'Positive' if aug_avg > 0.05 else 'Negative' if aug_avg < -0.05 else 'Neutral'}")
-        report.append(f"  Distribution:")
-        for sentiment in ["Positive", "Neutral", "Negative"]:
-            count = aug_counts.get(sentiment, 0)
-            pct = (count / total_comments * 100) if total_comments > 0 else 0
-            report.append(f"    - {sentiment}: {count} comments ({pct:.1f}%)")
-        report.append("")
+        methods_data = [['Method', 'Avg Score', 'Sentiment', 'Positive', 'Neutral', 'Negative']]
         
-        report.append("Filipino Keyword Sentiment (Direct Count):")
-        report.append(f"  Dominant Sentiment: {fil_dominant}")
-        report.append(f"  Distribution:")
-        for sentiment in ["Positive", "Neutral", "Negative"]:
-            count = fil_counts.get(sentiment, 0)
-            pct = (count / total_comments * 100) if total_comments > 0 else 0
-            report.append(f"    - {sentiment}: {count} comments ({pct:.1f}%)")
-        report.append("")
+        # Standard VADER
+        std_sentiment_label = 'Positive' if std_avg > 0.05 else 'Negative' if std_avg < -0.05 else 'Neutral'
+        methods_data.append([
+            'Standard VADER',
+            f"{std_avg:.3f}",
+            std_sentiment_label,
+            f"{std_counts.get('Positive', 0)}",
+            f"{std_counts.get('Neutral', 0)}",
+            f"{std_counts.get('Negative', 0)}"
+        ])
         
-        report.append("Statistical Comparison:")
-        report.append(f"  Pearson Correlation: {correlation:.3f}")
-        report.append(f"  Mean Score Difference (Augmented - Standard): {mean_difference:.3f}")
-        report.append(f"  Polarity Sign Flip Rate: {flip_rate:.2f}%")
-        report.append("")
-        report.append("")
+        # Augmented VADER
+        aug_sentiment_label = 'Positive' if aug_avg > 0.05 else 'Negative' if aug_avg < -0.05 else 'Neutral'
+        methods_data.append([
+            'Augmented VADER',
+            f"{aug_avg:.3f}",
+            aug_sentiment_label,
+            f"{aug_counts.get('Positive', 0)}",
+            f"{aug_counts.get('Neutral', 0)}",
+            f"{aug_counts.get('Negative', 0)}"
+        ])
+        
+        methods_table = Table(methods_data)
+        methods_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003366')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.lightblue),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        story.append(methods_table)
+        story.append(Spacer(1, 0.1*inch))
+        
+        story.append(Paragraph(f"Pearson Correlation: <b>{correlation:.3f}</b>", normal_style))
+        story.append(Paragraph(f"Polarity Sign Flip Rate: <b>{flip_rate:.2f}%</b>", normal_style))
+        story.append(Spacer(1, 0.2*inch))
         
         # 3. OVERALL SENTIMENT PER TOPIC
-        report.append("3. OVERALL SENTIMENT PER TOPIC")
-        report.append("-" * 80)
+        story.append(Paragraph("3. OVERALL SENTIMENT PER TOPIC", heading_style))
         if not topic_summary_df.empty:
             for idx, row in topic_summary_df.iterrows():
-                report.append("")
-                report.append(f"Topic {row['Topic ID']}: {row['AI Label']}")
-                report.append(f"  Keywords: {row['Top Keywords']}")
-                report.append(f"  Number of Comments: {row['Num Comments']}")
-                report.append(f"  Avg VADER Eng Score: {row['Avg VADER Eng Score']}")
-                report.append(f"  VADER Eng Distribution: {row['VADER Eng Dist (%)']}")
-                report.append(f"  Avg VADER Aug Score: {row['Avg VADER Aug Score']}")
-                report.append(f"  VADER Aug Distribution: {row['VADER Aug Dist (%)']}")
-                report.append(f"  Avg Filipino Keyword Score: {row['Avg Fil. Keyword Score']}")
-                report.append(f"  Filipino Keyword Distribution: {row['Fil. Keyword Dist (%)']}")
+                story.append(Paragraph(f"<b>Topic {row['Topic ID']}: {row['AI Label']}</b>", normal_style))
+                story.append(Paragraph(f"Keywords: {row['Top Keywords']}", normal_style))
+                story.append(Paragraph(f"Number of Comments: {row['Num Comments']}", normal_style))
+                story.append(Paragraph(f"Avg VADER Aug Score: <b>{row['Avg VADER Aug Score']}</b>", normal_style))
+                story.append(Spacer(1, 0.08*inch))
         else:
-            report.append("No topic sentiment data available.")
-        report.append("")
-        report.append("")
+            story.append(Paragraph("No topic sentiment data available.", normal_style))
+        story.append(Spacer(1, 0.2*inch))
         
         # 4. AI RECOMMENDATIONS FOR SELECTED TOPICS
-        report.append("4. AI RECOMMENDATIONS FOR SELECTED TOPICS")
-        report.append("-" * 80)
-        report.append("Recommendations for the 4 topic(s) with the most negative average Augmented VADER sentiment.")
-        report.append("")
+        story.append(Paragraph("4. AI RECOMMENDATIONS FOR SELECTED TOPICS", heading_style))
+        story.append(Paragraph("Recommendations for the 4 topic(s) with the most negative average Augmented VADER sentiment.", normal_style))
+        story.append(Spacer(1, 0.1*inch))
         try:
             for row in selected_topics:
-                report.append(_build_topic_recommendations(row))
-                report.append("")
+                rec_text = _build_topic_recommendations(row)
+                # Clean markdown formatting
+                rec_text = rec_text.replace("**", "").replace("   * ", "• ")
+                story.append(Paragraph(rec_text, normal_style))
+                story.append(Spacer(1, 0.1*inch))
         except:
-            report.append("Topic recommendations could not be generated.")
-        report.append("")
-        report.append("")
+            story.append(Paragraph("Topic recommendations could not be generated.", normal_style))
+        
+        story.append(PageBreak())
         
         # 5. OVERALL AI RECOMMENDATIONS
-        report.append("5. OVERALL AI RECOMMENDATIONS")
-        report.append("-" * 80)
+        story.append(Paragraph("5. OVERALL AI RECOMMENDATIONS", heading_style))
         if gemini_model:
             try:
-                report.append(gemini_recommendation_text)
+                rec_text = gemini_recommendation_text.replace("**", "")
+                story.append(Paragraph(rec_text, normal_style))
             except:
-                report.append("Overall AI recommendations could not be generated.")
+                story.append(Paragraph("Overall AI recommendations could not be generated.", normal_style))
         else:
-            report.append("Gemini model not available for generating recommendations.")
-        report.append("")
-        report.append("")
+            story.append(Paragraph("Gemini model not available for generating recommendations.", normal_style))
         
-        report.append("=" * 80)
-        report.append("END OF REPORT")
-        report.append("=" * 80)
+        story.append(Spacer(1, 0.3*inch))
+        story.append(Paragraph("End of Report", normal_style))
         
-        return "\n".join(report)
+        doc.build(story)
+        buffer.seek(0)
+        return buffer
     
     # Generate and display download button
-    comprehensive_report = _build_comprehensive_report()
-    report_bytes = comprehensive_report.encode('utf-8')
+    pdf_buffer = _build_comprehensive_pdf_report(uploaded_file.name)
     
     st.divider()
     st.header("📥 Download Full Report")
     st.download_button(
-        label="📄 Download Complete Analysis Report",
-        data=report_bytes,
-        file_name="TeachAIRs_Analysis_Report.txt",
-        mime="text/plain"
+        label="📄 Download Complete Analysis Report (PDF)",
+        data=pdf_buffer,
+        file_name="TeachAIRs_Analysis_Report.pdf",
+        mime="application/pdf"
     )
     
     st.divider()
