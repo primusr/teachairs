@@ -20,7 +20,7 @@ from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle
-from reportlab.lib import colors
+from reportlab.lib.colors import HexColor, whitesmoke, beige, lightblue, black
 
 # Import utility functions
 from utils import (
@@ -652,7 +652,7 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
             'CustomTitle',
             parent=styles['Heading1'],
             fontSize=24,
-            textColor=colors.HexColor('#003366'),
+            textColor=HexColor('#003366'),
             spaceAfter=12,
             alignment=1
         )
@@ -661,7 +661,7 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
             'CustomHeading',
             parent=styles['Heading2'],
             fontSize=14,
-            textColor=colors.HexColor('#003366'),
+            textColor=HexColor('#003366'),
             spaceAfter=8,
             spaceBefore=8
         )
@@ -682,7 +682,7 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
             'FileInfo',
             parent=styles['Normal'],
             fontSize=11,
-            textColor=colors.HexColor('#666666'),
+            textColor=HexColor('#666666'),
             spaceAfter=12
         )
         story.append(Paragraph(f"<b>File Analyzed:</b> {filename}", file_info_style))
@@ -705,14 +705,14 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         
         dist_table = Table(dist_data)
         dist_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003366')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#003366')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 11),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, 1), (-1, -1), beige),
+            ('GRID', (0, 0), (-1, -1), 1, black),
         ]))
         story.append(dist_table)
         story.append(Spacer(1, 0.2*inch))
@@ -746,14 +746,14 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         
         methods_table = Table(methods_data)
         methods_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003366')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#003366')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.lightblue),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, 1), (-1, -1), lightblue),
+            ('GRID', (0, 0), (-1, -1), 1, black),
         ]))
         story.append(methods_table)
         story.append(Spacer(1, 0.1*inch))
