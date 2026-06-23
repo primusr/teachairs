@@ -41,9 +41,8 @@ load_nltk()
 
 st.set_page_config(
     page_title="TeachAIRs",
-    page_icon="🧊",
-    layout="wide",
-    initial_sidebar_state="expanded",
+    page_icon="📊",
+    layout="centered",
     menu_items={
         "About": "Developed by Neo under the supervision of the Oracle. Watch this short video for a tutorial on how to use the app:  https://www.youtube.com/shorts/OvRlMiYURhM",
         "Get Help": "https://www.linkedin.com/in/unclebreaker/",
@@ -369,62 +368,6 @@ Distribution (Filipino Keywords):
         optimal_index = cv_scores.index(max(cv_scores))
         optimal_k = k_values[optimal_index]
         optimal_cv = cv_scores[optimal_index]
-
-    # # ------------------------------
-    # # Plot Line Graphs
-    # # ------------------------------
-    # fig, axes = plt.subplots(3, 1, figsize=(8, 12))
-
-    # # Top: C_v
-    # axes[0].plot(k_values, cv_scores, marker='o')
-    # axes[0].set_title("C_v Coherence Scores")
-    # axes[0].set_xlabel("Number of Topics (k)")
-    # axes[0].set_ylabel("C_v Score")
-    # axes[0].axvline(optimal_k, linestyle='--')
-    # axes[0].annotate(
-    #     f"Peak at k={optimal_k}\n({optimal_cv:.4f})",
-    #     xy=(optimal_k, optimal_cv),
-    #     xytext=(optimal_k, optimal_cv + 0.02),
-    #     arrowprops=dict()
-    # )
-
-    # # Middle: UMass
-    # axes[1].plot(k_values, umass_scores, marker='o')
-    # axes[1].set_title("UMass Coherence Scores")
-    # axes[1].set_xlabel("Number of Topics (k)")
-    # axes[1].set_ylabel("UMass Score")
-
-    # # Bottom: C_NPMI
-    # axes[2].plot(k_values, cnpmi_scores, marker='o')
-    # axes[2].set_title("C_NPMI Coherence Scores")
-    # axes[2].set_xlabel("Number of Topics (k)")
-    # axes[2].set_ylabel("C_NPMI Score")
-
-    # plt.tight_layout()
-    # st.pyplot(fig)
-
-    # # ------------------------------
-    # # Interpretation Output
-    # # ------------------------------
-    # st.markdown(f"""
-    # ### 📊 Optimal Topic Determination
-
-    # The C_v coherence score reaches its maximum at **k = {optimal_k}**, 
-    # with a value of **{optimal_cv:.4f}**, indicating the highest semantic similarity 
-    # and interpretability among the generated topics.
-
-    # Based on the strong correlation of C_v with human judgment, the optimal 
-    # number of topics was programmatically determined to be:
-
-    # ## ✅ k = {optimal_k}
-
-    # This ensures that subsequent thematic analysis is grounded in the most 
-    # semantically coherent topic structure derived from student feedback.
-    # """)
-
-    # ------------------------------
-    # Topic Modeling
-    # ------------------------------
 
     # ------------------------------
     # Overall Sentiment per Topic (Tabular)
