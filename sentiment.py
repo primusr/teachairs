@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import textwrap
 from io import BytesIO
-
+import subprocess
 from gensim import corpora
 from gensim.models import LdaModel
 from gensim.models import CoherenceModel
@@ -651,9 +651,13 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         st.markdown(gemini_recommendation_text)
 
     
-        if st.button("Run"):
-            runpy.run_path("print.py")
-            st.success("Script executed")
+        if st.button("Run Script"):
+            result = subprocess.run(
+                ["python", "print.py"],
+                capture_output=True,
+                text=True
+            )
+            st.text(result.stdout)
    
 
 
