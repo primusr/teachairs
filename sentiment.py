@@ -21,6 +21,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle, Image
 from reportlab.lib.colors import HexColor, whitesmoke, beige, lightblue, black
+import zipfile
 
 # Import utility functions
 from utils import (
@@ -468,11 +469,8 @@ Distribution (Filipino Keywords):
 
         sentiment_csv = df.to_csv(index=False).encode('utf-8')
 
-       
-
-        
         # Topic Word Clouds (First 4 LDA Topics)
-        
+        topic_wordcloud_buffers = []
         topic_ids_to_plot = [row["Topic ID"] for row in topic_rows][:4]
         if topic_ids_to_plot:
             st.divider()
@@ -496,7 +494,6 @@ Distribution (Filipino Keywords):
                     with col:
                         st.markdown( f""" Keywords: {words}""", unsafe_allow_html=True )
                         
-
                         wc = WordCloud(background_color="white", width=400, height=300)
                         wc.generate_from_frequencies(dict(words_probs))
                         fig, ax = plt.subplots(figsize=(6, 4))
@@ -504,6 +501,12 @@ Distribution (Filipino Keywords):
                         ax.axis("off")
                         fig.suptitle( f"Topic {topic_idx}: {ai_title}", fontsize=10, y=0.95 )
                         st.pyplot(fig)
+
+                        # Save word cloud figure buffer for PDF
+                        fig_wc_buffer = BytesIO()
+                        fig.savefig(fig_wc_buffer, format='png', bbox_inches='tight')
+                        fig_wc_buffer.seek(0)
+                        topic_wordcloud_buffers.append((topic_idx, ai_title, fig_wc_buffer))
 
     else:
         st.info("No topic sentiment summary available.")
@@ -839,6 +842,23 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         else:
             story.append(Paragraph("No topic sentiment data available.", normal_style))
             story.append(Spacer(1, 0.2*inch))
+
+        if topic_wordcloud_buffers:
+            story.append(Paragraph("4. TOPIC WORD CLOUDS", heading_style))
+            story.append(Paragraph("Visual summaries of topic keywords from the LDA model.", normal_style))
+            story.append(Spacer(1, 0.1*inch))
+            for topic_idx, ai_title, wc_buffer in topic_wordcloud_buffers:
+                try:
+                    wc_buffer.seek(0)
+                    story.append(Paragraph(f"Topic {topic_idx}: {ai_title}", normal_style))
+                    story.append(Image(wc_buffer, width=6.5*inch, height=3.5*inch))
+                    story.append(Spacer(1, 0.2*inch))
+                except Exception:
+                    continue
+            story.append(PageBreak())
+            section_offset = 1
+        else:
+            section_offset = 0
         
         # 4. AI RECOMMENDATIONS FOR SELECTED TOPICS
         story.append(Paragraph("4. AI RECOMMENDATIONS FOR SELECTED TOPICS", heading_style))
@@ -873,9 +893,78 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         doc.build(story)
         buffer.seek(0)
         return buffer
-    
-    # Generate and display download button
+
+    def _build_sentiment_distribution_csv():
+        dist_df = pd.DataFrame({
+            'Sentiment': ['Positive', 'Neutral', 'Negative'],
+            'Count': [counts.get(s, 0) for s in ['Positive', 'Neutral', 'Negative']],
+            'Percentage': [
+                f"{(counts.get(s, 0) / len(df) * 100):.1f}%" if len(df) > 0 else '0.0%'
+                for s in ['Positive', 'Neutral', 'Negative']
+            ]
+        })
+        return dist_df.to_csv(index=False).encode('utf-8')
+
+    def _build_polarity_distribution_csv():
+        rows = [
+            {
+                'Method': 'Standard VADER',
+                'Avg Score': f"{std_avg:.3f}",
+                'Sentiment': 'Positive' if std_avg > 0.05 else 'Negative' if std_avg < -0.05 else 'Neutral',
+                'Positive': std_counts.get('Positive', 0),
+                'Neutral': std_counts.get('Neutral', 0),
+                'Negative': std_counts.get('Negative', 0)
+            },
+            {
+                'Method': 'Augmented VADER',
+                'Avg Score': f"{aug_avg:.3f}",
+                'Sentiment': 'Positive' if aug_avg > 0.05 else 'Negative' if aug_avg < -0.05 else 'Neutral',
+                'Positive': aug_counts.get('Positive', 0),
+                'Neutral': aug_counts.get('Neutral', 0),
+                'Negative': aug_counts.get('Negative', 0)
+            },
+            {
+                'Method': 'Filipino Keyword Sentiment',
+                'Avg Score': '',
+                'Sentiment': fil_dominant,
+                'Positive': fil_counts.get('Positive', 0),
+                'Neutral': fil_counts.get('Neutral', 0),
+                'Negative': fil_counts.get('Negative', 0)
+            }
+        ]
+        return pd.DataFrame(rows).to_csv(index=False).encode('utf-8')
+
+    def _build_topic_recommendations_csv():
+        rec_rows = []
+        for row in selected_topics:
+            recommendation = _build_topic_recommendations(row)
+            recommendation = recommendation.replace('**', '').replace('   * ', '• ').strip()
+            rec_rows.append({
+                'Topic ID': row['Topic ID'],
+                'AI Label': row['AI Label'],
+                'Top Keywords': row['Top Keywords'],
+                'Avg VADER Aug Score': row['Avg VADER Aug Score'],
+                'Recommendations': recommendation
+            })
+        return pd.DataFrame(rec_rows).to_csv(index=False).encode('utf-8')
+
+    def _build_report_package(filename):
+        pdf_buffer = _build_comprehensive_pdf_report(filename)
+        pdf_bytes = pdf_buffer.getvalue()
+
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr('TeachAIRs_Analysis_Report.pdf', pdf_bytes)
+            zf.writestr('Sentiment_Distribution.csv', _build_sentiment_distribution_csv())
+            zf.writestr('Sentiment_Polarity_Distribution.csv', _build_polarity_distribution_csv())
+            zf.writestr('Overall_Sentiment_Per_Topic.csv', topic_summary_df.to_csv(index=False).encode('utf-8'))
+            zf.writestr('Selected_Topic_Recommendations.csv', _build_topic_recommendations_csv())
+        zip_buffer.seek(0)
+        return zip_buffer
+
+    # Generate and display download buttons
     pdf_buffer = _build_comprehensive_pdf_report(uploaded_file.name)
+    report_package = _build_report_package(uploaded_file.name)
     
     st.divider()
     st.header("📥 Download Full Report")
@@ -884,6 +973,12 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         data=pdf_buffer,
         file_name="TeachAIRs_Analysis_Report.pdf",
         mime="application/pdf"
+    )
+    st.download_button(
+        label="📦 Download PDF + CSV Package",
+        data=report_package,
+        file_name="TeachAIRs_Report_Package.zip",
+        mime="application/zip"
     )
     
     st.divider()
