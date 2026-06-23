@@ -21,8 +21,6 @@ from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle, Image
 from reportlab.lib.colors import HexColor, whitesmoke, beige, lightblue, black
 import zipfile
-from weasyprint import HTML, CSS
-from weasyprint.fonts import FontConfiguration
 
 # Import utility functions
 from utils import (
