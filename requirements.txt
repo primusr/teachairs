@@ -1,12 +1,1 @@
-streamlit
-pandas
-nltk
-matplotlib
-seaborn
-gensim
-wordcloud
-langdetect
-googletrans==4.0.0-rc1
-google-generativeai
-numpy
-scikit-learn
+streamlit pandas nltk matplotlib seaborn gensim wordcloud langdetect googletrans==4.0.0-rc1 google-generativeai numpy scikit-learn
