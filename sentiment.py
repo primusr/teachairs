@@ -696,10 +696,11 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
     # ------------------------------
     # AI Recommendations (Optional)
     # ------------------------------
+    st.divider()
     if gemini_model:
        
         st.header("Generating Overall AI Recommendations (based on CSV Analysis)")
-        st.subheader("Overall AI Recommendations:")
+        
 
         # Ensure correlation exists
         try:
