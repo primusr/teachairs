@@ -236,7 +236,8 @@ Distribution (Filipino Keywords):
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("### Standard VADER (English Only)")
+        
+        st.text("### Standard VADER (English Only)")
         colors_std = df["VADER_Standard"].apply(sentiment_color)
         fig_std, ax_std = plt.subplots()
         ax_std.scatter(
@@ -255,7 +256,7 @@ Distribution (Filipino Keywords):
     # 2️⃣ Augmented VADER Scatter
     # ------------------------------
     with col2:
-        st.markdown("### Augmented VADER (With Filipino Lexicon)")
+        st.text("### Augmented VADER (With Filipino Lexicon)")
         colors_aug = df["VADER_Augmented"].apply(sentiment_color)
         fig_aug, ax_aug = plt.subplots()
 
