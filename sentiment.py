@@ -117,6 +117,7 @@ if uploaded_file:
                 color: white !important;
                 border-radius: 8px !important;
                 border: none !important;
+                font-weight: bold !important;
             }
             /* Optional: Change color when hovering */
             .stDownloadButton button:hover {
@@ -571,6 +572,7 @@ Distribution (Filipino Keywords):
                 color: white !important;
                 border-radius: 8px !important;
                 border: none !important;
+                font-weight: bold !important;
             }
             /* Optional: Change color when hovering */
             .stDownloadButton button:hover {
@@ -777,6 +779,7 @@ SELECTED TOPICS:
                 color: white !important;
                 border-radius: 8px !important;
                 border: none !important;
+                font-weight: bold !important;    
             }
             /* Optional: Change color when hovering */
             .stDownloadButton button:hover {
