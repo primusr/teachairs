@@ -795,30 +795,8 @@ SELECTED TOPICS:
             mime="text/plain",icon="✅"
         )
 
-    # # Use markdown to preserve formatting
-    # st.markdown(response.text)
-    # if gemini_model:
-    #     st.divider()
-    #     st.header("Generating Overall AI Recommendations (based on CSV Analysis)")
-    #     st.subheader("Overall AI Recommendations:")  
-
-    #     # Ensure correlation exists
-    #     try:
-    #         corr_value = f"{correlation:.2f}"
-    #     except:
-    #         corr_value = "Not computed"
-
-    #     summary = f"""
-    #     Average Sentiment Score: {avg_score:.2f}
-    #     Distribution: {counts.to_dict()}
-    #     Correlation Between Models: {corr_value}
-    #     """
-
-    #     response = gemini_model.generate_content(
-    #         summary + "\nGive 3 actionable teaching recommendations."
-    #     )
-
-    #     st.write(response.text.strip())
+    
+    st.divider()
 
 else:
     st.info("Please upload a CSV file to begin.")
