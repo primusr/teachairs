@@ -655,7 +655,7 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
     def _build_comprehensive_pdf_report(filename):
         """Build a comprehensive PDF report with all analysis sections"""
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch, orientation='landscape')
+        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
         story = []
         styles = getSampleStyleSheet()
         
@@ -796,30 +796,41 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
         # 3. OVERALL SENTIMENT PER TOPIC
         story.append(Paragraph("3. OVERALL SENTIMENT PER TOPIC", heading_style))
         if not topic_summary_df.empty:
+            topic_cell_style = ParagraphStyle(
+                'TopicCell',
+                parent=styles['Normal'],
+                fontSize=8,
+                leading=10,
+                alignment=0,
+                spaceAfter=2
+            )
             topic_summary_rows = [[
                 'Topic ID', 'AI Label', 'Keywords', 'Num Comments',
                 'Avg VADER Eng', 'VADER Eng +', 'Avg VADER Aug', 'VADER Aug +', 'Avg Fil. Score'
             ]]
             for idx, row in topic_summary_df.iterrows():
                 topic_summary_rows.append([
-                    str(row['Topic ID']),
-                    row['AI Label'],
-                    row['Top Keywords'],
-                    str(row['Num Comments']),
-                    str(row['Avg VADER Eng Score']),
-                    row['VADER Eng Dist (%)'],
-                    str(row['Avg VADER Aug Score']),
-                    row['VADER Aug Dist (%)'],
-                    str(row['Avg Fil. Keyword Score'])
+                    Paragraph(str(row['Topic ID']), topic_cell_style),
+                    Paragraph(str(row['AI Label']), topic_cell_style),
+                    Paragraph(str(row['Top Keywords']), topic_cell_style),
+                    Paragraph(str(row['Num Comments']), topic_cell_style),
+                    Paragraph(str(row['Avg VADER Eng Score']), topic_cell_style),
+                    Paragraph(str(row['VADER Eng Dist (%)']), topic_cell_style),
+                    Paragraph(str(row['Avg VADER Aug Score']), topic_cell_style),
+                    Paragraph(str(row['VADER Aug Dist (%)']), topic_cell_style),
+                    Paragraph(str(row['Avg Fil. Keyword Score']), topic_cell_style)
                 ])
-            topic_table = Table(topic_summary_rows, colWidths=[0.7*inch, 1.2*inch, 1.8*inch, 0.8*inch, 0.8*inch, 1.3*inch, 0.8*inch, 1.3*inch, 0.8*inch])
+            topic_table = Table(topic_summary_rows, colWidths=[0.55*inch, 1.1*inch, 2.8*inch, 0.55*inch, 0.65*inch, 1.1*inch, 0.6*inch, 1.1*inch, 0.6*inch])
             topic_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), HexColor('#003366')),
                 ('TEXTCOLOR', (0, 0), (-1, 0), whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, 0), 8),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 4),
                 ('BACKGROUND', (0, 1), (-1, -1), beige),
                 ('GRID', (0, 0), (-1, -1), 0.5, black),
             ]))
