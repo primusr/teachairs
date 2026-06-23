@@ -655,7 +655,7 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
     def _build_comprehensive_pdf_report(filename):
         """Build a comprehensive PDF report with all analysis sections"""
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch, orientation='landscape')
         story = []
         styles = getSampleStyleSheet()
         
