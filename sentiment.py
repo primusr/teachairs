@@ -542,8 +542,40 @@ Here are 2-3 actionable teaching recommendations based on the topic "{topic_labe
         def _format_selected_topics(topics):
             if not topics: return "No selected topic data is available."
             return "\n".join([f"Topic {row['Topic ID']} - {row['AI Label']}: {row['Top Keywords']} | Avg VADER Aug Score: {row['Avg VADER Aug Score']:.2f} | VADER Aug Dist: {row['VADER Aug Dist (%)']}" for row in topics])
+        
+        structured_prompt = f"""
+You are an academic assistant analyzing student feedback data.
+Generate teaching recommendations for the selected topics using the requested structured format.
 
-        structured_prompt = f"You are an academic assistant analyzing student feedback data.\nGenerate teaching recommendations for the selected topics using the requested structured format.\n\nSTRICT FORMAT FOR EACH SELECTED TOPIC:\n- Provide a clear topic title line.\n- Provide one summary sentence describing the context from sentiment and keywords.\n- Provide exactly 2-3 actionable teaching recommendations.\n- Each recommendation block MUST include:\n  * Action\n  * Rationale\n  * Measurement\n\nDATA SUMMARY:\n{summary}\n\nSELECTED TOPICS:\n{_format_selected_topics(selected_topics)}"
+STRICT FORMAT FOR EACH SELECTED TOPIC:
+- Provide a clear topic title line.
+- Provide one summary sentence describing the context from sentiment and keywords.
+- Provide exactly 2-3 actionable teaching recommendations.
+- Each recommendation block MUST include:
+  * Action
+  * Rationale
+  * Measurement
+
+OUTPUT FORMAT FOR EACH TOPIC:
+Recommendations for Topic <N> (<Topic Label>):
+Here are 2-3 actionable teaching recommendations based on the topic "<Topic Label>".
+**Understanding the Context:** <context sentence>
+**Actionable Teaching Recommendations:**
+1. <recommendation text>
+   * **Action:** ...
+   * **Rationale:** ...
+   * **Measurement:** ...
+2. <recommendation text>
+   * **Action:** ...
+   * **Rationale:** ...
+   * **Measurement:** ...
+
+DATA SUMMARY:
+{summary}
+
+SELECTED TOPICS:
+{selected_topics_text}
+"""
 
         response = gemini_model.generate_content(structured_prompt)
         gemini_recommendation_text = response.text.strip()
