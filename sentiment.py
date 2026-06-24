@@ -413,7 +413,7 @@ Distribution (Aug VADER):
             "Fil. Keyword Dist (%)": f"Positive: {fil_dist['Positive']:.1f}, Neutral: {fil_dist['Neutral']:.1f}, Negative: {fil_dist['Negative']:.1f}"
         })
     
-    Global_SENTIMENTTOPIC = df.c
+    Global_SENTIMENTTOPIC = df.copy()
     topic_summary_df = pd.DataFrame(topic_rows)
    
     # Dictionary to save initial image footprints so WeasyPrint does not recalculate anything
