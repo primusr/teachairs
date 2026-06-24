@@ -702,166 +702,135 @@ SELECTED TOPICS:
         <!DOCTYPE html>
         <html>
         <head>
-            <meta charset="utf-8">
-            <title>TeachAIRs Feedback Report</title>
-            <style>
-                /* ==========================================
-                   LANDSCAPE CANVAS DIMENSION STRUCTS
-                ========================================== */
-                @page {{
-                    size: letter landscape; 
-                    margin: 0.5in;
-                    @bottom-right {{
-                        content: "Page " counter(page);
-                        font-family: Arial, sans-serif;
-                        font-size: 9pt;
-                        color: #6b7280;
-                    }}
-                }}
-                body {{
-                    font-family: Arial, sans-serif;
-                    color: #1f2937;
-                    line-height: 1.4;
-                    width: 100%;
-                }}
-                h1 {{
-                    color: #1e3a8a;
-                    border-bottom: 3px solid #3b82f6;
-                    padding-bottom: 10px;
-                    margin-bottom: 20px;
-                    font-size: 24pt;
-                }}
-                h2 {{
-                    color: #1e40af;
-                    margin-top: 25px;
-                    border-bottom: 1px solid #e5e7eb;
-                    padding-bottom: 5px;
-                    font-size: 16pt;
-                    page-break-after: avoid;
-                }}
-                h3 {{
-                    font-size: 12pt;
-                    color: #374151;
-                    margin-bottom: 5px;
-                }}
-                .metric-box {{
-                    background-color: #f3f4f6;
-                    border-left: 5px solid #3b82f6;
-                    padding: 12px;
-                    margin-bottom: 20px;
-                    border-radius: 4px;
-                    font-size: 11pt;
-                }}
-                
-                /* ==========================================
-                   FIX: RIGID IMAGE MATCH CONSTRAINTS
-                ========================================== */
-                .chart-grid {{
-                    display: table;
-                    width: 100%;
-                    table-layout: fixed; /* Keep row boxes bounded */
-                    margin-top: 15px;
-                }}
-                .chart-card {{
-                    display: table-cell;
-                    width: 50%;
-                    padding: 10px;
-                    text-align: center;
-                    vertical-align: top;
-                }}
-                .pdf-img {{
-                    max-width: 100%;
-                    height: auto;
-                    display: block;
-                    margin: 0 auto;
-                }}
-                
-                /* ==========================================
-                   FIX: RIGID TABLE MATCH CONSTRAINTS
-                ========================================== */
-                .report-table {{
-                    width: 100%;
-                    table-layout: fixed; /* Stops automatic wide-stretching */
-                    border-collapse: collapse;
-                    margin-top: 15px;
-                    font-size: 8.5pt;
-                }}
-                .report-table th, .report-table td {{
-                    border-bottom: 1px solid #e5e7eb;
-                    padding: 8px 5px;
-                    word-wrap: break-word;
-                    overflow-wrap: break-word;
-                    white-space: normal; /* Permits automatic horizontal wrapping lines */
-                    vertical-align: top;
-                }}
-                .report-table th {{
-                    background-color: #1e3a8a;
-                    color: white;
-                    text-align: left;
-                    font-weight: bold;
-                }}
-                .report-table tr:nth-child(even) {{
-                    background-color: #f9fafb;
-                }}
-                
-                /* Precise column scaling assignments equaling exactly 100% */
-                .report-table th:nth-child(1), .report-table td:nth-child(1) {{ width: 5%; }}  
-                .report-table th:nth-child(2), .report-table td:nth-child(2) {{ width: 11%; }} 
-                .report-table th:nth-child(3), .report-table td:nth-child(3) {{ width: 14%; }} 
-                .report-table th:nth-child(4), .report-table td:nth-child(4) {{ width: 6%; }}  
-                .report-table th:nth-child(5), .report-table td:nth-child(5) {{ width: 8%; }}  
-                .report-table th:nth-child(6), .report-table td:nth-child(6) {{ width: 16%; }} 
-                .report-table th:nth-child(7), .report-table td:nth-child(7) {{ width: 8%; }}  
-                .report-table th:nth-child(8), .report-table td:nth-child(8) {{ width: 16%; }} 
-                .report-table th:nth-child(9), .report-table td:nth-child(9) {{ width: 8%; }}  
-                .report-table th:nth-child(10), .report-table td:nth-child(10) {{ width: 8%; }}
+        <meta charset="utf-8">
+        <title>TeachAIRs Feedback Report</title>
 
-                .page-break {{
-                    page-break-before: always;
-                }}
-            </style>
+        <style>
+        @page {{
+            size: letter portrait;
+            margin: 0.6in;
+        }}
+
+        body {{
+            font-family: Arial, sans-serif;
+            color: #1f2937;
+            line-height: 1.4;
+        }}
+
+        h1 {{
+            color: #1e3a8a;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 10px;
+            font-size: 22pt;
+        }}
+
+        h2 {{
+            color: #1e40af;
+            margin-top: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14pt;
+        }}
+
+        h3 {{
+            font-size: 11pt;
+            color: #374151;
+        }}
+
+        .metric-box {{
+            background-color: #f3f4f6;
+            border-left: 5px solid #3b82f6;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 10pt;
+        }}
+
+        .chart-grid {{
+            display: block;
+            margin-top: 10px;
+        }}
+
+        .chart-card {{
+            width: 100%;
+            margin-bottom: 20px;
+            text-align: center;
+        }}
+
+        .pdf-img {{
+            max-width: 100%;
+            width: 100%;
+            height: auto;
+        }}
+
+        .report-table {{
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-size: 9pt;
+        }}
+
+        .report-table th,
+        .report-table td {{
+            border-bottom: 1px solid #e5e7eb;
+            padding: 6px;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            white-space: normal;
+            vertical-align: top;
+        }}
+
+        .report-table th {{
+            background-color: #1e3a8a;
+            color: white;
+            text-align: left;
+        }}
+
+        .page-break {{
+            page-break-before: always;
+        }}
+        </style>
         </head>
+
         <body>
-            <h1>TeachAIRs: Student Feedback Analysis Report</h1>
-            
-            <div class="metric-box">
-                <p style="margin: 4px 0;"><strong>Average System Sentiment Score:</strong> {avg_score:.4f}</p>
-                <p style="margin: 4px 0;"><strong>Overall System Sentiment:</strong> {aug_sentiment}</p>
+
+        <h1>TeachAIRs: Student Feedback Analysis Report</h1>
+
+        <div class="metric-box">
+            <p><strong>Average System Sentiment Score:</strong> {avg_score:.4f}</p>
+            <p><strong>Overall System Sentiment:</strong> {aug_sentiment}</p>
+        </div>
+
+        <h2>Overall Sentiment Distribution</h2>
+        <div class="chart-grid">
+            <div class="chart-card">
+                <h3>Augmented Model Distribution</h3>
+                <img src="{sentiment_chart_b64}" class="pdf-img"/>
+            </div>
+        </div>
+
+        <div class="page-break"></div>
+
+        <h2>Methodology Comparison</h2>
+        <div class="chart-grid">
+            <div class="chart-card">
+                <h3>Standard VADER</h3>
+                <img src="{std_vader_chart_b64}" class="pdf-img"/>
             </div>
 
-            <h2>Overall Sentiment Metric Distribution</h2>
-            <div class="chart-grid">
-                <div class="chart-card">
-                    <h3>Augmented Model Target Distribution</h3>
-                    <img src="{sentiment_chart_b64}" class="pdf-img" style="max-width: 65%;" />
-                </div>
-                <div class="chart-card">
-                    </div>
+            <div class="chart-card">
+                <h3>Augmented VADER</h3>
+                <img src="{aug_vader_chart_b64}" class="pdf-img"/>
             </div>
+        </div>
 
-            <div class="page-break"></div>
+        <div class="page-break"></div>
 
-            <h2>Methodology Polarity Comparison Charts</h2>
-            <div class="chart-grid">
-                <div class="chart-card">
-                    <h3>Standard VADER (English Only)</h3>
-                    <img src="{std_vader_chart_b64}" class="pdf-img" />
-                </div>
-                <div class="chart-card">
-                    <h3>Augmented VADER (Filipino Lexicon Included)</h3>
-                    <img src="{aug_vader_chart_b64}" class="pdf-img" />
-                </div>
-            </div>
+        <h2>Sentiment Per Topic</h2>
+        {clean_table_html}
 
-            <div class="page-break"></div>
+        <div class="page-break"></div>
 
-            <h2>Comprehensive Sentiment Per Topic Table</h2>
-            <div>
-                {clean_table_html}
-            </div>
+        {word_clouds_html}
 
-            <div class="page-break"></div>
-            {word_clouds_html}
         </body>
         </html>
         """
