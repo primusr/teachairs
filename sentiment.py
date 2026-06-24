@@ -337,7 +337,7 @@ Distribution (Aug VADER):
         fig_aug_buffer = io.BytesIO()
         fig_aug.savefig(fig_aug_buffer, format="png", bbox_inches="tight", dpi=150)
         fig_aug_buffer.seek(0)
-        GLOBAL_FIGURES["Augmented VADER Polarity Scores"] = f"data:image/png;base64,{base64.b64encode(fig_aug_buffer.read()).decode()}"
+        #GLOBAL_FIGURES["Augmented VADER Polarity Scores"] = f"data:image/png;base64,{base64.b64encode(fig_aug_buffer.read()).decode()}"
         plt.close(fig_aug)
 
     # Statistical Comparison Calculations
