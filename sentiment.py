@@ -644,17 +644,10 @@ SELECTED TOPICS:
         # ZIP REPORT GENERATOR - FULL PAGE EXPORT (PORTRAIT, RESPONSIVE)
         # ==========================================
 
-        import io
-        import zipfile
-        import base64
-        import streamlit as st
-        from weasyprint import HTML
-        import matplotlib.pyplot as plt
-        from wordcloud import WordCloud
+       
 
         st.divider()
-        st.header("📦 Export Complete Report Bundle (FULL PAGE)")
-        st.markdown("Exports ALL charts, tables, and insights into a single portrait PDF + CSV bundle.")
+        st.markdown("Exports ALL charts, tables, and insights into PDF + CSV bundle.")
 
         # ------------------------------------------
         # FIGURE → BASE64 HELPER
@@ -757,7 +750,7 @@ SELECTED TOPICS:
             
             full_sections_html += f"""
             <div class="page-break"></div>
-            <h2>Overall LLM Executive Action Strategy</h2>
+            <h2>Overall AI Recommendations</h2>
             <div class="executive-box">
                 <div class="text-block">{formatted_gemini}</div>
             </div>
@@ -779,7 +772,7 @@ SELECTED TOPICS:
             @bottom-right {{
                 content: "Page " counter(page);
                 font-family: Arial, sans-serif;
-                font-size: 9pt;
+                font-size: 7pt;
                 color: #6b7280;
             }}
         }}
@@ -787,7 +780,7 @@ SELECTED TOPICS:
         body {{
             font-family: Arial, sans-serif;
             color: #1f2937;
-            line-height: 1.5;
+            line-height: 1.0;
         }}
 
         h1 {{
