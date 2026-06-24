@@ -643,7 +643,69 @@ SELECTED TOPICS:
    
 
    
+    # ==========================================
+        # ZIP REPORT GENERATOR (Add at the very bottom)
+        # ==========================================
+        st.divider()
+        st.header("堅 Export Complete Report Bundle")
+        st.markdown("Download a zipped bundle containing the generated PDF summary, the full Sentiment Analysis matrix, and the source Feedback dataset.")
 
+        import io
+        import zipfile
+        from reportlab.lib.pagesizes import letter
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet
+
+        # 1. Generate the PDF dynamically in memory
+        pdf_buffer = io.BytesIO()
+        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+        story = []
+
+        # Build a basic PDF content structure
+        story.append(Paragraph("TeachAIRs: Student Feedback Analysis Report", styles['Title']))
+        story.append(Spacer(1, 12))
+        story.append(Paragraph(f"<b>Average Sentiment Score:</b> {avg_score:.4f}", styles['Normal']))
+        story.append(Paragraph(f"<b>Overall System Sentiment:</b> {aug_sentiment}", styles['Normal']))
+        story.append(Spacer(1, 12))
+        story.append(Paragraph("<b>Topic Model Distribution Summary:</b>", styles['Heading2']))
+        
+        for row in topic_rows:
+            topic_summary_text = f"Topic {row['Topic ID']} ({row['AI Label']}): Keywords: {row['Top Keywords']} | Avg Score: {row['Avg VADER Aug Score']}"
+            story.append(Paragraph(topic_summary_text, styles['Normal']))
+            story.append(Spacer(1, 6))
+
+        doc.build(story)
+        pdf_data = pdf_buffer.getvalue()
+
+        # 2. Convert DataFrames to CSV strings
+        # "Sentiment Analysis Report.csv" (Includes calculations and labels)
+        sentiment_report_csv = df.to_csv(index=False)
+        
+        # "Feedback dataset.csv" (The clean minimal source text table)
+        feedback_dataset_csv = df[["Feedback", "Cleaned"]].to_csv(index=False)
+
+        # 3. Package everything into an in-memory ZIP archive
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            # Write PDF
+            zip_file.writestr("Output.pdf", pdf_data)
+            # Write Sentiment Evaluation CSV
+            zip_file.writestr("Sentiment Analysis Report.csv", sentiment_report_csv)
+            # Write Source Data CSV
+            zip_file.writestr("Feedback dataset.csv", feedback_dataset_csv)
+
+        # Seek buffer to the beginning for Streamlit processing
+        zip_buffer.seek(0)
+
+        # 4. Streamlit Download Button
+        st.download_button(
+            label="段 Download Complete Reports (.ZIP)",
+            data=zip_buffer,
+            file_name="TeachAIRs_Feedback_Report.zip",
+            mime="application/zip",
+            use_container_width=True
+        )
 else:
     st.info("Please upload a CSV file to begin.")
     st.divider()
