@@ -644,10 +644,17 @@ SELECTED TOPICS:
         # ZIP REPORT GENERATOR - FULL PAGE EXPORT (PORTRAIT, RESPONSIVE)
         # ==========================================
 
-       
+        import io
+        import zipfile
+        import base64
+        import streamlit as st
+        from weasyprint import HTML
+        import matplotlib.pyplot as plt
+        from wordcloud import WordCloud
 
         st.divider()
-        st.markdown("Exports ALL charts, tables, and insights into PDF + CSV bundle.")
+      
+        st.markdown("Exports ALL charts, tables, and insights into a PDF + CSV bundle.")
 
         # ------------------------------------------
         # FIGURE → BASE64 HELPER
