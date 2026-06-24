@@ -12,6 +12,3 @@ google-generativeai
 numpy 
 scikit-learn
 weasyprint
-libglib
-libpango
-libpangoft
