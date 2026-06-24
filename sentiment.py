@@ -3,6 +3,7 @@
 # With VADER Method Comparison
 # ==============================
 
+import re
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -47,6 +48,36 @@ def _escape_html(text):
     return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+def _format_recommendation_html(text):
+    escaped_text = _escape_html(text)
+    escaped_text = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", escaped_text)
+
+    html_parts = []
+    in_list = False
+    for line in escaped_text.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            if in_list:
+                html_parts.append("</ul>")
+                in_list = False
+            continue
+        if stripped.startswith("* "):
+            if not in_list:
+                html_parts.append("<ul>")
+                in_list = True
+            html_parts.append(f"<li>{stripped[2:]}</li>")
+        else:
+            if in_list:
+                html_parts.append("</ul>")
+                in_list = False
+            html_parts.append(f"<p>{stripped.replace(chr(10), '<br>')}</p>")
+
+    if in_list:
+        html_parts.append("</ul>")
+
+    return "".join(html_parts) or "<p>No recommendations available.</p>"
+
+
 def build_report_pdf():
     feedback_table = GLOBAL_FEEDBACK.to_html(index=False, escape=False) if not GLOBAL_FEEDBACK.empty else "<p>No feedback data available.</p>"
     sentiment_table = GLOBAL_SENTIMENTTOPIC.to_html(index=False, escape=False) if not GLOBAL_SENTIMENTTOPIC.empty else "<p>No sentiment topic data available.</p>"
@@ -54,13 +85,13 @@ def build_report_pdf():
     wordcloud_html = ""
     for topic_id, image_data in sorted(GLOBAL_WORDCLOUDS.items()):
         if image_data:
-            wordcloud_html += f"<div style='page-break-inside: avoid; margin-bottom: 20px;'><h3>Topic {topic_id}</h3><img src='{image_data}' style='max-width: 100%; height: auto;'/></div>"
+            wordcloud_html += f"<div class='report-section'><h3>Topic {topic_id}</h3><img src='{image_data}' style='max-width: 100%; height: auto;'/></div>"
 
     recommendations_html = ""
     for rec in GLOBAL_TOPIC_RECOMMENDATIONS:
-        recommendations_html += f"<div style='page-break-inside: avoid; margin-bottom: 20px;'><h3>Topic {rec.get('id', '')}: {rec.get('label', '')}</h3><div>{_escape_html(rec.get('text', ''))}</div></div>"
+        recommendations_html += f"<div class='report-section'><h3>Topic {rec.get('id', '')}: {rec.get('label', '')}</h3><div>{_format_recommendation_html(rec.get('text', ''))}</div></div>"
 
-    overall_html = f"<pre>{_escape_html(GLOBAL_OVERALL_AI_RECOMMENDATION or 'No overall AI recommendation generated.')}</pre>"
+    overall_html = f"<div class='report-section'>{_format_recommendation_html(GLOBAL_OVERALL_AI_RECOMMENDATION or 'No overall AI recommendation generated.')}</div>"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -68,12 +99,14 @@ def build_report_pdf():
       <head>
         <meta charset='utf-8'>
         <style>
-          body {{ font-family: Arial, sans-serif; padding: 24px; }}
-          h1, h2 {{ color: #1f4e79; }}
-          table {{ border-collapse: collapse; width: 100%; font-size: 10px; }}
-          th, td {{ border: 1px solid #ccc; padding: 4px; text-align: left; }}
-          img {{ max-width: 100%; height: auto; }}
-          pre {{ white-space: pre-wrap; word-wrap: break-word; }}
+          body {{ font-family: Arial, sans-serif; padding: 24px; line-height: 1.4; }}
+          h1, h2 {{ color: #1f4e79; page-break-after: avoid; }}
+          table {{ border-collapse: collapse; width: 100%; max-width: 100%; font-size: 10px; table-layout: fixed; word-wrap: break-word; }}
+          th, td {{ border: 1px solid #ccc; padding: 4px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }}
+          img {{ max-width: 100%; height: auto; display: block; margin: 0 auto; }}
+          div, p, li {{ overflow-wrap: anywhere; }}
+          pre {{ white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; }}
+          .report-section {{ page-break-inside: avoid; margin-bottom: 18px; }}
         </style>
       </head>
       <body>
@@ -492,25 +525,21 @@ Here are 2-3 actionable teaching recommendations based on the topic "{topic_labe
         st.markdown(gemini_recommendation_text)
         GLOBAL_OVERALL_AI_RECOMMENDATION = gemini_recommendation_text
 
-    report_zip_bytes = b""
-    if st.button("Create Report ZIP"):
-        if GLOBAL_FEEDBACK.empty or GLOBAL_SENTIMENTTOPIC.empty:
-            st.warning("Upload and analyze a dataset first to build the report package.")
-        else:
-            zip_buffer = io.BytesIO()
-            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-                archive.writestr("Feedback.csv", GLOBAL_FEEDBACK.to_csv(index=False).encode("utf-8"))
-                archive.writestr("Sentiment.csv", GLOBAL_SENTIMENTTOPIC.to_csv(index=False).encode("utf-8"))
-                archive.writestr("Report.pdf", build_report_pdf())
-            report_zip_bytes = zip_buffer.getvalue()
+    if not GLOBAL_FEEDBACK.empty and not GLOBAL_SENTIMENTTOPIC.empty:
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("Feedback.csv", GLOBAL_FEEDBACK.to_csv(index=False).encode("utf-8"))
+            archive.writestr("Sentiment.csv", GLOBAL_SENTIMENTTOPIC.to_csv(index=False).encode("utf-8"))
+            archive.writestr("Report.pdf", build_report_pdf())
 
-    if report_zip_bytes:
         st.download_button(
             "Download Report ZIP",
-            report_zip_bytes,
+            zip_buffer.getvalue(),
             file_name="TeachAIRs_Report_Package.zip",
             mime="application/zip",
         )
+    else:
+        st.info("Upload and analyze a dataset to enable the report download.")
 
 else:
     st.info("Please upload a CSV file to begin.")
