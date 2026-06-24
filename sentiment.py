@@ -14,6 +14,7 @@ from gensim.models import LdaModel
 from gensim.models import CoherenceModel
 from wordcloud import WordCloud
 import base64
+import zipfile
 
 import streamlit.components.v1 as components
 
@@ -25,7 +26,6 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle, Image
 from reportlab.lib.colors import HexColor, whitesmoke, beige, lightblue, black
-import zipfile
 
 # Import utility functions
 from utils import (
@@ -545,14 +545,33 @@ Context: {context}<br>
         </html>
         """
 
-        # Pass compiled buffer package directly to WeasyPrint engine instantiation
+        # Generate the pristine WeasyPrint PDF content
         weasy_pdf_bytes = HTML(string=html_document_payload).write_pdf()
 
+        # Convert the full, un-truncated topic summary dataframe to CSV data
+        csv_topic_buffer = BytesIO()
+        topic_summary_df.to_csv(csv_topic_buffer, index=False, encoding='utf-8')
+        csv_topic_bytes = csv_topic_buffer.getvalue()
+
+        # Convert the full feedback dataset dataframe to CSV data
+        csv_full_buffer = BytesIO()
+        df.to_csv(csv_full_buffer, index=False, encoding='utf-8')
+        csv_full_bytes = csv_full_buffer.getvalue()
+
+        # Compile PDF and both CSV matrices into an in-memory ZIP package
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("TeachAIRs_WeasyPrint_Report.pdf", weasy_pdf_bytes)
+            zip_file.writestr("Full_Sentiment_Per_Topic.csv", csv_topic_bytes)
+            zip_file.writestr("Full_Feedback_Dataset.csv", csv_full_bytes)
+        zip_buffer.seek(0)
+
+        # Unified download layout package delivery channel
         st.download_button(
-            label="🚀 Download Comprehensive WeasyPrint PDF Portfolio",
-            data=weasy_pdf_bytes,
-            file_name="TeachAIRs_WeasyPrint_Report.pdf",
-            mime="application/pdf"
+            label="🚀 Download Complete Portfolio Package (ZIP: PDF + 2 Data CSVs)",
+            data=zip_buffer.getvalue(),
+            file_name="TeachAIRs_Analysis_Bundle.zip",
+            mime="application/zip"
         )
 else:
     st.info("Please upload a CSV file to begin.")
