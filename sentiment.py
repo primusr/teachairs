@@ -467,7 +467,7 @@ Distribution (Aug VADER):
                     if idx >= len(topic_ids_to_plot):
                         break
                     topic_idx = topic_ids_to_plot[idx]
-                    words_probs = lda_model_final.show_topic(topic_idx, topn=15)
+                    words_probs = lda_model_final.show_topic(topic_idx, topn=10)
                     words = ", ".join([w for w, _ in words_probs])
                     ai_title = next((r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx), f"Topic {topic_idx}")
                     
