@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 # ==============================
 # TeachAIRs: Sentiment & Topic Analysis
 # With VADER Method Comparison
@@ -830,4 +828,4 @@ SELECTED TOPICS:
 else:
     st.info("Please upload a CSV file to begin.")
     st.divider()
->>>>>>> parent of 78d205a (Auto Update)
+
