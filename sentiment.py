@@ -149,7 +149,7 @@ def build_report_pdf():
         <h2>Word Clouds</h2>
         {wordcloud_html or '<p>No word clouds available.</p>'}
 
-      
+        
         <h2>AI Recommendations per Topic</h2>
         {recommendations_html or '<p>No topic recommendations available.</p>'}
         <h2>Overall AI Recommendations</h2>
@@ -486,7 +486,7 @@ Distribution (Aug VADER):
                             fontsize=5,
                             wrap=True,
                         )
-                        fig.subplots_adjust(top=0.82)
+                        fig.subplotsadjust(top=0.82)
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
                         st.pyplot(fig)
