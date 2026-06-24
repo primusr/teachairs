@@ -103,15 +103,6 @@ if uploaded_file:
     df = df[[feedback_col]].rename(columns={feedback_col: "Feedback"})
     df.dropna(inplace=True)
 
-    # Web Print Action Trigger
-    st.write("### 🖨️ Browser Webpage Print Control")
-    components.html("""
-        <button onclick="window.parent.print()" style="
-            background-color: #003366; color: white; border: none; padding: 10px 20px;
-            border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;
-        ">🖨️ Native Browser Print Window</button>
-    """, height=50)
-
     st.divider()
     st.header("Feedback Dataset Overview")
     st.dataframe(df, use_container_width=True)
