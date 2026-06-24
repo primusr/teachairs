@@ -330,12 +330,12 @@ def classify_sentiment(score):
 
 def sentiment_color(score):
     """Get color for sentiment visualization"""
-    if score > 0:
+    if score > 0.05:
         return "green"
-    elif score < 0:
+    elif score <= -0.05:
         return "red"
     else:
-        return "yellow"
+        return "blue"
 
 # Filipino keyword sentiment analysis
 FILIPINO_POSITIVE = ["maganda", "mabuti", "mahusay", "salamat", "okay"]

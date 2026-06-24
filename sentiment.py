@@ -43,6 +43,7 @@ GLOBAL_WORDCLOUDS = {}
 GLOBAL_TOPIC_RECOMMENDATIONS = []
 GLOBAL_OVERALL_AI_RECOMMENDATION = ""
 GLOBAL_FIGURES = {}
+GLOBAL_SENTIMENT_SUMMARY = ""
 
 
 def _escape_html(text):
@@ -97,6 +98,7 @@ def build_report_pdf():
     for rec in GLOBAL_TOPIC_RECOMMENDATIONS:
         recommendations_html += f"<div class='report-section'><h3>Topic {rec.get('id', '')}: {rec.get('label', '')}</h3><div>{_format_recommendation_html(rec.get('text', ''))}</div></div>"
 
+    sentiment_summary_html = f"<div class='report-section'><pre>{_escape_html(GLOBAL_SENTIMENT_SUMMARY or 'No sentiment summary available.')}</pre></div>"
     overall_html = f"<div class='report-section'>{_format_recommendation_html(GLOBAL_OVERALL_AI_RECOMMENDATION or 'No overall AI recommendation generated.')}</div>"
 
     html_content = f"""
@@ -117,17 +119,19 @@ def build_report_pdf():
       </head>
       <body>
         <h1>TeachAIRs Report</h1>
-        <h3>Feedback Overview</h3>
+        <h2>Feedback Overview</h2>
         {feedback_table}
-        <h3>Sentiment Topics</h3>
+        <h2>Sentiment Summary</h2>
+        {sentiment_summary_html}
+        <h2>Sentiment Topics</h2>
         {sentiment_table}
-        <h3>Figures</h3>
+        <h2>Figures</h2>
         {figure_html or '<p>No figures available.</p>'}
-        <h3>Word Clouds</h3>
+        <h2>Word Clouds</h2>
         {wordcloud_html or '<p>No word clouds available.</p>'}
-        <h3>AI Recommendations per Topic</h3>
+        <h2>AI Recommendations per Topic</h2>
         {recommendations_html or '<p>No topic recommendations available.</p>'}
-        <h3>Overall AI Recommendations</h3>
+        <h2>Overall AI Recommendations</h2>
         {overall_html}
       </body>
     </html>
@@ -192,6 +196,7 @@ if uploaded_file:
     GLOBAL_SENTIMENTTOPIC = pd.DataFrame()
     GLOBAL_FEEDBACK = pd.DataFrame()
     GLOBAL_FIGURES = {}
+    GLOBAL_SENTIMENT_SUMMARY = ""
 
     df = pd.read_csv(uploaded_file)
 
@@ -291,7 +296,9 @@ Distribution (Aug VADER):
  - Negative (VADER Aug): {aug_counts['Negative']} comments ({(aug_counts['Negative'] / total_comments * 100):.2f}%)
 """
 
-    st.code(std_text + "\n" + "-" * 30 + "\n" + aug_text + "\n" + "-" * 30)
+    GLOBAL_SENTIMENT_SUMMARY = std_text + "\n" + "-" * 30 + "\n" + aug_text + "\n" + "-" * 30
+    st.code(GLOBAL_SENTIMENT_SUMMARY)
+    
 
     # ------------------------------
     # Sentiment Polarity Distribution Across Methods (plots)
@@ -601,7 +608,7 @@ SELECTED TOPICS:
     if not GLOBAL_FEEDBACK.empty and not GLOBAL_SENTIMENTTOPIC.empty:
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr("02_Feedback.csv", GLOBAL_FEEDBACK.to_csv(index=False).encode("utf-8"))
+            # archive.writestr("02_Feedback.csv", GLOBAL_FEEDBACK.to_csv(index=False).encode("utf-8"))
             archive.writestr("03_Sentiment.csv", GLOBAL_SENTIMENTTOPIC.to_csv(index=False).encode("utf-8"))
             archive.writestr("01_Report.pdf", build_report_pdf())
         st.subheader("Download Report Package")
