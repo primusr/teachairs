@@ -414,6 +414,14 @@ Context: {context}<br>
         for row in selected_topics:
             rec_html_blocks += f'<div class="callout">{_build_topic_recommendations(row)}</div>'
 
+        # Construct a condensed dataframe layout specifically optimized to fit PDF width profiles
+        pdf_topic_df = topic_summary_df.copy()
+        pdf_topic_df.columns = [
+            "ID", "AI Label", "Top Keywords", "Count",
+            "Eng Score", "Eng Dist", "Aug Score", 
+            "Aug Dist", "Fil Score", "Fil Dist"
+        ]
+
         # Document Compilation Wrapper String
         html_document_payload = f"""
         <!DOCTYPE html>
@@ -442,10 +450,34 @@ Context: {context}<br>
                 h2 {{ color: #003366; font-size: 16pt; border-bottom: 2px solid #E2E8F0; padding-bottom: 5px; margin-top: 25px; page-break-after: avoid; }}
                 h3 {{ color: #2B6CB0; font-size: 12pt; margin-top: 10px; }}
                 .page-break {{ page-break-before: always; }}
-                table {{ width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 9pt; page-break-inside: avoid; }}
-                th {{ background-color: #003366; color: white; padding: 8px 10px; font-weight: bold; text-align: left; }}
-                td {{ padding: 8px 10px; border-bottom: 1px solid #E2E8F0; vertical-align: top; }}
+                
+                /* Compact table style to ensure full width matrix fits perfectly inside page walls */
+                table {{ 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin: 15px 0; 
+                    font-size: 7.5pt; 
+                    page-break-inside: avoid;
+                    table-layout: fixed;
+                }}
+                th {{ 
+                    background-color: #003366; 
+                    color: white; 
+                    padding: 5px 3px; 
+                    font-weight: bold; 
+                    text-align: left; 
+                    word-wrap: break-word;
+                    word-break: break-all;
+                }}
+                td {{ 
+                    padding: 5px 3px; 
+                    border-bottom: 1px solid #E2E8F0; 
+                    vertical-align: top; 
+                    word-wrap: break-word;
+                    word-break: break-all;
+                }}
                 tr:nth-child(even) td {{ background-color: #F7FAFC; }}
+                
                 .metric-row {{ display: flex; justify-content: space-between; margin-bottom: 15px; }}
                 .badge {{ background-color: #EBF8FF; color: #2B6CB0; padding: 4px 8px; border-radius: 4px; font-size: 9.5pt; font-weight: bold; }}
                 .callout {{ background-color: #FFFAF0; border-left: 4px solid #DD6B20; padding: 12px; margin: 12px 0; border-radius: 4px; page-break-inside: avoid; }}
@@ -494,7 +526,7 @@ Context: {context}<br>
             <div class="page-break"></div>
 
             <h2>3. Document Sentiment Matrices Per Topic</h2>
-            {topic_summary_df.to_html(index=False, classes="table")}
+            {pdf_topic_df.to_html(index=False, classes="table", escape=False)}
 
             <h2>4. Topic Context Lexicon Word Clouds</h2>
             <div class="row">
