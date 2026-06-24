@@ -467,12 +467,12 @@ Distribution (Filipino Keywords):
         )
 
         sentiment_csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            "Download Sentiment Analysis Results",
-            sentiment_csv,
-            file_name="sentiment_analysis_results.csv",
-            mime="text/csv"
-        )
+        # st.download_button(
+        #     "Download Sentiment Analysis Results",
+        #     sentiment_csv,
+        #     file_name="sentiment_analysis_results.csv",
+        #     mime="text/csv"
+        # )
 
         # ------------------------------
         # Topic Word Clouds (First 4 LDA Topics)
@@ -648,8 +648,8 @@ SELECTED TOPICS:
         # ZIP REPORT GENERATOR WITH IMAGES & COMPACT TABLES (WEASYPRINT)
         # ==========================================
         st.divider()
-        st.header("📦 Export Complete Report Bundle")
-        st.markdown("Download a zipped bundle containing the complete PDF report with embedded charts and tables, along with the underlying CSV data matrices.")
+        
+        st.markdown("Download a zipped bundle containing the PDF report with embedded charts and tables, along with the underlying CSV data matrices.")
 
         import io
         import zipfile
