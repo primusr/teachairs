@@ -643,92 +643,128 @@ SELECTED TOPICS:
    
 
    
-    # ==========================================
-        # FIXED ZIP REPORT GENERATOR (Standalone in-memory logic)
+    # ==# ==========================================
+        # ZIP REPORT GENERATOR WITH WEASYPRINT
         # ==========================================
         st.divider()
-        st.header("📥 Export Complete Report Bundle")
-        st.markdown("Download a zipped bundle containing the generated PDF summary, the full Sentiment Analysis matrix, and the source Feedback dataset.")
+        st.header("📦 Export Complete Report Bundle")
+        st.markdown("Download a zipped bundle containing the generated HTML-to-PDF summary via WeasyPrint, the full Sentiment Analysis matrix, and the source Feedback dataset.")
 
         import io
         import zipfile
-        from reportlab.lib.pagesizes import letter
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
-        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from weasyprint import HTML
 
-        # Extract metrics locally safely before injecting them to avoid page canvas reflection
-        safe_avg_score = float(df["Score"].mean()) if "Score" in df.columns else 0.0
-        safe_sentiment = "Neutral"
-        if "Label" in df.columns:
-            safe_sentiment = df["Label"].mode()[0] if not df["Label"].empty else "Neutral"
+        # 1. Structure the PDF payload as a cleanly styled HTML string
+        # Construct topic summaries to loop into the HTML output
+        topics_html_snippet = ""
+        for row in topic_rows:
+            topics_html_snippet += f"""
+            <div class="topic-card">
+                <h3>Topic {row['Topic ID']}: {row['AI Label']}</h3>
+                <p><strong>Top Keywords:</strong> <span class="keywords">{row['Top Keywords']}</span></p>
+                <p><strong>Avg VADER Score:</strong> {row['Avg VADER Aug Score']} | <strong>Distribution:</strong> {row['VADER Aug Dist (%)']}</p>
+            </div>
+            """
 
-        # 1. Generate the isolated PDF report structure
-        pdf_buffer = io.BytesIO()
-        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
-        
-        styles = getSampleStyleSheet()
-        
-        # Define clean unique styling maps to prevent overflow rendering loops
-        body_style = ParagraphStyle(
-            'CustomBody',
-            parent=styles['Normal'],
-            fontSize=10,
-            leading=14
-        )
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=22,
-            leading=26,
-            spaceAfter=15
-        )
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>TeachAIRs Feedback Report</title>
+            <style>
+                @page {{
+                    size: letter;
+                    margin: 1in;
+                    @bottom-right {{
+                        content: counter(page);
+                        font-family: Arial, sans-serif;
+                        font-size: 10pt;
+                        color: #666;
+                    }}
+                }}
+                body {{
+                    font-family: Arial, sans-serif;
+                    color: #333;
+                    line-height: 1.5;
+                }}
+                h1 {{
+                    color: #1e3a8a;
+                    border-bottom: 2px solid #3b82f6;
+                    padding-bottom: 8px;
+                    margin-bottom: 20px;
+                }}
+                h2 {{
+                    color: #1e40af;
+                    margin-top: 30px;
+                }}
+                .metric-box {{
+                    background-color: #f3f4f6;
+                    border-left: 4px solid #3b82f6;
+                    padding: 15px;
+                    margin-bottom: 20px;
+                    border-radius: 4px;
+                }}
+                .topic-card {{
+                    background-color: #ffffff;
+                    border: 1px solid #e5e7eb;
+                    padding: 15px;
+                    margin-bottom: 15px;
+                    border-radius: 6px;
+                }}
+                .topic-card h3 {{
+                    margin-top: 0;
+                    color: #111827;
+                }}
+                .keywords {{
+                    font-family: monospace;
+                    background-color: #eff6ff;
+                    color: #1e40af;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                }}
+            </style>
+        </head>
+        <body>
+            <h1>TeachAIRs: Student Feedback Analysis Report</h1>
+            
+            <div class="metric-box">
+                <p><strong>Average System Sentiment Score:</strong> {avg_score:.4f}</p>
+                <p><strong>Overall System Sentiment:</strong> {aug_sentiment}</p>
+            </div>
 
-        story = []
+            <h2>Topic Model Distribution Summary</h2>
+            {topics_html_snippet}
+        </body>
+        </html>
+        """
 
-        # --- PAGE 1: EXECUTIVE SUMMARY ---
-        story.append(Paragraph("TeachAIRs: Student Feedback Analysis Report", title_style))
-        story.append(Spacer(1, 15))
-        story.append(Paragraph(f"<b>Average System Sentiment Score:</b> {safe_avg_score:.4f}", body_style))
-        story.append(Paragraph(f"<b>Overall Dominant Sentiment:</b> {safe_sentiment}", body_style))
-        story.append(Spacer(1, 20))
-        
-        # Add an explicit page break constraint right after the summary context
-        story.append(PageBreak())
+        # 2. Render HTML to PDF in-memory using WeasyPrint
+        pdf_data = HTML(string=html_content).write_pdf()
 
-        # --- PAGE 2: TOPIC DISTRIBUTION & ANALYSIS ---
-        story.append(Paragraph("Topic Model Distribution Summary", styles['Heading2']))
-        story.append(Spacer(1, 12))
-
-        # Check if localized breakdown metrics variables exist safely in context
-        if 'topic_rows' in locals() or 'topic_rows' in globals():
-            for row in topic_rows:
-                topic_summary_text = f"<b>Topic {row.get('Topic ID', 'N/A')} ({row.get('AI Label', 'Unlabeled')}):</b><br/>" \
-                                     f"Keywords: {row.get('Top Keywords', '')}<br/>" \
-                                     f"Calculated Score Grouping: {row.get('Avg VADER Aug Score', '0.0')}"
-                story.append(Paragraph(topic_summary_text, body_style))
-                story.append(Spacer(1, 10))
-        else:
-            story.append(Paragraph("No supplementary topic distributions processing row markers found.", body_style))
-
-        doc.build(story)
-        pdf_data = pdf_buffer.getvalue()
-
-        # 2. Convert DataFrames strictly to text CSV values
+        # 3. Convert DataFrames to CSV strings
+        # "Sentiment Analysis Report.csv" (Includes calculations and labels)
         sentiment_report_csv = df.to_csv(index=False)
-        feedback_dataset_csv = df[["Feedback", "Cleaned"]].to_csv(index=False) if "Cleaned" in df.columns else df[["Feedback"]].to_csv(index=False)
+        
+        # "Feedback dataset.csv" (The raw feedback text table)
+        feedback_dataset_csv = df[["Feedback", "Cleaned"]].to_csv(index=False)
 
-        # 3. Zip file compilation stage
+        # 4. Package everything into an in-memory ZIP archive
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            # Write PDF generated via WeasyPrint
             zip_file.writestr("Output.pdf", pdf_data)
+            # Write Sentiment Evaluation CSV
             zip_file.writestr("Sentiment Analysis Report.csv", sentiment_report_csv)
+            # Write Source Data CSV
             zip_file.writestr("Feedback dataset.csv", feedback_dataset_csv)
 
+        # Seek buffer to the beginning for Streamlit processing
         zip_buffer.seek(0)
 
-        # 4. Clean local down-loader view
+        # 5. Streamlit Download Button
         st.download_button(
-            label="📦 Download Complete Reports (.ZIP)",
+            label="🎁 Download Complete Reports (.ZIP)",
             data=zip_buffer,
             file_name="TeachAIRs_Feedback_Report.zip",
             mime="application/zip",
