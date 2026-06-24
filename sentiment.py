@@ -84,10 +84,22 @@ def build_report_pdf():
     feedback_table = GLOBAL_FEEDBACK.to_html(index=False, escape=False) if not GLOBAL_FEEDBACK.empty else "<p>No feedback data available.</p>"
     sentiment_table = GLOBAL_SENTIMENTTOPIC.to_html(index=False, escape=False) if not GLOBAL_SENTIMENTTOPIC.empty else "<p>No sentiment topic data available.</p>"
 
+    preferred_figures = [
+        "Sentiment Distribution",
+        "Standard VADER Polarity Scores",
+        "Augmented VADER Polarity Scores",
+    ]
+    ordered_figure_names = [
+        name for name in preferred_figures if name in GLOBAL_FIGURES
+    ] + [
+        name for name in GLOBAL_FIGURES if name not in preferred_figures
+    ]
+
     figure_html = ""
-    for fig_name, image_data in sorted(GLOBAL_FIGURES.items()):
+    for fig_name in ordered_figure_names:
+        image_data = GLOBAL_FIGURES.get(fig_name)
         if image_data:
-            figure_html += f"<div class='report-section'><h3>{fig_name}</h3><img src='{image_data}' style='max-width: 80%; height: auto;'/></div>"
+            figure_html += f"<div class='report-section figure-section'><h3>{fig_name}</h3><img src='{image_data}' style='max-width: 80%; height: auto;'/></div>"
 
     wordcloud_html = ""
     for topic_id, image_data in sorted(GLOBAL_WORDCLOUDS.items()):
@@ -99,7 +111,7 @@ def build_report_pdf():
         recommendations_html += f"<div class='report-section'><h3>Topic {rec.get('id', '')}: {rec.get('label', '')}</h3><div>{_format_recommendation_html(rec.get('text', ''))}</div></div>"
 
     sentiment_summary_html = f"<div class='report-section'><pre>{_escape_html(GLOBAL_SENTIMENT_SUMMARY or 'No sentiment summary available.')}</pre></div>"
-    overall_html = f"<div class='report-section'>{_format_recommendation_html(GLOBAL_OVERALL_AI_RECOMMENDATION or 'No overall AI recommendation generated.')}</div>"
+    overall_html = f"<div class='report-section overall-recommendations'>{_format_recommendation_html(GLOBAL_OVERALL_AI_RECOMMENDATION or 'No overall AI recommendation generated.')}</div>"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -108,13 +120,15 @@ def build_report_pdf():
         <meta charset='utf-8'>
         <style>
           body {{ font-family: Arial, sans-serif; padding: 15px; line-height: 1.0, font-size:8px; margin: 5px; }}
-          h1, h2 {{ color: #1f4e79; page-break-after: avoid; }}
+          h1, h2 {{ color: #1f4e79; page-break-after: avoid; break-after: avoid; }}
           table {{ border-collapse: collapse; width: 100%; max-width: 100%; font-size: 8px; table-layout: fixed; word-wrap: break-word; align: center; }}
           th, td {{ border: 1px solid #ccc; padding: 4px; text-align: left; vertical-align: top; overflow-wrap: anywhere; align: center; }}
           img {{ max-width: 80%; height: auto; display: block; margin: 0 auto; }}
           div, p, li {{ overflow-wrap: anywhere; }}
           pre {{ white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; }}
-          .report-section {{ page-break-inside: avoid; margin-bottom: 12px; }}
+          .report-section {{ page-break-inside: avoid; break-inside: avoid; margin-bottom: 12px; }}
+          .figure-section {{ page-break-inside: avoid; break-inside: avoid; }}
+          .overall-recommendations {{ page-break-inside: avoid; break-inside: avoid; page-break-after: avoid; break-after: avoid; }}
         </style>
       </head>
       <body>
@@ -609,7 +623,7 @@ SELECTED TOPICS:
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as archive:
             # archive.writestr("02_Feedback.csv", GLOBAL_FEEDBACK.to_csv(index=False).encode("utf-8"))
             archive.writestr("03_Sentiment.csv", GLOBAL_SENTIMENTTOPIC.to_csv(index=False).encode("utf-8"))
-            archive.writestr("01_Report.pdf", build_report_pdf())
+            archive.writestr("01_Output.pdf", build_report_pdf())
         st.subheader("Download Report Package")
         st.download_button(
             "Download Report ZIP",
