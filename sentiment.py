@@ -529,7 +529,6 @@ Here are 2-3 actionable teaching recommendations based on the topic "{topic_labe
     # ------------------------------
     gemini_recommendation_text = ""
     if gemini_model:
-        st.divider()
         st.header("Overall AI Recommendations (based on CSV Analysis)")
         
         try:
