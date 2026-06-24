@@ -640,70 +640,103 @@ SELECTED TOPICS:
         gemini_recommendation_text = response.text.strip()
         st.markdown(gemini_recommendation_text)
 
-    # ==========================================
+    
+            # ==========================================
+        # ZIP REPORT GENERATOR - FULL PAGE EXPORT (PORTRAIT, RESPONSIVE)
         # ==========================================
-        # ZIP REPORT GENERATOR - FIXED SIZE LANDSCAPE (WEASYPRINT)
-        # ==========================================
-        st.divider()
-        st.header("📦 Export Complete Report Bundle")
-        st.markdown("Download a zipped bundle containing the complete landscape PDF report with embedded charts and tables, along with the underlying CSV data matrices.")
 
         import io
         import zipfile
         import base64
+        import streamlit as st
         from weasyprint import HTML
+        import matplotlib.pyplot as plt
+        from wordcloud import WordCloud
 
-        # Helper function to convert Matplotlib figures into base64 image strings for HTML embedding
-        # Crucial change: Re-enforcing layout safety constraints during image rendering
+        st.divider()
+        st.header("📦 Export Complete Report Bundle (FULL PAGE)")
+        st.markdown("Exports ALL charts, tables, and insights into a single portrait PDF + CSV bundle.")
+
+        # ------------------------------------------
+        # FIGURE → BASE64 HELPER
+        # ------------------------------------------
         def fig_to_base64(fig_obj):
-            img_buf = io.BytesIO()
-            fig_obj.savefig(img_buf, format="png", bbox_inches="tight", dpi=150)
-            img_buf.seek(0)
-            img_b64 = base64.b64encode(img_buf.read()).decode("utf-8")
-            return f"data:image/png;base64,{img_b64}"
+            buf = io.BytesIO()
+            fig_obj.savefig(buf, format="png", bbox_inches="tight", dpi=150)
+            buf.seek(0)
+            return f"data:image/png;base64,{base64.b64encode(buf.read()).decode()}"
 
-        # 1. Convert relevant figures to base64 images
-        sentiment_chart_b64 = fig_to_base64(fig1)
-        std_vader_chart_b64 = fig_to_base64(fig_std)
-        aug_vader_chart_b64 = fig_to_base64(fig_aug)
+        # ------------------------------------------
+        # COLLECT ALL FIGURES AUTOMATICALLY
+        # ------------------------------------------
+        figures = {
+            "Sentiment Distribution": fig1,
+            "Standard VADER Polarity": fig_std,
+            "Augmented VADER Polarity": fig_aug,
+        }
 
-        # 2. Build Word Cloud elements dynamically if they are computed
-        word_clouds_html = ""
+        # ------------------------------------------
+        # BUILD HTML CONTENT (FULL PAGE AUTO EXPORT)
+        # ------------------------------------------
+        full_sections_html = ""
+
+        # METRICS
+        full_sections_html += f"""
+        <h1>TeachAIRs: Full Feedback Analysis Report</h1>
+
+        <div class="metric-box">
+            <p><strong>Average Sentiment Score:</strong> {avg_score:.4f}</p>
+            <p><strong>Overall Sentiment:</strong> {aug_sentiment}</p>
+        </div>
+        """
+
+        # FIGURES (AUTO LOOP)
+        for title, fig in figures.items():
+            full_sections_html += f"""
+            <h2>{title}</h2>
+            <img src="{fig_to_base64(fig)}" class="pdf-img"/>
+            """
+
+        # SENTIMENT TABLE
+        full_sections_html += f"""
+        <h2>Sentiment Per Topic Table</h2>
+        {topic_summary_df.to_html(index=False, classes="report-table")}
+        """
+
+        # WORDCLOUDS
         topic_ids_to_plot = [row["Topic ID"] for row in topic_rows][:4]
+
         if topic_ids_to_plot:
-            word_clouds_html += "<h2>Identified Topic Word Clouds</h2><div class='chart-grid'>"
+            full_sections_html += "<h2>Topic Word Clouds</h2>"
+
             for topic_idx in topic_ids_to_plot:
                 words_probs = lda_model_final.show_topic(topic_idx, topn=15)
-                ai_title = next((r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx), f"Topic {topic_idx}")
-                
-                # Fixed figure sizing strictly scaled for side-by-side landscape display blocks
-                wc_pdf = WordCloud(background_color="white", width=400, height=250)
-                wc_pdf.generate_from_frequencies(dict(words_probs))
-                fig_wc_pdf, ax_wc_pdf = plt.subplots(figsize=(4, 2.5))
-                ax_wc_pdf.imshow(wc_pdf, interpolation="bilinear")
-                ax_wc_pdf.axis("off")
-                
-                wc_b64 = fig_to_base64(fig_wc_pdf)
-                plt.close(fig_wc_pdf) # Clean up memory
-                
-                word_clouds_html += f"""
-                <div class='chart-card'>
-                    <h3>Topic {topic_idx}: {ai_title}</h3>
-                    <img src='{wc_b64}' class='pdf-img' />
-                </div>
+                ai_title = next((r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx),
+                                f"Topic {topic_idx}")
+
+                wc = WordCloud(background_color="white", width=500, height=300)
+                wc.generate_from_frequencies(dict(words_probs))
+
+                fig_wc, ax = plt.subplots(figsize=(5, 3))
+                ax.imshow(wc, interpolation="bilinear")
+                ax.axis("off")
+
+                wc_b64 = fig_to_base64(fig_wc)
+                plt.close(fig_wc)
+
+                full_sections_html += f"""
+                <h3>Topic {topic_idx}: {ai_title}</h3>
+                <img src="{wc_b64}" class="pdf-img"/>
                 """
-            word_clouds_html += "</div>"
 
-        # 3. Generate the core Sentiment Summary HTML Table
-        clean_table_html = topic_summary_df.to_html(index=False, classes="report-table", escape=False)
-
-        # 4. Construct complete styled HTML template in Landscape orientation
+        # ------------------------------------------
+        # FINAL HTML TEMPLATE (PORTRAIT SAFE)
+        # ------------------------------------------
         html_content = f"""
         <!DOCTYPE html>
         <html>
         <head>
         <meta charset="utf-8">
-        <title>TeachAIRs Feedback Report</title>
 
         <style>
         @page {{
@@ -714,51 +747,40 @@ SELECTED TOPICS:
         body {{
             font-family: Arial, sans-serif;
             color: #1f2937;
-            line-height: 1.4;
+            line-height: 1.5;
         }}
 
         h1 {{
-            color: #1e3a8a;
-            border-bottom: 3px solid #3b82f6;
-            padding-bottom: 10px;
             font-size: 22pt;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 8px;
         }}
 
         h2 {{
-            color: #1e40af;
+            font-size: 14pt;
             margin-top: 20px;
             border-bottom: 1px solid #e5e7eb;
-            font-size: 14pt;
+            padding-bottom: 4px;
         }}
 
         h3 {{
             font-size: 11pt;
-            color: #374151;
-        }}
-
-        .metric-box {{
-            background-color: #f3f4f6;
-            border-left: 5px solid #3b82f6;
-            padding: 12px;
-            margin-bottom: 15px;
-            font-size: 10pt;
-        }}
-
-        .chart-grid {{
-            display: block;
             margin-top: 10px;
         }}
 
-        .chart-card {{
-            width: 100%;
+        .metric-box {{
+            background: #f3f4f6;
+            border-left: 5px solid #3b82f6;
+            padding: 12px;
             margin-bottom: 20px;
-            text-align: center;
         }}
 
         .pdf-img {{
-            max-width: 100%;
             width: 100%;
+            max-width: 100%;
             height: auto;
+            display: block;
+            margin: 10px 0;
         }}
 
         .report-table {{
@@ -775,11 +797,10 @@ SELECTED TOPICS:
             word-break: break-word;
             overflow-wrap: anywhere;
             white-space: normal;
-            vertical-align: top;
         }}
 
         .report-table th {{
-            background-color: #1e3a8a;
+            background: #1e3a8a;
             color: white;
             text-align: left;
         }}
@@ -788,77 +809,49 @@ SELECTED TOPICS:
             page-break-before: always;
         }}
         </style>
+
         </head>
 
         <body>
-
-        <h1>TeachAIRs: Student Feedback Analysis Report</h1>
-
-        <div class="metric-box">
-            <p><strong>Average System Sentiment Score:</strong> {avg_score:.4f}</p>
-            <p><strong>Overall System Sentiment:</strong> {aug_sentiment}</p>
-        </div>
-
-        <h2>Overall Sentiment Distribution</h2>
-        <div class="chart-grid">
-            <div class="chart-card">
-                <h3>Augmented Model Distribution</h3>
-                <img src="{sentiment_chart_b64}" class="pdf-img"/>
-            </div>
-        </div>
-
-        <div class="page-break"></div>
-
-        <h2>Methodology Comparison</h2>
-        <div class="chart-grid">
-            <div class="chart-card">
-                <h3>Standard VADER</h3>
-                <img src="{std_vader_chart_b64}" class="pdf-img"/>
-            </div>
-
-            <div class="chart-card">
-                <h3>Augmented VADER</h3>
-                <img src="{aug_vader_chart_b64}" class="pdf-img"/>
-            </div>
-        </div>
-
-        <div class="page-break"></div>
-
-        <h2>Sentiment Per Topic</h2>
-        {clean_table_html}
-
-        <div class="page-break"></div>
-
-        {word_clouds_html}
-
+        {full_sections_html}
         </body>
         </html>
         """
 
-        # 5. Compile HTML layout payload directly to an explicit PDF via WeasyPrint
+        # ------------------------------------------
+        # GENERATE PDF
+        # ------------------------------------------
         pdf_data = HTML(string=html_content).write_pdf()
 
-        # 6. Build the structural evaluation files matrices
+        # ------------------------------------------
+        # EXPORT CSVs
+        # ------------------------------------------
         sentiment_report_csv = df.to_csv(index=False)
         feedback_dataset_csv = df[["Feedback", "Cleaned"]].to_csv(index=False)
 
-        # 7. Write components into an in-memory ZIP deployment architecture
+        # ------------------------------------------
+        # CREATE ZIP FILE
+        # ------------------------------------------
         zip_buffer = io.BytesIO()
+
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            zip_file.writestr("Output.pdf", pdf_data)
-            zip_file.writestr("Sentiment Analysis Report.csv", sentiment_report_csv)
-            zip_file.writestr("Feedback dataset.csv", feedback_dataset_csv)
+            zip_file.writestr("TeachAIRs_Report.pdf", pdf_data)
+            zip_file.writestr("Sentiment_Report.csv", sentiment_report_csv)
+            zip_file.writestr("Feedback_Dataset.csv", feedback_dataset_csv)
 
         zip_buffer.seek(0)
 
-        # 8. Render the unified output channel button interface
+        # ------------------------------------------
+        # STREAMLIT DOWNLOAD BUTTON
+        # ------------------------------------------
         st.download_button(
-            label="🎁 Download Complete Reports Bundle (.ZIP)",
+            label="🎁 Download Complete Full Report (.ZIP)",
             data=zip_buffer,
-            file_name="TeachAIRs_Feedback_Report.zip",
+            file_name="TeachAIRs_Full_Report.zip",
             mime="application/zip",
             use_container_width=True
         )
+
 else:
     st.info("Please upload a CSV file to begin.")
     st.divider()
