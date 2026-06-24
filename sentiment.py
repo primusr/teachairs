@@ -640,8 +640,7 @@ SELECTED TOPICS:
         gemini_recommendation_text = response.text.strip()
         st.markdown(gemini_recommendation_text)
 
-    
-            # ==========================================
+    # ==========================================
         # ZIP REPORT GENERATOR - FULL PAGE EXPORT (PORTRAIT, RESPONSIVE)
         # ==========================================
 
@@ -699,6 +698,7 @@ SELECTED TOPICS:
 
         # SENTIMENT TABLE
         full_sections_html += f"""
+        <div class="page-break"></div>
         <h2>Sentiment Per Topic Table</h2>
         {topic_summary_df.to_html(index=False, classes="report-table")}
         """
@@ -707,7 +707,7 @@ SELECTED TOPICS:
         topic_ids_to_plot = [row["Topic ID"] for row in topic_rows][:4]
 
         if topic_ids_to_plot:
-            full_sections_html += "<h2>Topic Word Clouds</h2>"
+            full_sections_html += "<div class='page-break'></div><h2>Topic Word Clouds</h2>"
 
             for topic_idx in topic_ids_to_plot:
                 words_probs = lda_model_final.show_topic(topic_idx, topn=15)
@@ -730,7 +730,41 @@ SELECTED TOPICS:
                 """
 
         # ------------------------------------------
-        # FINAL HTML TEMPLATE (PORTRAIT SAFE)
+        # NEW ADDITION: AI RECOMMENDATIONS PER TOPIC
+        # ------------------------------------------
+        if topic_summary_df.shape[0] > 0:
+            full_sections_html += "<div class='page-break'></div><h2>AI Recommendations for Selected Topics</h2>"
+            selected_topics = sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:4]
+            
+            for row in selected_topics:
+                raw_rec_text = _build_topic_recommendations(row)
+                # Convert basic markdown formatting components to cleaner HTML presentation layouts
+                formatted_rec = raw_rec_text.replace("\n", "<br>").replace("**", "<b>").replace("<b> ", "<b>")
+                
+                full_sections_html += f"""
+                <div class="recommendation-card">
+                    <h3>Topic {row['Topic ID']}: {row['AI Label']}</h3>
+                    <div class="text-block">{formatted_rec}</div>
+                </div>
+                """
+
+        # ------------------------------------------
+        # NEW ADDITION: OVERALL GEMINI RECOMMENDATIONS
+        # ------------------------------------------
+        if gemini_model and 'gemini_recommendation_text' in locals():
+            # Convert basic markdown configurations to pristine HTML styles
+            formatted_gemini = gemini_recommendation_text.replace("\n", "<br>").replace("**", "<b>")
+            
+            full_sections_html += f"""
+            <div class="page-break"></div>
+            <h2>Overall LLM Executive Action Strategy</h2>
+            <div class="executive-box">
+                <div class="text-block">{formatted_gemini}</div>
+            </div>
+            """
+
+        # ------------------------------------------
+        # FINAL HTML TEMPLATE (PORTRAIT SAFE WITH STYLE EXTENSIONS)
         # ------------------------------------------
         html_content = f"""
         <!DOCTYPE html>
@@ -742,6 +776,12 @@ SELECTED TOPICS:
         @page {{
             size: letter portrait;
             margin: 0.6in;
+            @bottom-right {{
+                content: "Page " counter(page);
+                font-family: Arial, sans-serif;
+                font-size: 9pt;
+                color: #6b7280;
+            }}
         }}
 
         body {{
@@ -754,18 +794,22 @@ SELECTED TOPICS:
             font-size: 22pt;
             border-bottom: 3px solid #3b82f6;
             padding-bottom: 8px;
+            color: #1e3a8a;
         }}
 
         h2 {{
             font-size: 14pt;
-            margin-top: 20px;
+            margin-top: 25px;
             border-bottom: 1px solid #e5e7eb;
             padding-bottom: 4px;
+            color: #1e40af;
+            page-break-after: avoid;
         }}
 
         h3 {{
             font-size: 11pt;
-            margin-top: 10px;
+            margin-top: 15px;
+            color: #374151;
         }}
 
         .metric-box {{
@@ -773,6 +817,7 @@ SELECTED TOPICS:
             border-left: 5px solid #3b82f6;
             padding: 12px;
             margin-bottom: 20px;
+            border-radius: 4px;
         }}
 
         .pdf-img {{
@@ -781,28 +826,54 @@ SELECTED TOPICS:
             height: auto;
             display: block;
             margin: 10px 0;
+            page-break-inside: avoid;
         }}
 
         .report-table {{
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
-            font-size: 9pt;
+            font-size: 8pt;
+            margin-top: 10px;
         }}
 
         .report-table th,
         .report-table td {{
             border-bottom: 1px solid #e5e7eb;
-            padding: 6px;
-            word-break: break-word;
+            padding: 6px 4px;
+            word-wrap: break-word;
             overflow-wrap: anywhere;
             white-space: normal;
+            vertical-align: top;
         }}
 
         .report-table th {{
             background: #1e3a8a;
             color: white;
             text-align: left;
+        }}
+        
+        .recommendation-card {{
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 15px;
+            page-break-inside: avoid;
+        }}
+        
+        .executive-box {{
+            background: #f8fafc;
+            border-left: 5px solid #10b981;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }}
+
+        .text-block {{
+            font-size: 10pt;
+            color: #334155;
+            line-height: 1.6;
         }}
 
         .page-break {{
@@ -851,6 +922,7 @@ SELECTED TOPICS:
             mime="application/zip",
             use_container_width=True
         )
+ 
 
 else:
     st.info("Please upload a CSV file to begin.")
