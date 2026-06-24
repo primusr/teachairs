@@ -42,6 +42,7 @@ GLOBAL_SENTIMENTTOPIC = pd.DataFrame()
 GLOBAL_WORDCLOUDS = {}
 GLOBAL_TOPIC_RECOMMENDATIONS = []
 GLOBAL_OVERALL_AI_RECOMMENDATION = ""
+GLOBAL_FIGURES = {}
 
 
 def _escape_html(text):
@@ -82,6 +83,11 @@ def build_report_pdf():
     feedback_table = GLOBAL_FEEDBACK.to_html(index=False, escape=False) if not GLOBAL_FEEDBACK.empty else "<p>No feedback data available.</p>"
     sentiment_table = GLOBAL_SENTIMENTTOPIC.to_html(index=False, escape=False) if not GLOBAL_SENTIMENTTOPIC.empty else "<p>No sentiment topic data available.</p>"
 
+    figure_html = ""
+    for fig_name, image_data in sorted(GLOBAL_FIGURES.items()):
+        if image_data:
+            figure_html += f"<div class='report-section'><h3>{fig_name}</h3><img src='{image_data}' style='max-width: 100%; height: auto;'/></div>"
+
     wordcloud_html = ""
     for topic_id, image_data in sorted(GLOBAL_WORDCLOUDS.items()):
         if image_data:
@@ -115,6 +121,8 @@ def build_report_pdf():
         {feedback_table}
         <h2>Sentiment Topics</h2>
         {sentiment_table}
+        <h2>Figures</h2>
+        {figure_html or '<p>No figures available.</p>'}
         <h2>Word Clouds</h2>
         {wordcloud_html or '<p>No word clouds available.</p>'}
         <h2>AI Recommendations per Topic</h2>
@@ -183,6 +191,7 @@ if uploaded_file:
     GLOBAL_OVERALL_AI_RECOMMENDATION = ""
     GLOBAL_SENTIMENTTOPIC = pd.DataFrame()
     GLOBAL_FEEDBACK = pd.DataFrame()
+    GLOBAL_FIGURES = {}
 
     df = pd.read_csv(uploaded_file)
 
@@ -227,6 +236,11 @@ if uploaded_file:
     ax1.set_xlabel("Sentiment")
     ax1.set_title("Sentiment Distribution")
     st.pyplot(fig1)
+    fig_buffer = io.BytesIO()
+    fig1.savefig(fig_buffer, format="png", bbox_inches="tight", dpi=150)
+    fig_buffer.seek(0)
+    GLOBAL_FIGURES["Sentiment Distribution"] = f"data:image/png;base64,{base64.b64encode(fig_buffer.read()).decode()}"
+    plt.close(fig1)
     avg_score = df["Score"].mean()
     st.markdown(f"""
     **Average Sentiment Score:** {avg_score:.3f}  
@@ -297,6 +311,11 @@ Distribution (Aug VADER):
         ax_std.set_ylabel("Polarity Score")
         ax_std.set_title("Standard VADER Polarity Scores")
         st.pyplot(fig_std)
+        fig_std_buffer = io.BytesIO()
+        fig_std.savefig(fig_std_buffer, format="png", bbox_inches="tight", dpi=150)
+        fig_std_buffer.seek(0)
+        GLOBAL_FIGURES["Standard VADER Polarity Scores"] = f"data:image/png;base64,{base64.b64encode(fig_std_buffer.read()).decode()}"
+        plt.close(fig_std)
 
     with col2:
         st.markdown("### Augmented VADER (With Filipino Lexicon)")
@@ -308,6 +327,11 @@ Distribution (Aug VADER):
         ax_aug.set_ylabel("Polarity Score")
         ax_aug.set_title("Augmented VADER Polarity Scores")
         st.pyplot(fig_aug)
+        fig_aug_buffer = io.BytesIO()
+        fig_aug.savefig(fig_aug_buffer, format="png", bbox_inches="tight", dpi=150)
+        fig_aug_buffer.seek(0)
+        GLOBAL_FIGURES["Augmented VADER Polarity Scores"] = f"data:image/png;base64,{base64.b64encode(fig_aug_buffer.read()).decode()}"
+        plt.close(fig_aug)
 
     # Statistical Comparison Calculations
     correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
