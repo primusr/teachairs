@@ -108,9 +108,9 @@ def build_report_pdf():
         <meta charset='utf-8'>
         <style>
           body {{ font-family: Arial, sans-serif; padding: 24px; line-height: 1.0, font-size:10px; }}
-          h1, h2 {{ color: #1f4e79; page-break-after: avoid; }}
+          h1, h2 {{ color: #1f4e79;}}
           table {{ border-collapse: collapse; width: 100%; max-width: 100%; font-size: 10px; table-layout: fixed; word-wrap: break-word; align: center; }}
-          th, td {{ border: 1px solid #ccc; padding: 4px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }}
+          th, td {{ border: 1px solid #ccc; padding: 4px; text-align: left; vertical-align: top; overflow-wrap: anywhere; align: center; }}
           img {{ max-width: 100%; height: auto; display: block; margin: 0 auto; }}
           div, p, li {{ overflow-wrap: anywhere; }}
           pre {{ white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; }}
@@ -119,19 +119,19 @@ def build_report_pdf():
       </head>
       <body>
         <h1>TeachAIRs Report</h1>
-        <h3>Feedback Overview</h3>
+        <h2>Feedback Overview</h2>
         {feedback_table}
-        <h3>Sentiment Summary</h3>
+        <h2>Sentiment Summary</h2>
         {sentiment_summary_html}
-        <h3>Sentiment Topics</h3>
+        <h2>Sentiment Topics</h2>
         {sentiment_table}
-        <h3>Figures</h3>
+        <h2>Figures</h2>
         {figure_html or '<p>No figures available.</p>'}
-        <h3>Word Clouds</h3>
+        <h2>Word Clouds</h2>
         {wordcloud_html or '<p>No word clouds available.</p>'}
-        <h3>AI Recommendations per Topic</h3>
+        <h2>AI Recommendations per Topic</h2>
         {recommendations_html or '<p>No topic recommendations available.</p>'}
-        <h3>Overall AI Recommendations</h3>
+        <h2>Overall AI Recommendations</h2>
         {overall_html}
       </body>
     </html>
@@ -337,7 +337,7 @@ Distribution (Aug VADER):
         fig_aug_buffer = io.BytesIO()
         fig_aug.savefig(fig_aug_buffer, format="png", bbox_inches="tight", dpi=150)
         fig_aug_buffer.seek(0)
-        #GLOBAL_FIGURES["Augmented VADER Polarity Scores"] = f"data:image/png;base64,{base64.b64encode(fig_aug_buffer.read()).decode()}"
+        GLOBAL_FIGURES["Augmented VADER Polarity Scores"] = f"data:image/png;base64,{base64.b64encode(fig_aug_buffer.read()).decode()}"
         plt.close(fig_aug)
 
     # Statistical Comparison Calculations
