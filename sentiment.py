@@ -510,34 +510,6 @@ Distribution (Filipino Keywords):
     topic_summary_df = pd.DataFrame(topic_rows)
 
     if not topic_summary_df.empty:
-        overview_csv = overview_df.to_csv(index=False).encode("utf-8")
-        overall_sentiment_csv = topic_summary_df.to_csv(index=False).encode("utf-8")
-
-        report_lines = [
-            "TeachAIRs Report",
-            f"Generated on: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            "",
-            "Feedback Dataset Overview",
-            overview_df.to_csv(index=False),
-            "",
-            "Overall Sentiment per Topic",
-            topic_summary_df.to_csv(index=False),
-        ]
-        full_report_pdf = build_simple_pdf("\n".join(report_lines))
-
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr("FeedbackOverview.csv", overview_csv)
-            archive.writestr("OverallSentiment.csv", overall_sentiment_csv)
-            archive.writestr("TechAireReport.pdf", full_report_pdf)
-
-        st.download_button(
-            "Download Analysis Package (ZIP)",
-            zip_buffer.getvalue(),
-            file_name="TeachAIRs_Report_Package.zip",
-            mime="application/zip",
-        )
-
         topic_summary_df = topic_summary_df[
             [
                 "Topic ID",
@@ -732,7 +704,33 @@ SELECTED TOPICS:
         gemini_recommendation_text = response.text.strip()
         st.markdown(gemini_recommendation_text)
 
+        overview_csv = overview_df.to_csv(index=False).encode("utf-8")
+        overall_sentiment_csv = topic_summary_df.to_csv(index=False).encode("utf-8")
 
+        report_lines = [
+            "TeachAIRs Report",
+            f"Generated on: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            "",
+            "Feedback Dataset Overview",
+            overview_df.to_csv(index=False),
+            "",
+            "Overall Sentiment per Topic",
+            topic_summary_df.to_csv(index=False),
+        ]
+        full_report_pdf = build_simple_pdf("\n".join(report_lines))
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("FeedbackOverview.csv", overview_csv)
+            archive.writestr("OverallSentiment.csv", overall_sentiment_csv)
+            archive.writestr("TechAireReport.pdf", full_report_pdf)
+
+        st.download_button(
+            "Download Analysis Package (ZIP)",
+            zip_buffer.getvalue(),
+            file_name="TeachAIRs_Report_Package.zip",
+            mime="application/zip",
+        )
 
 else:
     st.info("Please upload a CSV file to begin.")
