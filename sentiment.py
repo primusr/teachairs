@@ -15,8 +15,6 @@ from gensim.models import CoherenceModel
 from wordcloud import WordCloud
 import base64
 import zipfile
-import tempfile
-import os
 
 import streamlit.components.v1 as components
 
@@ -260,9 +258,8 @@ Distribution (Aug VADER):
         if num_comments == 0:
             continue
 
-        words_probs = lda_model_final.show_topic(topic_id, topn=10)
-        top_keywords = ", ".join([w for w, _ in words_probs[:5]])
-        raw_weights = " + ".join([f"{prob:.3f}*\"{w}\"" for w, prob in words_probs])
+        words_probs = lda_model_final.show_topic(topic_id, topn=5)
+        top_keywords = ", ".join([w for w, _ in words_probs])
 
         if gemini_model:
             prompt = f"Provide a concise 3-word academic topic label for: {top_keywords}"
@@ -288,7 +285,6 @@ Distribution (Aug VADER):
             "Topic ID": topic_id,
             "AI Label": ai_label,
             "Top Keywords": top_keywords,
-            "Model Weights Formula": raw_weights,
             "Num Comments": num_comments,
             "Avg VADER Eng Score": round(avg_std, 2),
             "VADER Eng Dist (%)": f"Pos: {std_dist['Positive']:.1f}%, Neu: {std_dist['Neutral']:.1f}%, Neg: {std_dist['Negative']:.1f}%",
@@ -302,7 +298,7 @@ Distribution (Aug VADER):
 
     if not topic_summary_df.empty:
         topic_summary_df = topic_summary_df[[
-            "Topic ID", "AI Label", "Top Keywords", "Model Weights Formula", "Num Comments",
+            "Topic ID", "AI Label", "Top Keywords", "Num Comments",
             "Avg VADER Eng Score", "VADER Eng Dist (%)", "Avg VADER Aug Score",
             "VADER Aug Dist (%)", "Avg Fil. Keyword Score", "Fil. Keyword Dist (%)"
         ]]
@@ -419,7 +415,7 @@ Context: {context}<br>
         # Construct a condensed dataframe layout specifically optimized to fit PDF width profiles
         pdf_topic_df = topic_summary_df.copy()
         pdf_topic_df.columns = [
-            "ID", "AI Label", "Top Keywords", "Weights", "Count",
+            "ID", "AI Label", "Top Keywords", "Count",
             "Eng Score", "Eng Dist", "Aug Score", 
             "Aug Dist", "Fil Score", "Fil Dist"
         ]
@@ -560,29 +556,17 @@ Context: {context}<br>
         df.to_csv(csv_full_buffer, index=False, encoding='utf-8')
         csv_full_bytes = csv_full_buffer.getvalue()
 
-        # Compile PDF, both CSV matrices, and the Model into an in-memory ZIP package
+        # Compile PDF and both CSV matrices into an in-memory ZIP package
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             zip_file.writestr("TeachAIRs_WeasyPrint_Report.pdf", weasy_pdf_bytes)
             zip_file.writestr("Full_Sentiment_Per_Topic.csv", csv_topic_bytes)
             zip_file.writestr("Full_Feedback_Dataset.csv", csv_full_bytes)
-            
-            # Create a temporary directory to save the Gensim model files
-            with tempfile.TemporaryDirectory() as tmpdirname:
-                model_path = os.path.join(tmpdirname, 'lda_model_final')
-                lda_model_final.save(model_path)
-                
-                # Walk through the temp directory and write all model files into the ZIP
-                for root, dirs, files in os.walk(tmpdirname):
-                    for file in files:
-                        file_path = os.path.join(root, file)
-                        zip_file.write(file_path, arcname=f"lda_model_files/{file}")
-
         zip_buffer.seek(0)
 
         # Unified download layout package delivery channel
         st.download_button(
-            label="Download Complete Report & Model Bundle",
+            label="Download Complete Report",
             data=zip_buffer.getvalue(),
             file_name="TeachAIRs_Analysis_Bundle.zip",
             mime="application/zip"
