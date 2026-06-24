@@ -87,12 +87,12 @@ def build_report_pdf():
     figure_html = ""
     for fig_name, image_data in sorted(GLOBAL_FIGURES.items()):
         if image_data:
-            figure_html += f"<div class='report-section'><h3>{fig_name}</h3><img src='{image_data}' style='max-width: 100%; height: auto;'/></div>"
+            figure_html += f"<div class='report-section'><h3>{fig_name}</h3><img src='{image_data}' style='max-width: 80%; height: auto;'/></div>"
 
     wordcloud_html = ""
     for topic_id, image_data in sorted(GLOBAL_WORDCLOUDS.items()):
         if image_data:
-            wordcloud_html += f"<div class='report-section'><h3>Topic {topic_id}</h3><img src='{image_data}' style='max-width: 100%; height: auto;'/></div>"
+            wordcloud_html += f"<div class='report-section'><h3>Topic {topic_id}</h3><img src='{image_data}' style='max-width: 80%; height: auto;'/></div>"
 
     recommendations_html = ""
     for rec in GLOBAL_TOPIC_RECOMMENDATIONS:
@@ -107,11 +107,11 @@ def build_report_pdf():
       <head>
         <meta charset='utf-8'>
         <style>
-          body {{ font-family: Arial, sans-serif; padding: 15px; line-height: 1.0, font-size:8px; }}
-          h1, h2 {{ color: #1f4e79;}}
+          body {{ font-family: Arial, sans-serif; padding: 15px; line-height: 1.0, font-size:8px; margin: 5px; }}
+          h1, h2 {{ color: #1f4e79; page-break-after: avoid; }}
           table {{ border-collapse: collapse; width: 100%; max-width: 100%; font-size: 8px; table-layout: fixed; word-wrap: break-word; align: center; }}
           th, td {{ border: 1px solid #ccc; padding: 4px; text-align: left; vertical-align: top; overflow-wrap: anywhere; align: center; }}
-          img {{ max-width: 100%; height: auto; display: block; margin: 0 auto; }}
+          img {{ max-width: 80%; height: auto; display: block; margin: 0 auto; }}
           div, p, li {{ overflow-wrap: anywhere; }}
           pre {{ white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; }}
           .report-section {{ page-break-inside: avoid; margin-bottom: 12px; }}
@@ -153,7 +153,6 @@ st.set_page_config(
     page_title="TeachAIRs",
     page_icon="🧊",
     layout="wide",
-    initial_sidebar_state="expanded",
     menu_items={
         "About": "Developed by Neo under the supervision of the Oracle. Watch this short video for a tutorial on how to use the app:  https://www.youtube.com/shorts/OvRlMiYURhM",
         "Get Help": "https://www.linkedin.com/in/unclebreaker/",
