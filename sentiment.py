@@ -581,10 +581,13 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
     st.divider()
     if gemini_model:
 <<<<<<< HEAD
+<<<<<<< HEAD
        
         st.header("Overall AI Recommendations (based on CSV Analysis)")
         
 =======
+=======
+>>>>>>> parent of 78d205a (Auto Update)
         st.divider()
         st.header("Generating Overall AI Recommendations (based on CSV Analysis)")
         st.subheader("Overall AI Recommendations:")
