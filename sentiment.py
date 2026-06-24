@@ -121,6 +121,7 @@ def build_report_pdf():
         <style>
           body {{ font-family: Arial, sans-serif; padding: 5px; line-height: 1.0, font-size:8px; margin: 5px; }}
           h1, h2 {{ color: #1f4e79; page-break-after: avoid; break-after: avoid; }}
+          h2 {{ page-break-after: allow; }}
           table {{ border-collapse: collapse; width: 100%; max-width: 100%; font-size: 8px; table-layout: fixed; word-wrap: break-word; align: center; }}
           th, td {{ border: 1px solid #ccc; padding: 2px; text-align: center; vertical-align: center; overflow-wrap: anywhere; align: center;  }}
           img {{ max-width: 80%; height: auto; display: block; margin: 0 auto; }}
