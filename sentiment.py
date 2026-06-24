@@ -486,7 +486,8 @@ Distribution (Aug VADER):
                             fontsize=5,
                             wrap=True,
                         )
-                        fig.subplotsadjust(top=0.82)
+                        
+                        fig.subplots_adjust(top=0.82)
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
                         st.pyplot(fig)
