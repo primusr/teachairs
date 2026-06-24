@@ -134,12 +134,9 @@ def build_report_pdf():
       </head>
       <body>
         <h1>TeachAIRs Report</h1>
-        <h2>Feedback Overview</h2>
-        {feedback_table}
         <h2>Sentiment Summary</h2>
         {sentiment_summary_html}
-        <h2>Sentiment Topics</h2>
-        {sentiment_table}
+       
         <h2>Figures</h2>
         {figure_html or '<p>No figures available.</p>'}
         <h2>Word Clouds</h2>
