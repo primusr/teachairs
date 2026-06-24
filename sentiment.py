@@ -128,8 +128,8 @@ def build_report_pdf():
           pre {{ white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; }}
           .report-section {{ page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px; }}
           .figure-section {{ page-break-inside: avoid; break-inside: avoid; }}
-          .overall-recommendations {{ page-break-inside: avoid; break-inside: avoid; page-break-after: avoid; break-after: avoid; }}
-        </style>
+          .overall-recommendations {{ page-break-inside: avoid; break-inside: avoid; page-break-after: avoid;}}
+         </style>
       </head>
       <body>
         <h1>TeachAIRs Report</h1>
