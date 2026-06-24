@@ -569,8 +569,8 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
     # ------------------------------
     if gemini_model:
         st.divider()
-        st.header("Generating Overall AI Recommendations (based on CSV Analysis)")
-        st.subheader("Overall AI Recommendations:")
+        st.header("Overall AI Recommendations (based on CSV Analysis)")
+        
 
         # Ensure correlation exists
         try:
@@ -644,28 +644,63 @@ SELECTED TOPICS:
 
    
     # ==# ==========================================
-        # ZIP REPORT GENERATOR WITH WEASYPRINT
+        # ==========================================
+        # ZIP REPORT GENERATOR WITH IMAGES & COMPACT TABLES (WEASYPRINT)
         # ==========================================
         st.divider()
         st.header("📦 Export Complete Report Bundle")
-        st.markdown("Download a zipped bundle containing the generated HTML-to-PDF summary via WeasyPrint, the full Sentiment Analysis matrix, and the source Feedback dataset.")
+        st.markdown("Download a zipped bundle containing the complete PDF report with embedded charts and tables, along with the underlying CSV data matrices.")
 
         import io
         import zipfile
+        import base64
         from weasyprint import HTML
 
-        # 1. Structure the PDF payload as a cleanly styled HTML string
-        # Construct topic summaries to loop into the HTML output
-        topics_html_snippet = ""
-        for row in topic_rows:
-            topics_html_snippet += f"""
-            <div class="topic-card">
-                <h3>Topic {row['Topic ID']}: {row['AI Label']}</h3>
-                <p><strong>Top Keywords:</strong> <span class="keywords">{row['Top Keywords']}</span></p>
-                <p><strong>Avg VADER Score:</strong> {row['Avg VADER Aug Score']} | <strong>Distribution:</strong> {row['VADER Aug Dist (%)']}</p>
-            </div>
-            """
+        # Helper function to convert Matplotlib figures into base64 image strings for HTML embedding
+        def fig_to_base64(fig_obj):
+            img_buf = io.BytesIO()
+            fig_obj.savefig(img_buf, format="png", bbox_inches="tight", dpi=150)
+            img_buf.seek(0)
+            img_b64 = base64.b64encode(img_buf.read()).decode("utf-8")
+            return f"data:image/png;base64,{img_b64}"
 
+        # 1. Convert relevant figures to base64 images
+        sentiment_chart_b64 = fig_to_base64(fig1)
+        std_vader_chart_b64 = fig_to_base64(fig_std)
+        aug_vader_chart_b64 = fig_to_base64(fig_aug)
+
+        # 2. Build Word Cloud elements dynamically if they are computed
+        word_clouds_html = ""
+        topic_ids_to_plot = [row["Topic ID"] for row in topic_rows][:4]
+        if topic_ids_to_plot:
+            word_clouds_html += "<h2>Identified Topic Word Clouds</h2><div class='chart-grid'>"
+            for topic_idx in topic_ids_to_plot:
+                words_probs = lda_model_final.show_topic(topic_idx, topn=15)
+                ai_title = next((r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx), f"Topic {topic_idx}")
+                
+                # Re-generate the word cloud figure specifically for the PDF
+                wc_pdf = WordCloud(background_color="white", width=400, height=300)
+                wc_pdf.generate_from_frequencies(dict(words_probs))
+                fig_wc_pdf, ax_wc_pdf = plt.subplots(figsize=(4, 3))
+                ax_wc_pdf.imshow(wc_pdf, interpolation="bilinear")
+                ax_wc_pdf.axis("off")
+                
+                wc_b64 = fig_to_base64(fig_wc_pdf)
+                plt.close(fig_wc_pdf) # Clean up memory
+                
+                word_clouds_html += f"""
+                <div class='chart-card'>
+                    <h3>Topic {topic_idx}: {ai_title}</h3>
+                    <img src='{wc_b64}' style='width: 100%; border: 1px solid #e5e7eb;' />
+                </div>
+                """
+            word_clouds_html += "</div>"
+
+        # 3. Generate the core Sentiment Summary HTML Table
+        # We apply custom column headers to target specific column widths inside the CSS framework
+        clean_table_html = topic_summary_df.to_html(index=False, classes="report-table", escape=False)
+
+        # 4. Construct complete styled HTML template
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -675,53 +710,101 @@ SELECTED TOPICS:
             <style>
                 @page {{
                     size: letter;
-                    margin: 1in;
+                    margin: 0.6in; /* Expanded margin to give tables more room */
                     @bottom-right {{
-                        content: counter(page);
+                        content: "Page " counter(page);
                         font-family: Arial, sans-serif;
-                        font-size: 10pt;
-                        color: #666;
+                        font-size: 9pt;
+                        color: #6b7280;
                     }}
                 }}
                 body {{
                     font-family: Arial, sans-serif;
-                    color: #333;
-                    line-height: 1.5;
+                    color: #1f2937;
+                    line-height: 1.4;
                 }}
                 h1 {{
                     color: #1e3a8a;
-                    border-bottom: 2px solid #3b82f6;
-                    padding-bottom: 8px;
+                    border-bottom: 3px solid #3b82f6;
+                    padding-bottom: 10px;
                     margin-bottom: 20px;
+                    font-size: 22pt;
                 }}
                 h2 {{
                     color: #1e40af;
                     margin-top: 30px;
+                    border-bottom: 1px solid #e5e7eb;
+                    padding-bottom: 5px;
+                    font-size: 14pt;
+                    page-break-after: avoid;
+                }}
+                h3 {{
+                    font-size: 11pt;
+                    color: #374151;
+                    margin-bottom: 5px;
                 }}
                 .metric-box {{
                     background-color: #f3f4f6;
-                    border-left: 4px solid #3b82f6;
-                    padding: 15px;
+                    border-left: 5px solid #3b82f6;
+                    padding: 12px;
                     margin-bottom: 20px;
                     border-radius: 4px;
                 }}
-                .topic-card {{
-                    background-color: #ffffff;
-                    border: 1px solid #e5e7eb;
-                    padding: 15px;
-                    margin-bottom: 15px;
-                    border-radius: 6px;
+                .chart-grid {{
+                    display: table;
+                    width: 100%;
+                    margin-top: 15px;
                 }}
-                .topic-card h3 {{
-                    margin-top: 0;
-                    color: #111827;
+                .chart-card {{
+                    display: table-cell;
+                    width: 50%;
+                    padding: 10px;
+                    text-align: center;
+                    vertical-align: top;
                 }}
-                .keywords {{
-                    font-family: monospace;
-                    background-color: #eff6ff;
-                    color: #1e40af;
-                    padding: 2px 6px;
-                    border-radius: 4px;
+                
+                /* ==========================================
+                   CRITICAL FIX: FIT TO PAGE WIDTH STYLES
+                ========================================== */
+                .report-table {{
+                    width: 100%;
+                    table-layout: fixed; /* Forces table to honor strict 100% width constraint */
+                    border-collapse: collapse;
+                    margin-top: 15px;
+                    font-size: 7.5pt; /* Lowered slightly to fit 10 separate metric columns cleanly */
+                }}
+                .report-table th, .report-table td {{
+                    border-bottom: 1px solid #e5e7eb;
+                    padding: 6px 4px;
+                    word-wrap: break-word; /* Forces wrapping inside dense metric strings */
+                    overflow-wrap: break-word;
+                    white-space: normal; /* Disables cell lengthening stretch behaviors */
+                    vertical-align: top;
+                }}
+                .report-table th {{
+                    background-color: #1e3a8a;
+                    color: white;
+                    text-align: left;
+                    font-weight: bold;
+                }}
+                .report-table tr:nth-child(even) {{
+                    background-color: #f9fafb;
+                }}
+                
+                /* Define strict proportions for your 10 database columns */
+                .report-table th:nth-child(1), .report-table td:nth-child(1) {{ width: 6%; }}  /* Topic ID */
+                .report-table th:nth-child(2), .report-table td:nth-child(2) {{ width: 10%; }} /* AI Label */
+                .report-table th:nth-child(3), .report-table td:nth-child(3) {{ width: 14%; }} /* Top Keywords */
+                .report-table th:nth-child(4), .report-table td:nth-child(4) {{ width: 8%; }}  /* Num Comments */
+                .report-table th:nth-child(5), .report-table td:nth-child(5) {{ width: 8%; }}  /* Avg VADER Eng Score */
+                .report-table th:nth-child(6), .report-table td:nth-child(6) {{ width: 14%; }} /* VADER Eng Dist (%) */
+                .report-table th:nth-child(7), .report-table td:nth-child(7) {{ width: 8%; }}  /* Avg VADER Aug Score */
+                .report-table th:nth-child(8), .report-table td:nth-child(8) {{ width: 14%; }} /* VADER Aug Dist (%) */
+                .report-table th:nth-child(9), .report-table td:nth-child(9) {{ width: 8%; }}  /* Avg Fil. Keyword Score */
+                .report-table th:nth-child(10), .report-table td:nth-child(10) {{ width: 10%; }}/* Fil. Keyword Dist (%) */
+
+                .page-break {{
+                    page-break-before: always;
                 }}
             </style>
         </head>
@@ -729,42 +812,64 @@ SELECTED TOPICS:
             <h1>TeachAIRs: Student Feedback Analysis Report</h1>
             
             <div class="metric-box">
-                <p><strong>Average System Sentiment Score:</strong> {avg_score:.4f}</p>
-                <p><strong>Overall System Sentiment:</strong> {aug_sentiment}</p>
+                <p style="margin: 4px 0;"><strong>Average System Sentiment Score:</strong> {avg_score:.4f}</p>
+                <p style="margin: 4px 0;"><strong>Overall System Sentiment:</strong> {aug_sentiment}</p>
             </div>
 
-            <h2>Topic Model Distribution Summary</h2>
-            {topics_html_snippet}
+            <h2>Overall Sentiment Metric Distribution</h2>
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h3>Augmented Model Target Distribution</h3>
+                    <img src="{sentiment_chart_b64}" style="width: 95%;" />
+                </div>
+                <div class="chart-card">
+                    </div>
+            </div>
+
+            <div class="page-break"></div>
+
+            <h2>Methodology Polarity Comparison Charts</h2>
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h3>Standard VADER (English Only)</h3>
+                    <img src="{std_vader_chart_b64}" style="width: 100%;" />
+                </div>
+                <div class="chart-card">
+                    <h3>Augmented VADER (Filipino Lexicon Included)</h3>
+                    <img src="{aug_vader_chart_b64}" style="width: 100%;" />
+                </div>
+            </div>
+
+            <h2>Comprehensive Sentiment Per Topic Table</h2>
+            <div>
+                {clean_table_html}
+            </div>
+
+            <div class="page-break"></div>
+            {word_clouds_html}
         </body>
         </html>
         """
 
-        # 2. Render HTML to PDF in-memory using WeasyPrint
+        # 5. Compile HTML layout payload directly to an explicit PDF via WeasyPrint
         pdf_data = HTML(string=html_content).write_pdf()
 
-        # 3. Convert DataFrames to CSV strings
-        # "Sentiment Analysis Report.csv" (Includes calculations and labels)
+        # 6. Build the structural evaluation files matrices
         sentiment_report_csv = df.to_csv(index=False)
-        
-        # "Feedback dataset.csv" (The raw feedback text table)
         feedback_dataset_csv = df[["Feedback", "Cleaned"]].to_csv(index=False)
 
-        # 4. Package everything into an in-memory ZIP archive
+        # 7. Write components into an in-memory ZIP deployment architecture
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            # Write PDF generated via WeasyPrint
             zip_file.writestr("Output.pdf", pdf_data)
-            # Write Sentiment Evaluation CSV
             zip_file.writestr("Sentiment Analysis Report.csv", sentiment_report_csv)
-            # Write Source Data CSV
             zip_file.writestr("Feedback dataset.csv", feedback_dataset_csv)
 
-        # Seek buffer to the beginning for Streamlit processing
         zip_buffer.seek(0)
 
-        # 5. Streamlit Download Button
+        # 8. Render the unified output channel button interface
         st.download_button(
-            label="🎁 Download Complete Reports (.ZIP)",
+            label="🎁 Download Complete Reports Bundle (.ZIP)",
             data=zip_buffer,
             file_name="TeachAIRs_Feedback_Report.zip",
             mime="application/zip",
