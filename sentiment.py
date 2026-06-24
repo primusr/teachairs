@@ -540,9 +540,15 @@ Here are 2-3 actionable teaching recommendations based on the topic "{topic_labe
         selected_topics = sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:4] if topic_rows else []
 
         def _format_selected_topics(topics):
-            if not topics: return "No selected topic data is available."
-            return "\n".join([f"Topic {row['Topic ID']} - {row['AI Label']}: {row['Top Keywords']} | Avg VADER Aug Score: {row['Avg VADER Aug Score']:.2f} | VADER Aug Dist: {row['VADER Aug Dist (%)']}" for row in topics])
-        
+            if not topics:
+                return "No selected topic data is available."
+            return "\n".join([
+                f"Topic {row['Topic ID']} - {row['AI Label']}: {row['Top Keywords']} | Avg VADER Aug Score: {row['Avg VADER Aug Score']:.2f} | VADER Aug Dist: {row['VADER Aug Dist (%)']}"
+                for row in topics
+            ])
+
+        selected_topics_text = _format_selected_topics(selected_topics)
+
         structured_prompt = f"""
 You are an academic assistant analyzing student feedback data.
 Generate teaching recommendations for the selected topics using the requested structured format.
