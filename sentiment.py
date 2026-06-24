@@ -356,13 +356,13 @@ Distribution (Aug VADER):
             keywords = row['Top Keywords']
             avg_score = row['Avg VADER Aug Score']
             context = _sentiment_context(avg_score)
-            return f"""
-<strong>Topic {row['Topic ID']} ({topic_label}):</strong><br>
-Context: {context}<br>
-• <strong>Action:</strong> Target the keywords "{keywords}" inside custom instruction structures.<br>
-• <strong>Rationale:</strong> Concrete application paths minimize comprehension errors.<br>
-• <strong>Measurement:</strong> Monitor quiz diagnostics for performance variance.
-"""
+            return f"""<strong>Topic {row['Topic ID']} ({topic_label}):</strong><br>
+                    Context: {context}<br>
+                    • <strong>Action:</strong> Target the keywords "{keywords}" inside custom instruction structures.<br>
+                    • <strong>Rationale:</strong> Concrete application paths minimize comprehension errors.<br>
+                    • <strong>Measurement:</strong> Monitor quiz diagnostics for performance variance.
+                    """
+        
         for row in selected_topics:
             st.subheader(f"Topic {row['Topic ID']}: {row['AI Label']}")
             st.markdown(_build_topic_recommendations(row), unsafe_allow_html=True)
