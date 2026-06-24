@@ -421,7 +421,7 @@ Distribution (Aug VADER):
     pre_generated_wordclouds = {}
 
     if not topic_summary_df.empty:
-        st.markdown("Overall Sentiment Per Topic")
+        # st.markdown("Overall Sentiment Per Topic")
         st.markdown(topic_summary_df.to_html(index=False, escape=False), unsafe_allow_html=True)
 
         # ------------------------------
@@ -553,10 +553,10 @@ Here are 2-3 actionable teaching recommendations based on the topic "{topic_labe
     if not GLOBAL_FEEDBACK.empty and not GLOBAL_SENTIMENTTOPIC.empty:
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr("Feedback.csv", GLOBAL_FEEDBACK.to_csv(index=False).encode("utf-8"))
-            archive.writestr("Sentiment.csv", GLOBAL_SENTIMENTTOPIC.to_csv(index=False).encode("utf-8"))
-            archive.writestr("Report.pdf", build_report_pdf())
-
+            archive.writestr("02_Feedback.csv", GLOBAL_FEEDBACK.to_csv(index=False).encode("utf-8"))
+            archive.writestr("03_Sentiment.csv", GLOBAL_SENTIMENTTOPIC.to_csv(index=False).encode("utf-8"))
+            archive.writestr("01_Report.pdf", build_report_pdf())
+        st.subheader("Download Report Package")
         st.download_button(
             "Download Report ZIP",
             zip_buffer.getvalue(),
