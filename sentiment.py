@@ -644,63 +644,91 @@ SELECTED TOPICS:
 
    
     # ==========================================
-        # ZIP REPORT GENERATOR (Add at the very bottom)
+        # FIXED ZIP REPORT GENERATOR (Standalone in-memory logic)
         # ==========================================
         st.divider()
-        st.header("堅 Export Complete Report Bundle")
+        st.header("📥 Export Complete Report Bundle")
         st.markdown("Download a zipped bundle containing the generated PDF summary, the full Sentiment Analysis matrix, and the source Feedback dataset.")
 
         import io
         import zipfile
         from reportlab.lib.pagesizes import letter
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-        # 1. Generate the PDF dynamically in memory
+        # Extract metrics locally safely before injecting them to avoid page canvas reflection
+        safe_avg_score = float(df["Score"].mean()) if "Score" in df.columns else 0.0
+        safe_sentiment = "Neutral"
+        if "Label" in df.columns:
+            safe_sentiment = df["Label"].mode()[0] if not df["Label"].empty else "Neutral"
+
+        # 1. Generate the isolated PDF report structure
         pdf_buffer = io.BytesIO()
-        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
+        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+        
         styles = getSampleStyleSheet()
+        
+        # Define clean unique styling maps to prevent overflow rendering loops
+        body_style = ParagraphStyle(
+            'CustomBody',
+            parent=styles['Normal'],
+            fontSize=10,
+            leading=14
+        )
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=22,
+            leading=26,
+            spaceAfter=15
+        )
+
         story = []
 
-        # Build a basic PDF content structure
-        story.append(Paragraph("TeachAIRs: Student Feedback Analysis Report", styles['Title']))
-        story.append(Spacer(1, 12))
-        story.append(Paragraph(f"<b>Average Sentiment Score:</b> {avg_score:.4f}", styles['Normal']))
-        story.append(Paragraph(f"<b>Overall System Sentiment:</b> {aug_sentiment}", styles['Normal']))
-        story.append(Spacer(1, 12))
-        story.append(Paragraph("<b>Topic Model Distribution Summary:</b>", styles['Heading2']))
+        # --- PAGE 1: EXECUTIVE SUMMARY ---
+        story.append(Paragraph("TeachAIRs: Student Feedback Analysis Report", title_style))
+        story.append(Spacer(1, 15))
+        story.append(Paragraph(f"<b>Average System Sentiment Score:</b> {safe_avg_score:.4f}", body_style))
+        story.append(Paragraph(f"<b>Overall Dominant Sentiment:</b> {safe_sentiment}", body_style))
+        story.append(Spacer(1, 20))
         
-        for row in topic_rows:
-            topic_summary_text = f"Topic {row['Topic ID']} ({row['AI Label']}): Keywords: {row['Top Keywords']} | Avg Score: {row['Avg VADER Aug Score']}"
-            story.append(Paragraph(topic_summary_text, styles['Normal']))
-            story.append(Spacer(1, 6))
+        # Add an explicit page break constraint right after the summary context
+        story.append(PageBreak())
+
+        # --- PAGE 2: TOPIC DISTRIBUTION & ANALYSIS ---
+        story.append(Paragraph("Topic Model Distribution Summary", styles['Heading2']))
+        story.append(Spacer(1, 12))
+
+        # Check if localized breakdown metrics variables exist safely in context
+        if 'topic_rows' in locals() or 'topic_rows' in globals():
+            for row in topic_rows:
+                topic_summary_text = f"<b>Topic {row.get('Topic ID', 'N/A')} ({row.get('AI Label', 'Unlabeled')}):</b><br/>" \
+                                     f"Keywords: {row.get('Top Keywords', '')}<br/>" \
+                                     f"Calculated Score Grouping: {row.get('Avg VADER Aug Score', '0.0')}"
+                story.append(Paragraph(topic_summary_text, body_style))
+                story.append(Spacer(1, 10))
+        else:
+            story.append(Paragraph("No supplementary topic distributions processing row markers found.", body_style))
 
         doc.build(story)
         pdf_data = pdf_buffer.getvalue()
 
-        # 2. Convert DataFrames to CSV strings
-        # "Sentiment Analysis Report.csv" (Includes calculations and labels)
+        # 2. Convert DataFrames strictly to text CSV values
         sentiment_report_csv = df.to_csv(index=False)
-        
-        # "Feedback dataset.csv" (The clean minimal source text table)
-        feedback_dataset_csv = df[["Feedback", "Cleaned"]].to_csv(index=False)
+        feedback_dataset_csv = df[["Feedback", "Cleaned"]].to_csv(index=False) if "Cleaned" in df.columns else df[["Feedback"]].to_csv(index=False)
 
-        # 3. Package everything into an in-memory ZIP archive
+        # 3. Zip file compilation stage
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            # Write PDF
             zip_file.writestr("Output.pdf", pdf_data)
-            # Write Sentiment Evaluation CSV
             zip_file.writestr("Sentiment Analysis Report.csv", sentiment_report_csv)
-            # Write Source Data CSV
             zip_file.writestr("Feedback dataset.csv", feedback_dataset_csv)
 
-        # Seek buffer to the beginning for Streamlit processing
         zip_buffer.seek(0)
 
-        # 4. Streamlit Download Button
+        # 4. Clean local down-loader view
         st.download_button(
-            label="段 Download Complete Reports (.ZIP)",
+            label="📦 Download Complete Reports (.ZIP)",
             data=zip_buffer,
             file_name="TeachAIRs_Feedback_Report.zip",
             mime="application/zip",
