@@ -52,60 +52,8 @@ st.set_page_config(
   
 )
 
-# st.markdown("""
-# <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-# <style>
-# html, body, [class*="css"]  {
-#     font-family: 'Poppins', sans-serif;
-# }
-
-# h1, h2, h3, h4, h5, h6 {
-#     font-family: 'Poppins', sans-serif;
-# }
-
-# .stApp {
-#     background-color: #0E1117;
-# }
-# [data-testid="stSidebar"] {
-#     background-color: #161A23;
-# }
-
-# /* Responsive tables and code blocks */
-# [data-testid="stDataFrame"],
-# .stDataFrame {
-#     width: 100% !important;
-#     max-width: 100% !important;
-# }
-
-# [data-testid="stDataFrame"] td,
-# [data-testid="stDataFrame"] th,
-# .stDataFrame td,
-# .stDataFrame th {
-#     white-space: normal !important;
-#     overflow-wrap: anywhere !important;
-#     word-break: break-word !important;
-#     max-width: 300px;
-# }
-
-# [data-testid="stDataFrame"] div[role="grid"],
-# .stDataFrame div[role="grid"] {
-#     overflow-x: auto !important;
-#     width: 100% !important;
-# }
-
-# code,
-# pre {
-#     white-space: pre-wrap !important;
-#     word-break: break-word !important;
-#     overflow-wrap: anywhere !important;
-#     max-width: 100% !important;
-# }
-
-# </style>
-# """, unsafe_allow_html=True)
-
-st.title("TeachAIRs: Student Feedback Analyzer with AI Recommendations")
+st.title("📊TeachAIRs: Student Feedback Analyzer with AI Recommendations")
 
 # ------------------------------
 # Gemini API (Optional)
@@ -151,30 +99,7 @@ if uploaded_file:
     df = df[[feedback_col]].rename(columns={feedback_col: "Feedback"})
     df.dropna(inplace=True)
 
-    # # ------------------------------
-    # # Sample VADER Output (Head & Tail) - formatted
-    # # ------------------------------
-    # st.subheader("Sample VADER Sentiment Output (Head & Tail)")
-
-    # def _format_sentiment_block(series, n=5):
-    #     """Return a formatted string showing Original_Text, Cleaned_Text, Sentiment_Score and labels."""
-    #     s = series.head(n) if len(series) >= n else series.head(len(series))
-    #     df_block = s.to_frame(name="Original_Text")
-    #     df_block["Cleaned_Text"] = df_block["Original_Text"].apply(preprocess)
-    #     df_block["Sentiment_Score"] = df_block["Original_Text"].apply(get_augmented_vader)
-    #     # Preserve original indices in the string representation
-    #     table_str = df_block.to_string()
-    #     labels_str = "\n\nSentiment\n" + "\n".join(
-    #         f"{idx} {label_from_score(score)}" for idx, score in zip(df_block.index, df_block["Sentiment_Score"])    
-    #     )
-    #     return table_str + labels_str
-
-    # head_block = _format_sentiment_block(df["Feedback"], n=5)
-    # tail_block = _format_sentiment_block(df["Feedback"].tail(5), n=5)
-
-    # st.code("Head of the sentiment analysis results:\n" + head_block)
-    # st.markdown("---")
-    # st.code("Tail of the sentiment analysis results:\n" + tail_block)
+    
 
     st.divider()
     st.header("Feedback Dataset Overview")
@@ -331,16 +256,7 @@ Distribution (Filipino Keywords):
     correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
     mean_difference = (df["VADER_Augmented"] - df["VADER_Standard"]).mean()
 
-    # st.markdown(f"""
-    # ### 📈 Statistical Comparison Summary
-
-    # **Pearson Correlation Between Methods:** {correlation:.3f}  
-    # **Mean Score Difference (Augmented − Standard):** {mean_difference:.3f}
-    # """)
-
-    # # # Statistical comparison
-    # # correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
-    # # mean_difference = (df["VADER_Augmented"] - df["VADER_Standard"]).mean()
+    
 
     sign_flip = (
          (df["VADER_Standard"] > 0) & (df["VADER_Augmented"] < 0)
@@ -350,18 +266,7 @@ Distribution (Filipino Keywords):
 
     flip_rate = sign_flip.mean() * 100
 
-    # # st.markdown(f"""
-    # # ### 📈 Statistical Comparison
-
-    # # **Pearson Correlation:** {correlation:.3f}  
-    # # **Mean Score Difference (Augmented − Standard):** {mean_difference:.3f}  
-    # # **Polarity Sign Flip Rate:** {flip_rate:.2f}%  
-    # # """)
-
-    # # ------------------------------
-    # # Topic Coherence Evaluation
-    # # ------------------------------
-    # st.subheader("📈 Topic Coherence Evaluation for Optimal k Selection")
+    
 
     from gensim.models import CoherenceModel
 
@@ -419,58 +324,6 @@ Distribution (Filipino Keywords):
         optimal_index = cv_scores.index(max(cv_scores))
         optimal_k = k_values[optimal_index]
         optimal_cv = cv_scores[optimal_index]
-
-    # # ------------------------------
-    # # Plot Line Graphs
-    # # ------------------------------
-    # fig, axes = plt.subplots(3, 1, figsize=(8, 12))
-
-    # # Top: C_v
-    # axes[0].plot(k_values, cv_scores, marker='o')
-    # axes[0].set_title("C_v Coherence Scores")
-    # axes[0].set_xlabel("Number of Topics (k)")
-    # axes[0].set_ylabel("C_v Score")
-    # axes[0].axvline(optimal_k, linestyle='--')
-    # axes[0].annotate(
-    #     f"Peak at k={optimal_k}\n({optimal_cv:.4f})",
-    #     xy=(optimal_k, optimal_cv),
-    #     xytext=(optimal_k, optimal_cv + 0.02),
-    #     arrowprops=dict()
-    # )
-
-    # # Middle: UMass
-    # axes[1].plot(k_values, umass_scores, marker='o')
-    # axes[1].set_title("UMass Coherence Scores")
-    # axes[1].set_xlabel("Number of Topics (k)")
-    # axes[1].set_ylabel("UMass Score")
-
-    # # Bottom: C_NPMI
-    # axes[2].plot(k_values, cnpmi_scores, marker='o')
-    # axes[2].set_title("C_NPMI Coherence Scores")
-    # axes[2].set_xlabel("Number of Topics (k)")
-    # axes[2].set_ylabel("C_NPMI Score")
-
-    # plt.tight_layout()
-    # st.pyplot(fig)
-
-    # # ------------------------------
-    # # Interpretation Output
-    # # ------------------------------
-    # st.markdown(f"""
-    # ### 📊 Optimal Topic Determination
-
-    # The C_v coherence score reaches its maximum at **k = {optimal_k}**, 
-    # with a value of **{optimal_cv:.4f}**, indicating the highest semantic similarity 
-    # and interpretability among the generated topics.
-
-    # Based on the strong correlation of C_v with human judgment, the optimal 
-    # number of topics was programmatically determined to be:
-
-    # ## ✅ k = {optimal_k}
-
-    # This ensures that subsequent thematic analysis is grounded in the most 
-    # semantically coherent topic structure derived from student feedback.
-    # """)
 
     # ------------------------------
     # Topic Modeling
@@ -660,12 +513,6 @@ Distribution (Filipino Keywords):
         st.info("No topic sentiment summary available.")
 
    
-    
-   
-
-    
-    
-
     # ------------------------------
     # AI Recommendations for Selected Topics
     # ------------------------------
@@ -793,37 +640,9 @@ SELECTED TOPICS:
         gemini_recommendation_text = response.text.strip()
         st.markdown(gemini_recommendation_text)
 
-        st.download_button(
-            "Download Gemini Recommendations",
-            gemini_recommendation_text,
-            file_name="gemini_recommendations.txt",
-            mime="text/plain"
-        )
+   
 
-    # # Use markdown to preserve formatting
-    # st.markdown(response.text)
-    # if gemini_model:
-    #     st.divider()
-    #     st.header("Generating Overall AI Recommendations (based on CSV Analysis)")
-    #     st.subheader("Overall AI Recommendations:")  
-
-    #     # Ensure correlation exists
-    #     try:
-    #         corr_value = f"{correlation:.2f}"
-    #     except:
-    #         corr_value = "Not computed"
-
-    #     summary = f"""
-    #     Average Sentiment Score: {avg_score:.2f}
-    #     Distribution: {counts.to_dict()}
-    #     Correlation Between Models: {corr_value}
-    #     """
-
-    #     response = gemini_model.generate_content(
-    #         summary + "\nGive 3 actionable teaching recommendations."
-    #     )
-
-    #     st.write(response.text.strip())
+   
 
 else:
     st.info("Please upload a CSV file to begin.")
