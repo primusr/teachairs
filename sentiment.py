@@ -641,7 +641,8 @@ SELECTED TOPICS:
         st.markdown(gemini_recommendation_text)
 
     # ==========================================
-        # ZIP REPORT GENERATOR - LANDSCAPE FORMAT (WEASYPRINT)
+        # ==========================================
+        # ZIP REPORT GENERATOR - FIXED SIZE LANDSCAPE (WEASYPRINT)
         # ==========================================
         st.divider()
         st.header("📦 Export Complete Report Bundle")
@@ -653,6 +654,7 @@ SELECTED TOPICS:
         from weasyprint import HTML
 
         # Helper function to convert Matplotlib figures into base64 image strings for HTML embedding
+        # Crucial change: Re-enforcing layout safety constraints during image rendering
         def fig_to_base64(fig_obj):
             img_buf = io.BytesIO()
             fig_obj.savefig(img_buf, format="png", bbox_inches="tight", dpi=150)
@@ -674,10 +676,10 @@ SELECTED TOPICS:
                 words_probs = lda_model_final.show_topic(topic_idx, topn=15)
                 ai_title = next((r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx), f"Topic {topic_idx}")
                 
-                # Re-generate the word cloud figure specifically for the PDF
-                wc_pdf = WordCloud(background_color="white", width=400, height=300)
+                # Fixed figure sizing strictly scaled for side-by-side landscape display blocks
+                wc_pdf = WordCloud(background_color="white", width=400, height=250)
                 wc_pdf.generate_from_frequencies(dict(words_probs))
-                fig_wc_pdf, ax_wc_pdf = plt.subplots(figsize=(4, 3))
+                fig_wc_pdf, ax_wc_pdf = plt.subplots(figsize=(4, 2.5))
                 ax_wc_pdf.imshow(wc_pdf, interpolation="bilinear")
                 ax_wc_pdf.axis("off")
                 
@@ -687,7 +689,7 @@ SELECTED TOPICS:
                 word_clouds_html += f"""
                 <div class='chart-card'>
                     <h3>Topic {topic_idx}: {ai_title}</h3>
-                    <img src='{wc_b64}' style='width: 90%; border: 1px solid #e5e7eb;' />
+                    <img src='{wc_b64}' class='pdf-img' />
                 </div>
                 """
             word_clouds_html += "</div>"
@@ -704,10 +706,10 @@ SELECTED TOPICS:
             <title>TeachAIRs Feedback Report</title>
             <style>
                 /* ==========================================
-                   CRITICAL FIX: LANDSCAPE PAGE SETUP
+                   LANDSCAPE CANVAS DIMENSION STRUCTS
                 ========================================== */
                 @page {{
-                    size: letter landscape; /* Forces landscape presentation */
+                    size: letter landscape; 
                     margin: 0.5in;
                     @bottom-right {{
                         content: "Page " counter(page);
@@ -720,6 +722,7 @@ SELECTED TOPICS:
                     font-family: Arial, sans-serif;
                     color: #1f2937;
                     line-height: 1.4;
+                    width: 100%;
                 }}
                 h1 {{
                     color: #1e3a8a;
@@ -749,9 +752,14 @@ SELECTED TOPICS:
                     border-radius: 4px;
                     font-size: 11pt;
                 }}
+                
+                /* ==========================================
+                   FIX: RIGID IMAGE MATCH CONSTRAINTS
+                ========================================== */
                 .chart-grid {{
                     display: table;
                     width: 100%;
+                    table-layout: fixed; /* Keep row boxes bounded */
                     margin-top: 15px;
                 }}
                 .chart-card {{
@@ -761,21 +769,29 @@ SELECTED TOPICS:
                     text-align: center;
                     vertical-align: top;
                 }}
+                .pdf-img {{
+                    max-width: 100%;
+                    height: auto;
+                    display: block;
+                    margin: 0 auto;
+                }}
                 
-                /* Landscape Optimized Table Layout */
+                /* ==========================================
+                   FIX: RIGID TABLE MATCH CONSTRAINTS
+                ========================================== */
                 .report-table {{
                     width: 100%;
-                    table-layout: fixed;
+                    table-layout: fixed; /* Stops automatic wide-stretching */
                     border-collapse: collapse;
                     margin-top: 15px;
-                    font-size: 8.5pt; /* Increased font size due to landscape space */
+                    font-size: 8.5pt;
                 }}
                 .report-table th, .report-table td {{
                     border-bottom: 1px solid #e5e7eb;
-                    padding: 8px 6px;
+                    padding: 8px 5px;
                     word-wrap: break-word;
                     overflow-wrap: break-word;
-                    white-space: normal;
+                    white-space: normal; /* Permits automatic horizontal wrapping lines */
                     vertical-align: top;
                 }}
                 .report-table th {{
@@ -788,17 +804,17 @@ SELECTED TOPICS:
                     background-color: #f9fafb;
                 }}
                 
-                /* Proportional widths allocated for landscape spread */
-                .report-table th:nth-child(1), .report-table td:nth-child(1) {{ width: 5%; }}  /* Topic ID */
-                .report-table th:nth-child(2), .report-table td:nth-child(2) {{ width: 11%; }} /* AI Label */
-                .report-table th:nth-child(3), .report-table td:nth-child(3) {{ width: 14%; }} /* Top Keywords */
-                .report-table th:nth-child(4), .report-table td:nth-child(4) {{ width: 6%; }}  /* Num Comments */
-                .report-table th:nth-child(5), .report-table td:nth-child(5) {{ width: 8%; }}  /* Avg VADER Eng Score */
-                .report-table th:nth-child(6), .report-table td:nth-child(6) {{ width: 16%; }} /* VADER Eng Dist (%) */
-                .report-table th:nth-child(7), .report-table td:nth-child(7) {{ width: 8%; }}  /* Avg VADER Aug Score */
-                .report-table th:nth-child(8), .report-table td:nth-child(8) {{ width: 16%; }} /* VADER Aug Dist (%) */
-                .report-table th:nth-child(9), .report-table td:nth-child(9) {{ width: 8%; }}  /* Avg Fil. Keyword Score */
-                .report-table th:nth-child(10), .report-table td:nth-child(10) {{ width: 8%; }}/* Fil. Keyword Dist (%) */
+                /* Precise column scaling assignments equaling exactly 100% */
+                .report-table th:nth-child(1), .report-table td:nth-child(1) {{ width: 5%; }}  
+                .report-table th:nth-child(2), .report-table td:nth-child(2) {{ width: 11%; }} 
+                .report-table th:nth-child(3), .report-table td:nth-child(3) {{ width: 14%; }} 
+                .report-table th:nth-child(4), .report-table td:nth-child(4) {{ width: 6%; }}  
+                .report-table th:nth-child(5), .report-table td:nth-child(5) {{ width: 8%; }}  
+                .report-table th:nth-child(6), .report-table td:nth-child(6) {{ width: 16%; }} 
+                .report-table th:nth-child(7), .report-table td:nth-child(7) {{ width: 8%; }}  
+                .report-table th:nth-child(8), .report-table td:nth-child(8) {{ width: 16%; }} 
+                .report-table th:nth-child(9), .report-table td:nth-child(9) {{ width: 8%; }}  
+                .report-table th:nth-child(10), .report-table td:nth-child(10) {{ width: 8%; }}
 
                 .page-break {{
                     page-break-before: always;
@@ -817,7 +833,7 @@ SELECTED TOPICS:
             <div class="chart-grid">
                 <div class="chart-card">
                     <h3>Augmented Model Target Distribution</h3>
-                    <img src="{sentiment_chart_b64}" style="width: 70%;" />
+                    <img src="{sentiment_chart_b64}" class="pdf-img" style="max-width: 65%;" />
                 </div>
                 <div class="chart-card">
                     </div>
@@ -829,11 +845,11 @@ SELECTED TOPICS:
             <div class="chart-grid">
                 <div class="chart-card">
                     <h3>Standard VADER (English Only)</h3>
-                    <img src="{std_vader_chart_b64}" style="width: 90%;" />
+                    <img src="{std_vader_chart_b64}" class="pdf-img" />
                 </div>
                 <div class="chart-card">
                     <h3>Augmented VADER (Filipino Lexicon Included)</h3>
-                    <img src="{aug_vader_chart_b64}" style="width: 90%;" />
+                    <img src="{aug_vader_chart_b64}" class="pdf-img" />
                 </div>
             </div>
 
