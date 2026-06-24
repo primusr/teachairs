@@ -452,7 +452,7 @@ Distribution (Aug VADER):
                     ai_title = next((r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx), f"Topic {topic_idx}")
                     
                     with col:
-                        st.markdown(f'<div style="text-align: center;"><b>Topic {topic_idx}: {ai_title}</b><br>Keywords: {words}</div>', unsafe_allow_html=True)
+                        #st.markdown(f'<div style="text-align: center;"><b>Topic {topic_idx}: {ai_title}</b><br>Keywords: {words}</div>', unsafe_allow_html=True)
                         
                         wc = WordCloud(background_color="white", width=400, height=300)
                         wc.generate_from_frequencies(dict(words_probs))
