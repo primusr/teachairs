@@ -107,9 +107,9 @@ def build_report_pdf():
       <head>
         <meta charset='utf-8'>
         <style>
-          body {{ font-family: Arial, sans-serif; padding: 24px; line-height: 1.4; }}
+          body {{ font-family: Arial, sans-serif; padding: 24px; line-height: 1.0, font-size:10px; }}
           h1, h2 {{ color: #1f4e79; page-break-after: avoid; }}
-          table {{ border-collapse: collapse; width: 100%; max-width: 100%; font-size: 10px; table-layout: fixed; word-wrap: break-word; }}
+          table {{ border-collapse: collapse; width: 100%; max-width: 100%; font-size: 10px; table-layout: fixed; word-wrap: break-word; align: center; }}
           th, td {{ border: 1px solid #ccc; padding: 4px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }}
           img {{ max-width: 100%; height: auto; display: block; margin: 0 auto; }}
           div, p, li {{ overflow-wrap: anywhere; }}
