@@ -44,7 +44,7 @@ GLOBAL_TOPIC_RECOMMENDATIONS = []
 GLOBAL_OVERALL_AI_RECOMMENDATION = ""
 GLOBAL_FIGURES = {}
 GLOBAL_SENTIMENT_SUMMARY = ""
-GLOBAL_SENTIMENT_PERTOPIC = pd.DataFrame()
+GLOBAL_TOPIC_SUMMARY = pd.DataFrame()
 
 
 def _escape_html(text):
@@ -84,7 +84,7 @@ def _format_recommendation_html(text):
 def build_report_pdf():
     feedback_table = GLOBAL_FEEDBACK.to_html(index=False, escape=False) if not GLOBAL_FEEDBACK.empty else "<p>No feedback data available.</p>"
     sentiment_table = GLOBAL_SENTIMENTTOPIC.to_html(index=False, escape=False) if not GLOBAL_SENTIMENTTOPIC.empty else "<p>No sentiment topic data available.</p>" 
-    sentiment_per_topic_table = GLOBAL_SENTIMENT_PERTOPIC.to_html(index=False, escape=False) if not GLOBAL_SENTIMENT_PERTOPIC.empty else "<p>No sentiment per topic data available.</p>"
+    
     preferred_figures = [
         "Sentiment Distribution",
         "Standard VADER Polarity Scores",
@@ -114,8 +114,9 @@ def build_report_pdf():
     for rec in GLOBAL_TOPIC_RECOMMENDATIONS:
         recommendations_html += f"<div class='report-section'><h3>Topic {rec.get('id', '')}: {rec.get('label', '')}</h3><div>{_format_recommendation_html(rec.get('text', ''))}</div></div>"
 
-    sentiment_per_topic_table = f"<div class='report-section'<pre>{_escape_html(GLOBAL_SENTIMENT_PERTOPIC  or 'No sentiment summary available.')}</pre></div>"
+   
     sentiment_summary_html = f"<div class='report-section'><pre>{_escape_html(GLOBAL_SENTIMENT_SUMMARY or 'No sentiment summary available.')}</pre></div>"
+    topic_summary_table = GLOBAL_TOPIC_SUMMARY.to_html(index=False, escape=False) if not GLOBAL_TOPIC_SUMMARY.empty else "<p>No topic sentiment summary available.</p>"
     overall_html = f"<div class='report-section overall-recommendations'>{_format_recommendation_html(GLOBAL_OVERALL_AI_RECOMMENDATION or 'No overall AI recommendation generated.')}</div>"
 
     html_content = f"""
@@ -141,14 +142,14 @@ def build_report_pdf():
         <h1>TeachAIRs Report</h1>
         <h2>Sentiment Summary</h2>
         {sentiment_summary_html}
-       
+        <h2>Overall Sentiment per Topic</h2>
+        <div class='report-section'>{topic_summary_table}</div>
         <h2>Figures</h2>
         {figure_html or '<p>No figures available.</p>'}
         <h2>Word Clouds</h2>
         {wordcloud_html or '<p>No word clouds available.</p>'}
 
-               <h2>Overall Sentiment Per Topic</h2>
-        {sentiment_per_topic_table or '<p>No sentiment per topic data available.</p>'}
+      
         <h2>AI Recommendations per Topic</h2>
         {recommendations_html or '<p>No topic recommendations available.</p>'}
         <h2>Overall AI Recommendations</h2>
@@ -442,9 +443,8 @@ Distribution (Aug VADER):
     
    
     topic_summary_df = pd.DataFrame(topic_rows)
-    GLOBAL_SENTIMENT_PERTOPIC = pd.DataFrame(topic_rows)
-   
-    # Dictionary to save initial image footprints so WeasyPrint does not recalculate anything
+    GLOBAL_TOPIC_SUMMARY = topic_summary_df.copy()
+
     pre_generated_wordclouds = {}
 
     if not topic_summary_df.empty:
