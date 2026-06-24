@@ -493,14 +493,14 @@ Distribution (Filipino Keywords):
                         f"Topic {topic_idx}"
                     )
                     with col:
-                        st.markdown( f""" Keywords: {words}""", unsafe_allow_html=True )
+                        st.markdown( f""" <div style="text-align: center;">  Keywords: {words} </div> """, unsafe_allow_html=True )
                         
                         wc = WordCloud(background_color="white", width=400, height=300)
                         wc.generate_from_frequencies(dict(words_probs))
                         fig, ax = plt.subplots(figsize=(6, 4))
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
-                        fig.suptitle( f"Topic {topic_idx}: {ai_title}", fontsize=10, y=0.95 )
+                        fig.suptitle( f"Topic {topic_idx}: {ai_title}", fontsize=16, fontweight="bold", y=0.95 )
                         st.pyplot(fig)
 
                         # Save word cloud figure buffer for PDF
