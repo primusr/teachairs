@@ -119,7 +119,7 @@ def build_report_pdf():
       <head>
         <meta charset='utf-8'>
         <style>
-          body {{ font-family: Arial, sans-serif; padding: 15px; line-height: 1.0, font-size:8px; margin: 5px; }}
+          body {{ font-family: Arial, sans-serif; padding: 5px; line-height: 1.0, font-size:8px; margin: 5px; }}
           h1, h2 {{ color: #1f4e79; page-break-after: avoid; break-after: avoid; }}
           table {{ border-collapse: collapse; width: 100%; max-width: 100%; font-size: 8px; table-layout: fixed; word-wrap: break-word; align: center; }}
           th, td {{ border: 1px solid #ccc; padding: 4px; text-align: left; vertical-align: top; overflow-wrap: anywhere; align: center; }}
@@ -133,19 +133,19 @@ def build_report_pdf():
       </head>
       <body>
         <h1>TeachAIRs Report</h1>
-        <h5>Feedback Overview</h5>
+        <h2>Feedback Overview</h2>
         {feedback_table}
-        <h5>Sentiment Summary</h5>
+        <h2>Sentiment Summary</h2>
         {sentiment_summary_html}
-        <h5>Sentiment Topics</h5>
+        <h2>Sentiment Topics</h2>
         {sentiment_table}
-        <h5>Figures</h5>
+        <h2>Figures</h2>
         {figure_html or '<p>No figures available.</p>'}
-        <h5>Word Clouds</h5>
+        <h2>Word Clouds</h2>
         {wordcloud_html or '<p>No word clouds available.</p>'}
-        <h5>AI Recommendations per Topic</h5>
+        <h2>AI Recommendations per Topic</h2>
         {recommendations_html or '<p>No topic recommendations available.</p>'}
-        <h5>Overall AI Recommendations</h5>
+        <h2>Overall AI Recommendations</h2>
         {overall_html}
       </body>
     </html>
