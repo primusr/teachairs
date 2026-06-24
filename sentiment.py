@@ -103,7 +103,7 @@ if uploaded_file:
 
     st.divider()
     st.header("Feedback Dataset Overview")
-    st.dataframe(df.head(), use_container_width=True)
+    st.dataframe(df, use_container_width=True)
   
     df["Cleaned"] = df["Feedback"].apply(preprocess)
     df["VADER_Standard"] = df["Feedback"].apply(get_standard_vader)
