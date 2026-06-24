@@ -128,7 +128,7 @@ def build_report_pdf():
           pre {{ white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; }}
           .report-section {{ page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px; }}
           .figure-section {{ page-break-inside: avoid; break-inside: avoid; }}
-          .overall-recommendations {{ page-break-inside: avoid; break-inside: avoid; page-break-after: avoid;}}
+       
          </style>
       </head>
       <body>
@@ -146,7 +146,7 @@ def build_report_pdf():
         <h2>AI Recommendations per Topic</h2>
         {recommendations_html or '<p>No topic recommendations available.</p>'}
         <h2>Overall AI Recommendations</h2>
-        {overall_html}
+        {overall_html or '<p>No topic recommendations available.</p>'}
       </body>
     </html>
     """
