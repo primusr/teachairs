@@ -618,35 +618,35 @@ Here are 2-3 actionable teaching recommendations based on the topic \"{topic_lab
             You are an academic assistant analyzing student feedback data.
             Generate teaching recommendations for the selected topics using the requested structured format.
 
-    STRICT FORMAT FOR EACH SELECTED TOPIC:
-    - Provide a clear topic title line.
-    - Provide one summary sentence describing the context from sentiment and keywords.
-    - Provide exactly 2-3 actionable teaching recommendations.
-    - Each recommendation block MUST include:
+STRICT FORMAT FOR EACH SELECTED TOPIC:
+- Provide a clear topic title line.
+- Provide one summary sentence describing the context from sentiment and keywords.
+- Provide exactly 2-3 actionable teaching recommendations.
+- Each recommendation block MUST include:
     * Action
     * Rationale
     * Measurement
 
-    OUTPUT FORMAT FOR EACH TOPIC:
-    Recommendations for Topic <N> (<Topic Label>):
-    Here are 2-3 actionable teaching recommendations based on the topic "<Topic Label>".
-    **Understanding the Context:** <context sentence>
-    **Actionable Teaching Recommendations:**
-    1. <recommendation text>
+OUTPUT FORMAT FOR EACH TOPIC:
+Recommendations for Topic <N> (<Topic Label>):
+Here are 2-3 actionable teaching recommendations based on the topic "<Topic Label>".
+**Understanding the Context:** <context sentence>
+**Actionable Teaching Recommendations:**
+1. <recommendation text>
     * **Action:** ...
     * **Rationale:** ...
     * **Measurement:** ...
-    2. <recommendation text>
+2. <recommendation text>
     * **Action:** ...
     * **Rationale:** ...
     * **Measurement:** ...
 
-    DATA SUMMARY:
-    {summary}
+DATA SUMMARY:
+{summary}
 
-    SELECTED TOPICS:
-    {selected_topics_text}
-    """
+SELECTED TOPICS:
+{selected_topics_text}
+"""
 
         response = gemini_model.generate_content(structured_prompt)
         gemini_recommendation_text = response.text.strip()

@@ -546,9 +546,42 @@ Context: {context}<br>
         # Generate the pristine WeasyPrint PDF content
         weasy_pdf_bytes = HTML(string=html_document_payload).write_pdf()
 
-        # Convert the full, un-truncated topic summary dataframe to CSV data
+        # ==========================================
+        # BUILD THE FULL SENTIMENT PER TOPIC CSV
+        # Includes metrics + 10 sample sentiments per topic
+        # ==========================================
+        detailed_csv_rows = []
+        for topic_id in range(final_k):
+            # 1. Filter original dataframe for the current topic to get texts
+            topic_df = df[df["Topic_ID"] == topic_id]
+            
+            # 2. Get the previously calculated metric data for this topic
+            base_row = next((r for r in topic_rows if r["Topic ID"] == topic_id), None)
+            if base_row is None:
+                continue
+                
+            # Copy to avoid modifying the original list
+            row_dict = base_row.copy()
+            
+            # 3. Extract up to 10 feedback contents (sentiments)
+            feedbacks = topic_df["Feedback"].head(10).tolist()
+            
+            # 4. Inject them horizontally into the CSV dictionary
+            for idx in range(10):
+                column_name = f"Sentiment Content {idx + 1}"
+                if idx < len(feedbacks):
+                    row_dict[column_name] = feedbacks[idx]
+                else:
+                    row_dict[column_name] = "N/A"
+                    
+            detailed_csv_rows.append(row_dict)
+
+        # Convert to detailed DataFrame 
+        detailed_csv_df = pd.DataFrame(detailed_csv_rows)
+        
+        # Write to Buffer
         csv_topic_buffer = BytesIO()
-        topic_summary_df.to_csv(csv_topic_buffer, index=False, encoding='utf-8')
+        detailed_csv_df.to_csv(csv_topic_buffer, index=False, encoding='utf-8')
         csv_topic_bytes = csv_topic_buffer.getvalue()
 
         # Convert the full feedback dataset dataframe to CSV data
@@ -560,7 +593,7 @@ Context: {context}<br>
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             zip_file.writestr("TeachAIRs_WeasyPrint_Report.pdf", weasy_pdf_bytes)
-            zip_file.writestr("Full_Sentiment_Per_Topic.csv", csv_topic_bytes)
+            zip_file.writestr("Full_Sentiment_Per_Topic.csv", csv_topic_bytes) # <== Includes Content Now
             zip_file.writestr("Full_Feedback_Dataset.csv", csv_full_bytes)
         zip_buffer.seek(0)
 
