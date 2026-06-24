@@ -374,6 +374,7 @@ Distribution (Aug VADER):
     df["Topic_ID"] = [get_dominant_topic(bow) for bow in corpus]
     df["Filipino_Score"] = df["Label_Filipino"].map(SENTIMENT_SCORE_MAP)
 
+    GLOBAL_SENTIMENTTOPIC = df.copy()
     topic_rows = []
     for topic_id in range(final_k):
         topic_df = df[df["Topic_ID"] == topic_id]
@@ -413,7 +414,7 @@ Distribution (Aug VADER):
             "Fil. Keyword Dist (%)": f"Positive: {fil_dist['Positive']:.1f}, Neutral: {fil_dist['Neutral']:.1f}, Negative: {fil_dist['Negative']:.1f}"
         })
     
-    Global_SENTIMENTTOPIC = df.copy()
+   
     topic_summary_df = pd.DataFrame(topic_rows)
    
     # Dictionary to save initial image footprints so WeasyPrint does not recalculate anything
