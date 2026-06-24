@@ -463,7 +463,7 @@ Distribution (Aug VADER):
                             f"Topic {topic_idx}: {ai_title}\nKeywords: {words}",
                             ha="center",
                             va="top",
-                            fontsize=9,
+                            fontsize=5,
                             wrap=True,
                         )
                         fig.subplots_adjust(top=0.82)
