@@ -106,6 +106,7 @@ def build_report_pdf():
         if image_data:
             wordcloud_html += f"<div class='report-section'><h3>Topic {topic_id}</h3><img src='{image_data}' style='max-width: 80%; height: auto;'/></div>"
 
+    
     recommendations_html = ""
     for rec in GLOBAL_TOPIC_RECOMMENDATIONS:
         recommendations_html += f"<div class='report-section'><h3>Topic {rec.get('id', '')}: {rec.get('label', '')}</h3><div>{_format_recommendation_html(rec.get('text', ''))}</div></div>"
@@ -141,6 +142,9 @@ def build_report_pdf():
         {figure_html or '<p>No figures available.</p>'}
         <h2>Word Clouds</h2>
         {wordcloud_html or '<p>No word clouds available.</p>'}
+
+               <h2>Overall Sentiment Per Topic</h2>
+        {sentiment_summary_html or '<p>No word clouds available.</p>'}
         <h2>AI Recommendations per Topic</h2>
         {recommendations_html or '<p>No topic recommendations available.</p>'}
         <h2>Overall AI Recommendations</h2>
