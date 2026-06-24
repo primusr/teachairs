@@ -640,16 +640,12 @@ SELECTED TOPICS:
         gemini_recommendation_text = response.text.strip()
         st.markdown(gemini_recommendation_text)
 
-   
-
-   
-    # ==# ==========================================
-        # ==========================================
-        # ZIP REPORT GENERATOR WITH IMAGES & COMPACT TABLES (WEASYPRINT)
+    # ==========================================
+        # ZIP REPORT GENERATOR - LANDSCAPE FORMAT (WEASYPRINT)
         # ==========================================
         st.divider()
-        
-        st.markdown("Download a zipped bundle containing the PDF report with embedded charts and tables, along with the underlying CSV data matrices.")
+        st.header("📦 Export Complete Report Bundle")
+        st.markdown("Download a zipped bundle containing the complete landscape PDF report with embedded charts and tables, along with the underlying CSV data matrices.")
 
         import io
         import zipfile
@@ -691,16 +687,15 @@ SELECTED TOPICS:
                 word_clouds_html += f"""
                 <div class='chart-card'>
                     <h3>Topic {topic_idx}: {ai_title}</h3>
-                    <img src='{wc_b64}' style='width: 100%; border: 1px solid #e5e7eb;' />
+                    <img src='{wc_b64}' style='width: 90%; border: 1px solid #e5e7eb;' />
                 </div>
                 """
             word_clouds_html += "</div>"
 
         # 3. Generate the core Sentiment Summary HTML Table
-        # We apply custom column headers to target specific column widths inside the CSS framework
         clean_table_html = topic_summary_df.to_html(index=False, classes="report-table", escape=False)
 
-        # 4. Construct complete styled HTML template
+        # 4. Construct complete styled HTML template in Landscape orientation
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -708,9 +703,12 @@ SELECTED TOPICS:
             <meta charset="utf-8">
             <title>TeachAIRs Feedback Report</title>
             <style>
+                /* ==========================================
+                   CRITICAL FIX: LANDSCAPE PAGE SETUP
+                ========================================== */
                 @page {{
-                    size: letter;
-                    margin: 0.6in; /* Expanded margin to give tables more room */
+                    size: letter landscape; /* Forces landscape presentation */
+                    margin: 0.5in;
                     @bottom-right {{
                         content: "Page " counter(page);
                         font-family: Arial, sans-serif;
@@ -728,18 +726,18 @@ SELECTED TOPICS:
                     border-bottom: 3px solid #3b82f6;
                     padding-bottom: 10px;
                     margin-bottom: 20px;
-                    font-size: 22pt;
+                    font-size: 24pt;
                 }}
                 h2 {{
                     color: #1e40af;
-                    margin-top: 30px;
+                    margin-top: 25px;
                     border-bottom: 1px solid #e5e7eb;
                     padding-bottom: 5px;
-                    font-size: 14pt;
+                    font-size: 16pt;
                     page-break-after: avoid;
                 }}
                 h3 {{
-                    font-size: 11pt;
+                    font-size: 12pt;
                     color: #374151;
                     margin-bottom: 5px;
                 }}
@@ -749,6 +747,7 @@ SELECTED TOPICS:
                     padding: 12px;
                     margin-bottom: 20px;
                     border-radius: 4px;
+                    font-size: 11pt;
                 }}
                 .chart-grid {{
                     display: table;
@@ -763,22 +762,20 @@ SELECTED TOPICS:
                     vertical-align: top;
                 }}
                 
-                /* ==========================================
-                   CRITICAL FIX: FIT TO PAGE WIDTH STYLES
-                ========================================== */
+                /* Landscape Optimized Table Layout */
                 .report-table {{
                     width: 100%;
-                    table-layout: fixed; /* Forces table to honor strict 100% width constraint */
+                    table-layout: fixed;
                     border-collapse: collapse;
                     margin-top: 15px;
-                    font-size: 7.5pt; /* Lowered slightly to fit 10 separate metric columns cleanly */
+                    font-size: 8.5pt; /* Increased font size due to landscape space */
                 }}
                 .report-table th, .report-table td {{
                     border-bottom: 1px solid #e5e7eb;
-                    padding: 6px 4px;
-                    word-wrap: break-word; /* Forces wrapping inside dense metric strings */
+                    padding: 8px 6px;
+                    word-wrap: break-word;
                     overflow-wrap: break-word;
-                    white-space: normal; /* Disables cell lengthening stretch behaviors */
+                    white-space: normal;
                     vertical-align: top;
                 }}
                 .report-table th {{
@@ -791,17 +788,17 @@ SELECTED TOPICS:
                     background-color: #f9fafb;
                 }}
                 
-                /* Define strict proportions for your 10 database columns */
-                .report-table th:nth-child(1), .report-table td:nth-child(1) {{ width: 6%; }}  /* Topic ID */
-                .report-table th:nth-child(2), .report-table td:nth-child(2) {{ width: 10%; }} /* AI Label */
+                /* Proportional widths allocated for landscape spread */
+                .report-table th:nth-child(1), .report-table td:nth-child(1) {{ width: 5%; }}  /* Topic ID */
+                .report-table th:nth-child(2), .report-table td:nth-child(2) {{ width: 11%; }} /* AI Label */
                 .report-table th:nth-child(3), .report-table td:nth-child(3) {{ width: 14%; }} /* Top Keywords */
-                .report-table th:nth-child(4), .report-table td:nth-child(4) {{ width: 8%; }}  /* Num Comments */
+                .report-table th:nth-child(4), .report-table td:nth-child(4) {{ width: 6%; }}  /* Num Comments */
                 .report-table th:nth-child(5), .report-table td:nth-child(5) {{ width: 8%; }}  /* Avg VADER Eng Score */
-                .report-table th:nth-child(6), .report-table td:nth-child(6) {{ width: 14%; }} /* VADER Eng Dist (%) */
+                .report-table th:nth-child(6), .report-table td:nth-child(6) {{ width: 16%; }} /* VADER Eng Dist (%) */
                 .report-table th:nth-child(7), .report-table td:nth-child(7) {{ width: 8%; }}  /* Avg VADER Aug Score */
-                .report-table th:nth-child(8), .report-table td:nth-child(8) {{ width: 14%; }} /* VADER Aug Dist (%) */
+                .report-table th:nth-child(8), .report-table td:nth-child(8) {{ width: 16%; }} /* VADER Aug Dist (%) */
                 .report-table th:nth-child(9), .report-table td:nth-child(9) {{ width: 8%; }}  /* Avg Fil. Keyword Score */
-                .report-table th:nth-child(10), .report-table td:nth-child(10) {{ width: 10%; }}/* Fil. Keyword Dist (%) */
+                .report-table th:nth-child(10), .report-table td:nth-child(10) {{ width: 8%; }}/* Fil. Keyword Dist (%) */
 
                 .page-break {{
                     page-break-before: always;
@@ -820,7 +817,7 @@ SELECTED TOPICS:
             <div class="chart-grid">
                 <div class="chart-card">
                     <h3>Augmented Model Target Distribution</h3>
-                    <img src="{sentiment_chart_b64}" style="width: 95%;" />
+                    <img src="{sentiment_chart_b64}" style="width: 70%;" />
                 </div>
                 <div class="chart-card">
                     </div>
@@ -832,13 +829,15 @@ SELECTED TOPICS:
             <div class="chart-grid">
                 <div class="chart-card">
                     <h3>Standard VADER (English Only)</h3>
-                    <img src="{std_vader_chart_b64}" style="width: 100%;" />
+                    <img src="{std_vader_chart_b64}" style="width: 90%;" />
                 </div>
                 <div class="chart-card">
                     <h3>Augmented VADER (Filipino Lexicon Included)</h3>
-                    <img src="{aug_vader_chart_b64}" style="width: 100%;" />
+                    <img src="{aug_vader_chart_b64}" style="width: 90%;" />
                 </div>
             </div>
+
+            <div class="page-break"></div>
 
             <h2>Comprehensive Sentiment Per Topic Table</h2>
             <div>
