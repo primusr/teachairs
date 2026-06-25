@@ -46,7 +46,7 @@ GLOBAL_FIGURES = {}
 GLOBAL_SENTIMENT_SUMMARY = ""
 GLOBAL_TOPIC_SUMMARY = pd.DataFrame()
 
-
+# Rockon
 def _escape_html(text):
     return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
