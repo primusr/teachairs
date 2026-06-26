@@ -130,7 +130,7 @@ def build_report_pdf():
       <head>
         <meta charset='utf-8'>
         <style>
-          body {{ font-family: Courier New, monospace, sans-serif; line-height: 1.0, font-size:10px; margin: 5px; }}
+          body {{ font-family: Courier New, monospace, sans-serif; line-height: 1.0, font-size:8px; margin: 2px; }}
           h1, h2 {{ color: #1f4e79; break-after: avoid; break-inside: avoid; }}
           h2 {{ page-break-after: allow; break-inside: avoid; }}
           table {{ border-collapse: collapse; width: 100%; max-width: 100%; font-size: 8px; table-layout: fixed; word-wrap: break-word; align: center; }}
@@ -268,7 +268,7 @@ if uploaded_file:
     st.markdown("""
         <style>
         .big-font {
-            font: italic bold 1.2rem/1.5 "Helvetica", sans-serif;
+            font: bold 1.2rem/1.5 "Helvetica", sans-serif;
             font-size: 20px !important;
             
         </style>
