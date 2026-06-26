@@ -700,9 +700,10 @@ SELECTED TOPICS:
         st.info("Upload and analyze a dataset to enable the report download.")
 
 else:
-    st.info("Please upload a CSV file to begin. If you don't have a CSV file prepared, download and use one of the templates provided below.")
     url = "https://drive.google.com/drive/folders/13VI7m5JdzRfQrttCiiVoctKg6SWOV0aU?usp=sharing"
-    st.markdown(f"Filipino Vader Lexicon[link]({url})")
+    st.info("Please upload a CSV file to begin. If you don't have a CSV file prepared, download and use one of the templates provided below.\n [CSV Templates]({url})")
+
+   
   
    
     st.divider()
