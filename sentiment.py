@@ -589,30 +589,34 @@ Here are 2-3 actionable teaching recommendations based on the topic "{topic_labe
 
         structured_prompt = f"""
 You are an academic assistant analyzing student feedback data.
-Generate teaching recommendations for the selected topics using the requested structured format.
+Generate overall teaching recommendations for the selected topics using the requested structured format.
 
-STRICT FORMAT FOR EACH SELECTED TOPIC:
-- Provide a clear topic title line.
-- Provide one summary sentence describing the context from sentiment and keywords.
-- Provide exactly 2-3 actionable teaching recommendations.
-- Each recommendation block MUST include:
-  * Action
-  * Rationale
-  * Measurement
+OUTPUT FORMAT:
+Overall AI Recommendations:
 
-OUTPUT FORMAT FOR EACH TOPIC:
-Recommendations for Topic <N> (<Topic Label>):
-Here are 2-3 actionable teaching recommendations based on the topic "<Topic Label>".
-**Understanding the Context:** <context sentence>
-**Actionable Teaching Recommendations:**
-1. <recommendation text>
-   * **Action:** ...
-   * **Rationale:** ...
-   * **Measurement:** ...
-2. <recommendation text>
-   * **Action:** ...
-   * **Rationale:** ...
-   * **Measurement:** ...
+**1. <Recommendation title 1>**
+ * **Rationale:** <one or two sentences explaining why this recommendation follows from the data>
+ * **Actionable Steps:**
+   * <step 1>
+   * <step 2>
+   * <step 3>
+
+**2. <Recommendation title 2>**
+ * **Rationale:** <one or two sentences explaining why this recommendation follows from the data>
+ * **Actionable Steps:**
+   * <step 1>
+   * <step 2>
+   * <step 3>
+
+**3. <Recommendation title 3>**
+ * **Rationale:** <one or two sentences explaining why this recommendation follows from the data>
+ * **Actionable Steps:**
+   * <step 1>
+   * <step 2>
+   * <step 3>
+
+If there are more topics, include one item per topic up to 4 recommendations total.
+Use the selected topics and summary data to craft recommendations in the same style as the example.
 
 DATA SUMMARY:
 {summary}
