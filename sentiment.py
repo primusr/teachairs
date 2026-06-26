@@ -33,7 +33,7 @@ from utils import (
     classify_sentiment,
     sentiment_color,
     filipino_keyword_sentiment,
-    SENTIMENT_SCORE_MAP
+    SENTIMENT_SCORE_MAP,
 )
 
 GLOBAL_DF = pd.DataFrame()
@@ -46,10 +46,10 @@ GLOBAL_FIGURES = {}
 GLOBAL_SENTIMENT_SUMMARY = ""
 GLOBAL_TOPIC_SUMMARY = pd.DataFrame()
 
+
 # Rockon
 def _escape_html(text):
     return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-
 
 def _format_recommendation_html(text):
     escaped_text = _escape_html(text)
@@ -80,11 +80,18 @@ def _format_recommendation_html(text):
 
     return "".join(html_parts) or "<p>No recommendations available.</p>"
 
-
 def build_report_pdf():
-    feedback_table = GLOBAL_FEEDBACK.to_html(index=False, escape=False) if not GLOBAL_FEEDBACK.empty else "<p>No feedback data available.</p>"
-    sentiment_table = GLOBAL_SENTIMENTTOPIC.to_html(index=False, escape=False) if not GLOBAL_SENTIMENTTOPIC.empty else "<p>No sentiment topic data available.</p>" 
-    
+    feedback_table = (
+        GLOBAL_FEEDBACK.to_html(index=False, escape=False)
+        if not GLOBAL_FEEDBACK.empty
+        else "<p>No feedback data available.</p>"
+    )
+    sentiment_table = (
+        GLOBAL_SENTIMENTTOPIC.to_html(index=False, escape=False)
+        if not GLOBAL_SENTIMENTTOPIC.empty
+        else "<p>No sentiment topic data available.</p>"
+    )
+
     preferred_figures = [
         "Sentiment Distribution",
         "Standard VADER Polarity Scores",
@@ -92,9 +99,7 @@ def build_report_pdf():
     ]
     ordered_figure_names = [
         name for name in preferred_figures if name in GLOBAL_FIGURES
-    ] + [
-        name for name in GLOBAL_FIGURES if name not in preferred_figures
-    ]
+    ] + [name for name in GLOBAL_FIGURES if name not in preferred_figures]
 
     figure_html = ""
     for fig_name in ordered_figure_names:
@@ -107,16 +112,16 @@ def build_report_pdf():
         if image_data:
             wordcloud_html += f"<div class='report-section'><h3>Topic {topic_id}</h3><img src='{image_data}' style='max-width: 80%; height: auto;'/></div>"
 
-    
-
-
     recommendations_html = ""
     for rec in GLOBAL_TOPIC_RECOMMENDATIONS:
         recommendations_html += f"<div class='report-section'><h3>Topic {rec.get('id', '')}: {rec.get('label', '')}</h3><div>{_format_recommendation_html(rec.get('text', ''))}</div></div>"
 
-   
     sentiment_summary_html = f"<div class='report-section'><pre>{_escape_html(GLOBAL_SENTIMENT_SUMMARY or 'No sentiment summary available.')}</pre></div>"
-    topic_summary_table = GLOBAL_TOPIC_SUMMARY.to_html(index=False, escape=False) if not GLOBAL_TOPIC_SUMMARY.empty else "<p>No topic sentiment summary available.</p>"
+    topic_summary_table = (
+        GLOBAL_TOPIC_SUMMARY.to_html(index=False, escape=False)
+        if not GLOBAL_TOPIC_SUMMARY.empty
+        else "<p>No topic sentiment summary available.</p>"
+    )
     overall_html = f"<div class='report-section overall-recommendations'>{_format_recommendation_html(GLOBAL_OVERALL_AI_RECOMMENDATION or 'No overall AI recommendation generated.')}</div>"
 
     html_content = f"""
@@ -125,16 +130,16 @@ def build_report_pdf():
       <head>
         <meta charset='utf-8'>
         <style>
-          body {{ font-family: Arial, sans-serif; padding: 5px; line-height: 1.0, font-size:8px; margin: 5px; }}
-          h1, h2 {{ color: #1f4e79; page-break-after: avoid; break-after: avoid; }}
+          body {{ font-family: Courier New, monospace, sans-serif; line-height: 1.0, font-size:10px; margin: 5px; }}
+          h1, h2 {{ color: #1f4e79; break-after: avoid; }}
           h2 {{ page-break-after: allow; }}
           table {{ border-collapse: collapse; width: 100%; max-width: 100%; font-size: 8px; table-layout: fixed; word-wrap: break-word; align: center; }}
           th, td {{ border: 1px solid #ccc; padding: 2px; text-align: center; vertical-align: center; overflow-wrap: anywhere; align: center;  }}
           img {{ max-width: 80%; height: auto; display: block; margin: 0 auto; }}
           div, p, li {{ overflow-wrap: anywhere; }}
           pre {{ white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; }}
-          .report-section {{ page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px; }}
-          .figure-section {{ page-break-inside: avoid; break-inside: avoid; }}
+          .report-section {{ break-inside: avoid; margin-bottom: 8px; }}
+          .figure-section {{ break-inside: avoid; }}
        
          </style>
       </head>
@@ -165,7 +170,6 @@ def build_report_pdf():
 
 # Load NLTK resources
 load_nltk()
-
 # ------------------------------
 # Streamlit Config
 # ------------------------------
@@ -177,8 +181,8 @@ st.set_page_config(
     menu_items={
         "About": "Developed by Neo under the supervision of the Oracle. Watch this short video for a tutorial on how to use the app:  https://www.youtube.com/shorts/OvRlMiYURhM",
         "Get Help": "https://www.linkedin.com/in/unclebreaker/",
-        "Report a bug": "https://www.linkedin.com/in/unclebreaker/"
-    }    
+        "Report a bug": "https://www.linkedin.com/in/unclebreaker/",
+    },
 )
 
 st.title("📊TeachAIRs: Student Feedback Analyzer with AI Recommendations")
@@ -193,8 +197,7 @@ gemini_model = configure_gemini(api_key)
 # Filipino Lexicon Upload
 # ------------------------------
 filipino_lexicon_file = st.file_uploader(
-    "📤 Upload Filipino VADER Lexicon CSV (word, score)",
-    type=["csv"]
+    "📤 Upload Filipino VADER Lexicon CSV (word, score)", type=["csv"]
 )
 
 if filipino_lexicon_file:
@@ -222,10 +225,7 @@ if uploaded_file:
 
     # Auto-detect feedback column
     possible_cols = ["feedback", "comment", "comments", "Feedback"]
-    feedback_col = next(
-        (c for c in possible_cols if c in df.columns),
-        df.columns[0]
-    )
+    feedback_col = next((c for c in possible_cols if c in df.columns), df.columns[0])
 
     df = df[[feedback_col]].rename(columns={feedback_col: "Feedback"})
     df.dropna(inplace=True)
@@ -241,19 +241,15 @@ if uploaded_file:
     df["VADER_Augmented"] = df["Feedback"].apply(get_augmented_vader)
     df["Score"] = df["VADER_Augmented"]
     df["Label"] = df["Score"].apply(label_from_score)
-    
+
     GLOBAL_FEEDBACK = df.copy()
     st.divider()
     st.header("Sentiment Distribution (Augmented Model)")
     counts = df["Label"].value_counts()
     sentiment_order = ["Positive", "Neutral", "Negative"]
     counts = counts.reindex(sentiment_order, fill_value=0)
-    
-    color_map = {
-        "Positive": "green",
-        "Neutral": "blue",
-        "Negative": "red"
-    }
+
+    color_map = {"Positive": "green", "Neutral": "blue", "Negative": "red"}
     colors = [color_map[label] for label in counts.index]
     fig1, ax1 = plt.subplots()
     counts.plot(kind="bar", ax=ax1, color=colors)
@@ -264,7 +260,9 @@ if uploaded_file:
     fig_buffer = io.BytesIO()
     fig1.savefig(fig_buffer, format="png", bbox_inches="tight", dpi=150)
     fig_buffer.seek(0)
-    GLOBAL_FIGURES["Sentiment Distribution"] = f"data:image/png;base64,{base64.b64encode(fig_buffer.read()).decode()}"
+    GLOBAL_FIGURES["Sentiment Distribution"] = (
+        f"data:image/png;base64,{base64.b64encode(fig_buffer.read()).decode()}"
+    )
     plt.close(fig1)
     avg_score = df["Score"].mean()
     st.markdown(f"""
@@ -276,25 +274,41 @@ if uploaded_file:
 
     # Standard VADER
     df["Label_Std"] = df["VADER_Standard"].apply(classify_sentiment)
-    st.divider() # Make sure chart/metrics have structural padding
+    st.divider()  # Make sure chart/metrics have structural padding
     std_avg = df["VADER_Standard"].mean()
-    std_counts = df["Label_Std"].value_counts().reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+    std_counts = (
+        df["Label_Std"]
+        .value_counts()
+        .reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+    )
     std_dominant = std_counts.idxmax()
 
     # Augmented VADER
     df["Label_Aug"] = df["VADER_Augmented"].apply(classify_sentiment)
     aug_avg = df["VADER_Augmented"].mean()
-    aug_counts = df["Label_Aug"].value_counts().reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+    aug_counts = (
+        df["Label_Aug"]
+        .value_counts()
+        .reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+    )
     aug_dominant = aug_counts.idxmax()
 
     # Filipino Keywords
     df["Label_Filipino"] = df["Feedback"].apply(filipino_keyword_sentiment)
-    fil_counts = df["Label_Filipino"].value_counts().reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+    fil_counts = (
+        df["Label_Filipino"]
+        .value_counts()
+        .reindex(["Positive", "Neutral", "Negative"], fill_value=0)
+    )
     fil_dominant = fil_counts.idxmax()
 
     # Display formatted summaries
-    std_sentiment = "Positive" if std_avg > 0.05 else "Negative" if std_avg < -0.05 else "Neutral"
-    aug_sentiment = "Positive" if aug_avg > 0.05 else "Negative" if aug_avg < -0.05 else "Neutral"
+    std_sentiment = (
+        "Positive" if std_avg > 0.05 else "Negative" if std_avg < -0.05 else "Neutral"
+    )
+    aug_sentiment = (
+        "Positive" if aug_avg > 0.05 else "Negative" if aug_avg < -0.05 else "Neutral"
+    )
 
     std_text = f"""Standard VADER (English/Translated)
 Methodology: Avg of Std VADER scores (on Feedback_Text). Score: {std_avg:.4f}
@@ -316,16 +330,17 @@ Distribution (Aug VADER):
  - Negative (VADER Aug): {aug_counts['Negative']} comments ({(aug_counts['Negative'] / total_comments * 100):.2f}%)
 """
 
-    GLOBAL_SENTIMENT_SUMMARY = std_text + "\n" + "-" * 30 + "\n" + aug_text + "\n" + "-" * 30
+    GLOBAL_SENTIMENT_SUMMARY = (
+        std_text + "\n" + "-" * 30 + "\n" + aug_text + "\n" + "-" * 30
+    )
     st.code(GLOBAL_SENTIMENT_SUMMARY)
-    
 
     # ------------------------------
     # Sentiment Polarity Distribution Across Methods (plots)
     # ------------------------------
     st.divider()
     st.header("Sentiment Polarity Distribution Across Methods")
-    
+
     col1, col2 = st.columns(2)
 
     with col1:
@@ -341,7 +356,9 @@ Distribution (Aug VADER):
         fig_std_buffer = io.BytesIO()
         fig_std.savefig(fig_std_buffer, format="png", bbox_inches="tight", dpi=150)
         fig_std_buffer.seek(0)
-        GLOBAL_FIGURES["Standard VADER Polarity Scores"] = f"data:image/png;base64,{base64.b64encode(fig_std_buffer.read()).decode()}"
+        GLOBAL_FIGURES["Standard VADER Polarity Scores"] = (
+            f"data:image/png;base64,{base64.b64encode(fig_std_buffer.read()).decode()}"
+        )
         plt.close(fig_std)
 
     with col2:
@@ -357,14 +374,14 @@ Distribution (Aug VADER):
         fig_aug_buffer = io.BytesIO()
         fig_aug.savefig(fig_aug_buffer, format="png", bbox_inches="tight", dpi=150)
         fig_aug_buffer.seek(0)
-        GLOBAL_FIGURES["Augmented VADER Polarity Scores"] = f"data:image/png;base64,{base64.b64encode(fig_aug_buffer.read()).decode()}"
+        GLOBAL_FIGURES["Augmented VADER Polarity Scores"] = (
+            f"data:image/png;base64,{base64.b64encode(fig_aug_buffer.read()).decode()}"
+        )
         plt.close(fig_aug)
 
     # Statistical Comparison Calculations
     correlation = df["VADER_Standard"].corr(df["VADER_Augmented"])
     df = df[df["Cleaned"].str.strip() != ""].reset_index(drop=True)
-
-   
 
     texts = df["Cleaned"].apply(lambda x: x.split()).tolist()
     dictionary = corpora.Dictionary(texts)
@@ -374,8 +391,12 @@ Distribution (Aug VADER):
     cv_scores = []
 
     for k in k_values:
-        lda_model_k = LdaModel(corpus=corpus, id2word=dictionary, num_topics=k, passes=10, random_state=42)
-        coherence_cv = CoherenceModel(model=lda_model_k, texts=texts, dictionary=dictionary, coherence='c_v').get_coherence()
+        lda_model_k = LdaModel(
+            corpus=corpus, id2word=dictionary, num_topics=k, passes=10, random_state=42
+        )
+        coherence_cv = CoherenceModel(
+            model=lda_model_k, texts=texts, dictionary=dictionary, coherence="c_v"
+        ).get_coherence()
         cv_scores.append(coherence_cv)
 
     optimal_index = cv_scores.index(max(cv_scores))
@@ -392,7 +413,13 @@ Distribution (Aug VADER):
     except:
         final_k = 4
 
-    lda_model_final = LdaModel(corpus=corpus, id2word=dictionary, num_topics=final_k, passes=10, random_state=42)
+    lda_model_final = LdaModel(
+        corpus=corpus,
+        id2word=dictionary,
+        num_topics=final_k,
+        passes=10,
+        random_state=42,
+    )
 
     def get_dominant_topic(bow):
         topics = lda_model_final.get_document_topics(bow)
@@ -413,7 +440,9 @@ Distribution (Aug VADER):
         top_keywords = ", ".join([w for w, _ in words_probs])
 
         if gemini_model:
-            prompt = f"Provide a concise 3-word academic topic label for: {top_keywords}"
+            prompt = (
+                f"Provide a concise 3-word academic topic label for: {top_keywords}"
+            )
             response = gemini_model.generate_content(prompt)
             ai_label = response.text.strip().replace("**", "")
         else:
@@ -428,20 +457,21 @@ Distribution (Aug VADER):
         fil_dist = topic_df["Label_Filipino"].value_counts(normalize=True) * 100
         fil_dist = fil_dist.reindex(["Positive", "Neutral", "Negative"], fill_value=0)
 
-        topic_rows.append({
-            "Topic ID": topic_id,
-            "AI Label": ai_label,
-            "Top Keywords": top_keywords,
-            "Num Comments": num_comments,
-            "Avg VADER Eng Score": round(topic_df["VADER_Standard"].mean(), 2),
-            "VADER Eng Dist (%)": f"Positive: {std_dist['Positive']:.1f}, Neutral: {std_dist['Neutral']:.1f}, Negative: {std_dist['Negative']:.1f}",
-            "Avg VADER Aug Score": round(topic_df["VADER_Augmented"].mean(), 2),
-            "VADER Aug Dist (%)": f"Positive: {aug_dist['Positive']:.1f}, Neutral: {aug_dist['Neutral']:.1f}, Negative: {aug_dist['Negative']:.1f}",
-            "Avg Fil. Keyword Score": round(topic_df["Filipino_Score"].mean(), 2),
-            "Fil. Keyword Dist (%)": f"Positive: {fil_dist['Positive']:.1f}, Neutral: {fil_dist['Neutral']:.1f}, Negative: {fil_dist['Negative']:.1f}"
-        })
-    
-   
+        topic_rows.append(
+            {
+                "Topic ID": topic_id,
+                "AI Label": ai_label,
+                "Top Keywords": top_keywords,
+                "Num Comments": num_comments,
+                "Avg VADER Eng Score": round(topic_df["VADER_Standard"].mean(), 2),
+                "VADER Eng Dist (%)": f"Positive: {std_dist['Positive']:.1f}, Neutral: {std_dist['Neutral']:.1f}, Negative: {std_dist['Negative']:.1f}",
+                "Avg VADER Aug Score": round(topic_df["VADER_Augmented"].mean(), 2),
+                "VADER Aug Dist (%)": f"Positive: {aug_dist['Positive']:.1f}, Neutral: {aug_dist['Neutral']:.1f}, Negative: {aug_dist['Negative']:.1f}",
+                "Avg Fil. Keyword Score": round(topic_df["Filipino_Score"].mean(), 2),
+                "Fil. Keyword Dist (%)": f"Positive: {fil_dist['Positive']:.1f}, Neutral: {fil_dist['Neutral']:.1f}, Negative: {fil_dist['Negative']:.1f}",
+            }
+        )
+
     topic_summary_df = pd.DataFrame(topic_rows)
     GLOBAL_TOPIC_SUMMARY = topic_summary_df.copy()
 
@@ -449,7 +479,9 @@ Distribution (Aug VADER):
 
     if not topic_summary_df.empty:
         # st.markdown("Overall Sentiment Per Topic")
-        st.markdown(topic_summary_df.to_html(index=False, escape=False), unsafe_allow_html=True)
+        st.markdown(
+            topic_summary_df.to_html(index=False, escape=False), unsafe_allow_html=True
+        )
 
         # ------------------------------
         # Topic Word Clouds Rendering Loop
@@ -458,8 +490,10 @@ Distribution (Aug VADER):
         if topic_ids_to_plot:
             st.divider()
             st.header("Word Cloud for Identified Topics")
-            st.markdown("Word clouds for the topics identified by TeachAIRs LDA model...")
-            
+            st.markdown(
+                "Word clouds for the topics identified by TeachAIRs LDA model..."
+            )
+
             for i in range(0, len(topic_ids_to_plot), 2):
                 cols = st.columns(2)
                 for j, col in enumerate(cols):
@@ -469,11 +503,18 @@ Distribution (Aug VADER):
                     topic_idx = topic_ids_to_plot[idx]
                     words_probs = lda_model_final.show_topic(topic_idx, topn=10)
                     words = ", ".join([w for w, _ in words_probs])
-                    ai_title = next((r["AI Label"] for r in topic_rows if r["Topic ID"] == topic_idx), f"Topic {topic_idx}")
-                    
+                    ai_title = next(
+                        (
+                            r["AI Label"]
+                            for r in topic_rows
+                            if r["Topic ID"] == topic_idx
+                        ),
+                        f"Topic {topic_idx}",
+                    )
+
                     with col:
-                        #st.markdown(f'<div style="text-align: center;"><b>Topic {topic_idx}: {ai_title}</b><br>Keywords: {words}</div>', unsafe_allow_html=True)
-                        
+                        # st.markdown(f'<div style="text-align: center;"><b>Topic {topic_idx}: {ai_title}</b><br>Keywords: {words}</div>', unsafe_allow_html=True)
+
                         wc = WordCloud(background_color="white", width=400, height=300)
                         wc.generate_from_frequencies(dict(words_probs))
                         fig, ax = plt.subplots(figsize=(6, 4))
@@ -486,12 +527,12 @@ Distribution (Aug VADER):
                             fontsize=5,
                             wrap=True,
                         )
-                        
+
                         fig.subplots_adjust(top=0.82)
                         ax.imshow(wc, interpolation="bilinear")
                         ax.axis("off")
                         st.pyplot(fig)
-                        
+
                         # Cache the exact base64 image representation right now to prevent regeneration tasks later
                         buf = io.BytesIO()
                         fig.savefig(buf, format="png", bbox_inches="tight", dpi=150)
@@ -513,7 +554,9 @@ Distribution (Aug VADER):
         selected_topics = sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:4]
         st.divider()
         st.header("AI Recommendations for Selected Topics")
-        st.markdown("Recommendations for the 4 topic(s) with the most negative average Augmented VADER sentiment.")
+        st.markdown(
+            "Recommendations for the 4 topic(s) with the most negative average Augmented VADER sentiment."
+        )
 
         def _sentiment_context(avg_score):
             if avg_score > 0.05:
@@ -523,11 +566,11 @@ Distribution (Aug VADER):
             return f"A VADER score of {avg_score:.2f} suggests a neutral sentiment, indicating that the topic is neither strongly praised nor criticized."
 
         def _build_topic_recommendations(row):
-            topic_label = row['AI Label']
-            keywords = row['Top Keywords']
-            avg_score = row['Avg VADER Aug Score']
+            topic_label = row["AI Label"]
+            keywords = row["Top Keywords"]
+            avg_score = row["Avg VADER Aug Score"]
             sentiment_context = _sentiment_context(avg_score)
-            primary_keyword = keywords.split(', ')[0] if keywords else "the topic"
+            primary_keyword = keywords.split(", ")[0] if keywords else "the topic"
             return f"""Recommendations for Topic {row['Topic ID']} ({topic_label}):
 Here are 2-3 actionable teaching recommendations based on the topic "{topic_label}".
 **Understanding the Context:** {sentiment_context}
@@ -544,13 +587,11 @@ Here are 2-3 actionable teaching recommendations based on the topic "{topic_labe
             rec_text = _build_topic_recommendations(row)
             st.markdown(rec_text)
             st.markdown("---")
-            
+
             # Cache the text blocks so they transfer natively to the PDF template
-            pre_generated_topic_recs.append({
-                "id": row['Topic ID'],
-                "label": row['AI Label'],
-                "text": rec_text
-            })
+            pre_generated_topic_recs.append(
+                {"id": row["Topic ID"], "label": row["AI Label"], "text": rec_text}
+            )
 
     GLOBAL_TOPIC_RECOMMENDATIONS = pre_generated_topic_recs
 
@@ -560,22 +601,28 @@ Here are 2-3 actionable teaching recommendations based on the topic "{topic_labe
     gemini_recommendation_text = ""
     if gemini_model:
         st.header("Overall AI Recommendations (based on CSV Analysis)")
-        
+
         try:
             corr_value = f"{correlation:.2f}"
         except:
             corr_value = "Not computed"
 
         summary = f"Average Sentiment Score: {avg_score:.2f}\nSentiment Distribution: {counts.to_dict()}\nStandard VADER Average: {std_avg:.2f}\nAugmented VADER Average: {aug_avg:.2f}\nFilipino Dominant Sentiment: {fil_dominant}\nCorrelation Between Models: {corr_value}"
-        selected_topics = sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:4] if topic_rows else []
+        selected_topics = (
+            sorted(topic_rows, key=lambda x: x["Avg VADER Aug Score"])[:4]
+            if topic_rows
+            else []
+        )
 
         def _format_selected_topics(topics):
             if not topics:
                 return "No selected topic data is available."
-            return "\n".join([
-                f"Topic {row['Topic ID']} - {row['AI Label']}: {row['Top Keywords']} | Avg VADER Aug Score: {row['Avg VADER Aug Score']:.2f} | VADER Aug Dist: {row['VADER Aug Dist (%)']}"
-                for row in topics
-            ])
+            return "\n".join(
+                [
+                    f"Topic {row['Topic ID']} - {row['AI Label']}: {row['Top Keywords']} | Avg VADER Aug Score: {row['Avg VADER Aug Score']:.2f} | VADER Aug Dist: {row['VADER Aug Dist (%)']}"
+                    for row in topics
+                ]
+            )
 
         selected_topics_text = _format_selected_topics(selected_topics)
 
@@ -626,8 +673,12 @@ SELECTED TOPICS:
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as archive:
             # archive.writestr("02_Feedback.csv", GLOBAL_FEEDBACK.to_csv(index=False).encode("utf-8"))
-            archive.writestr("03_Sentiment.csv", GLOBAL_SENTIMENTTOPIC.to_csv(index=False).encode("utf-8"))
+            archive.writestr(
+                "03_Sentiment.csv",
+                GLOBAL_SENTIMENTTOPIC.to_csv(index=False).encode("utf-8"),
+            )
             archive.writestr("01_Output.pdf", build_report_pdf())
+
         st.subheader("Download Report Package")
         st.download_button(
             "Download Report ZIP",
