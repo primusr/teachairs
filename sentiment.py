@@ -527,25 +527,17 @@ Distribution (Aug VADER):
             keywords = row['Top Keywords']
             avg_score = row['Avg VADER Aug Score']
             sentiment_context = _sentiment_context(avg_score)
-            rec_1 = f"**1. Improve clarity around {keywords.split(', ')[0]} and related concepts:**"
-            rec_2 = f"**2. Reinforce student mastery through targeted examples and checks:**"
-            rec_3 = f"**3. Collect and act on short-cycle feedback from learners:**"
+            primary_keyword = keywords.split(', ')[0] if keywords else "the topic"
             return f"""Recommendations for Topic {row['Topic ID']} ({topic_label}):
 Here are 2-3 actionable teaching recommendations based on the topic "{topic_label}".
 **Understanding the Context:** {sentiment_context}
 **Actionable Teaching Recommendations:**
-{rec_1}
-   * **Action:** Use the top keywords such as "{keywords}" to design brief, focused instruction and real examples.
-   * **Rationale:** Anchoring the lesson in familiar terms helps students connect feedback language to the core idea.
-   * **Measurement:** Track student questions and comprehension checks for the highlighted concept.
-{rec_2}
-   * **Action:** Break the topic into smaller lesson chunks and include a quick guided practice or explain-back moment.
-   * **Rationale:** Students often respond better when they can see how each part of the topic builds toward mastery.
-   * **Measurement:** Observe student confidence in follow-up tasks and the accuracy of responses.
-{rec_3}
-   * **Action:** Ask learners to share what they found clear or unclear after the lesson and adjust the next class accordingly.
-   * **Rationale:** Rapid feedback clarifies whether the teaching approach is aligning with student needs for this topic.
-   * **Measurement:** Compare learner feedback and engagement before and after implementing the changes."""
+1. **Improve clarity around {primary_keyword} and related concepts:** Use the top keywords like "{keywords}" to frame short, focused explanations and examples.
+   * Explain how the main idea connects to students' prior knowledge and check understanding with a quick summary prompt.
+2. **Reinforce student mastery through targeted examples and checks:** Break the topic into smaller chunks and include guided practice for each part.
+   * Use brief follow-up questions or tasks after each mini-lesson to confirm comprehension and adjust pacing.
+3. **Collect and act on short-cycle feedback from learners:** Ask students what was clear or confusing and adapt the next lesson accordingly.
+   * Use simple feedback methods such as reflection slips, thumbs-up/thumbs-down, or quick verbal summaries to inform instruction."""
 
         for row in selected_topics:
             st.subheader(f"Topic {row['Topic ID']}: {row['AI Label']}")
