@@ -700,8 +700,10 @@ SELECTED TOPICS:
         st.info("Upload and analyze a dataset to enable the report download.")
 
 else:
-    url = "https://drive.google.com/drive/folders/13VI7m5JdzRfQrttCiiVoctKg6SWOV0aU?usp=sharing"
-    st.info("Please upload a CSV file to begin. If you don't have a CSV file prepared, download and use this template: [TeachAIRs CSV Templates]({url})")
+ 
+    st.info("Please upload a CSV file to begin. If you don't have a CSV file prepared, download and use the template below")
+    
+    st.link_button("TeachAIRs CSV Templates", "https://drive.google.com/drive/folders/13VI7m5JdzRfQrttCiiVoctKg6SWOV0aU?usp=sharing")
 
    
   
