@@ -701,7 +701,7 @@ SELECTED TOPICS:
 
 else:
     url = "https://drive.google.com/drive/folders/13VI7m5JdzRfQrttCiiVoctKg6SWOV0aU?usp=sharing"
-    st.info("Please upload a CSV file to begin. If you don't have a CSV file prepared, download and use one of the templates provided below.<br>[CSV Templates]({url})")
+    st.info("Please upload a CSV file to begin. If you don't have a CSV file prepared, download and use this template: [TeachAIRs CSV Templates]({url})")
 
    
   
