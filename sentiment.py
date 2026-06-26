@@ -268,13 +268,15 @@ if uploaded_file:
     st.markdown("""
         <style>
         .big-font {
-            font-size: 30px !important;
+            font-size: 20px !important;
         }
         </style>
         """, unsafe_allow_html=True)
+    
     st.markdown(f"""<p class="big-font">
-    **Average Sentiment Score:** {avg_score:.3f}  
-    **Overall Sentiment:** {'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'}
+    Average Sentiment Score: {avg_score:.3f}""", unsafe_allow_html=True)
+    st.markdown(f"""<p class="big-font">
+    Overall Sentiment: {'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'}
     """, unsafe_allow_html=True)
 
     total_comments = len(df)
