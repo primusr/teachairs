@@ -265,10 +265,17 @@ if uploaded_file:
     )
     plt.close(fig1)
     avg_score = df["Score"].mean()
-    st.markdown(f"""
+    st.markdown("""
+        <style>
+        .big-font {
+            font-size: 30px !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+    st.markdown(f"""<p class="big-font">
     **Average Sentiment Score:** {avg_score:.3f}  
     **Overall Sentiment:** {'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'}
-    """)
+    """, unsafe_allow_html=True)
 
     total_comments = len(df)
 
