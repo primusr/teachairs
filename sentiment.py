@@ -131,13 +131,13 @@ def build_report_pdf():
         <meta charset='utf-8'>
         <style>
           body {{ font-family: Courier New, monospace, sans-serif; line-height: 1.0, font-size:10px; margin: 5px; }}
-          h1, h2 {{ color: #1f4e79; break-after: avoid; }}
-          h2 {{ page-break-after: allow; }}
+          h1, h2 {{ color: #1f4e79; break-after: avoid; break-inside: avoid; }}
+          h2 {{ page-break-after: allow; break-inside: avoid; }}
           table {{ border-collapse: collapse; width: 100%; max-width: 100%; font-size: 8px; table-layout: fixed; word-wrap: break-word; align: center; }}
           th, td {{ border: 1px solid #ccc; padding: 2px; text-align: center; vertical-align: center; overflow-wrap: anywhere; align: center;  }}
           img {{ max-width: 80%; height: auto; display: block; margin: 0 auto; }}
-          div, p, li {{ overflow-wrap: anywhere; }}
-          pre {{ white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; }}
+          div, p, li {{ overflow-wrap: anywhere; break-inside: avoid; }}
+          pre {{ white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; break-inside: avoid; }}
           .report-section {{ break-inside: avoid; margin-bottom: 8px; }}
           .figure-section {{ break-inside: avoid; }}
        
