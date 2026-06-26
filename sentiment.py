@@ -703,7 +703,7 @@ else:
  
     st.info("Please upload a CSV file to begin. If you don't have a CSV file prepared, download and use the template below")
     
-    st.link_button("TeachAIRs CSV Templates", "https://drive.google.com/drive/folders/13VI7m5JdzRfQrttCiiVoctKg6SWOV0aU?usp=sharing")
+    st.link_button("TeachAIRs CSV Templates", "https://drive.google.com/uc?export=download&id=1jtFA_4LPNwKz6qIMYsmUA8OANHZVI8Ot")
 
    
   
