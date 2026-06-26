@@ -601,7 +601,7 @@ Here are 2-3 actionable teaching recommendations based on the topic "{topic_labe
     gemini_recommendation_text = ""
     if gemini_model:
         
-        st.subheader("Overall AI Recommendations (based on CSV Analysis)")
+        st.header("Overall AI Recommendations (based on CSV Analysis)")
 
         try:
             corr_value = f"{correlation:.2f}"
@@ -632,7 +632,6 @@ You are an academic assistant analyzing student feedback data.
 Generate overall teaching recommendations for the selected topics using the requested structured format.
 
 OUTPUT FORMAT:
-Overall AI Recommendations:
 
 **1. <Recommendation title 1>**
  * **Rationale:** <one or two sentences explaining why this recommendation follows from the data>
