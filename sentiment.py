@@ -274,7 +274,7 @@ if uploaded_file:
         """, unsafe_allow_html=True)
     
     st.markdown(f"""<p class="big-font">
-    Average Sentiment Score: {avg_score:.3f}""", unsafe_allow_html=True)
+    Average Sentiment Score: {avg_score:.3f} <br> Overall Sentiment: {'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'} """, unsafe_allow_html=True)
     st.markdown(f"""<p class="big-font">
     Overall Sentiment: {'Positive' if avg_score > 0.05 else 'Negative' if avg_score < -0.05 else 'Neutral'}
     """, unsafe_allow_html=True)
