@@ -600,7 +600,8 @@ Here are 2-3 actionable teaching recommendations based on the topic "{topic_labe
     # ------------------------------
     gemini_recommendation_text = ""
     if gemini_model:
-        st.header("Overall AI Recommendations (based on CSV Analysis)")
+        
+        st.subheader("Overall AI Recommendations (based on CSV Analysis)")
 
         try:
             corr_value = f"{correlation:.2f}"
