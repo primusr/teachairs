@@ -688,7 +688,7 @@ SELECTED TOPICS:
                 GLOBAL_SENTIMENTTOPIC.to_csv(index=False).encode("utf-8"),
             )
             archive.writestr("01_Output.pdf", build_report_pdf())
-
+        st.divider()
         st.subheader("Download Report Package")
         st.download_button(
             "Download Report ZIP",
